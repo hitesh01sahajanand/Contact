@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ContactManager</string>
+    <string name="permission_access">ऐप की पूरी कार्यक्षमता सुनिश्चित करने के लिए आवश्यक अनुमतियाँ सक्षम करें।</string>
+    <string name="calls">कॉल्स</string>
+    <string name="notifications">सूचनाएं</string>
+    <string name="calls_desc">कॉल स्क्रीन से तुरंत संदेश भेजने के लिए फोन कॉल अनुमति चालू करें।</string>
+    <string name="notification_desc">महत्वपूर्ण संदेशों के अपडेट पाने के लिए सूचनाएं सक्षम करें।</string>
+    <string name="allow_permission">अनुमति दें</string>
+    <string name="grant_app_access">ऐप एक्सेस दें</string>
+    <string name="language">भाषा</string>
+    <string name="done">पूरा</string>
+    <string name="favorite">पसंदीदा</string>
+    <string name="recent">हाल ही में</string>
+    <string name="contact">संपर्क</string>
+    <string name="keypad">कीपैड</string>
+    <string name="setting">सेटिंग्स</string>
+    <string name="set_contacts_default">संपर्क को डिफ़ॉल्ट बनाएं</string>
+    <string name="set_default_app">डिफ़ॉल्ट संपर्क ऐप सेट करें</string>
+    <string name="default_app_desc">फोन कॉल करने और प्राप्त करने के लिए ऐप को\nडिफ़ॉल्ट फोन ऐप होना आवश्यक है।</string>
+
+</resources>

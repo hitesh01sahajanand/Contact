@@ -1,0 +1,535 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="OnClickHandler"
+            type="com.example.contactmanager.utils.OnClickHandler" />
+    </data>
+
+    <LinearLayout
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white"
+        android:orientation="vertical"
+        tools:context=".activities.settings.SettingsActivity">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="?actionBarSize"
+            android:layout_gravity="center_vertical"
+            android:layout_marginHorizontal="@dimen/_10sdp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/iv_back"
+                android:layout_width="@dimen/_25sdp"
+                android:layout_height="@dimen/_25sdp"
+                android:contentDescription="@string/setting"
+                android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
+                android:src="@drawable/ic_back_arrow" />
+
+            <TextView
+                style="@style/TextStyle.Medium"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+
+                android:gravity="center"
+
+                android:text="@string/setting"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/_10sdp"
+                android:orientation="vertical">
+
+
+                <TextView
+                    style="@style/TextStyle.Medium"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_vertical"
+
+                    android:gravity="start"
+
+                    android:text="@string/call_assist"
+                    android:textColor="@color/setting_grey_color" />
+
+                <LinearLayout
+                    android:id="@+id/ll_caller_id_disable"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/rounded_corner_with_stroke_bg"
+                    android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
+                    android:orientation="vertical"
+                    android:padding="@dimen/_10sdp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="@dimen/_35sdp"
+                            android:layout_height="@dimen/_35sdp"
+                            android:contentDescription="@string/caller_id_disables"
+                            android:src="@drawable/ic_caller_id" />
+
+                        <TextView
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="@dimen/_10sdp"
+                            android:layout_weight="1"
+
+                            android:gravity="center_vertical"
+
+                            android:text="@string/caller_id_disables"
+                            android:textColor="@color/black_color" />
+
+                        <ImageView
+                            android:layout_width="@dimen/_20sdp"
+                            android:layout_height="@dimen/_20sdp"
+                            android:rotation="180"
+                            android:src="@drawable/ic_back_arrow"
+                            app:tint="@color/setting_grey_color" />
+
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+
+                <TextView
+                    style="@style/TextStyle.Medium"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:gravity="start"
+                    android:text="@string/personalisation"
+                    android:textColor="@color/setting_grey_color" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/rounded_corner_with_stroke_bg"
+                    android:orientation="vertical"
+                    android:padding="@dimen/_10sdp">
+
+                    <LinearLayout
+                        android:id="@+id/ll_app_theme"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="@dimen/_35sdp"
+                            android:layout_height="@dimen/_35sdp"
+                            android:contentDescription="@string/caller_id_disables"
+                            android:src="@drawable/ic_app_theme" />
+
+                        <TextView
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="@dimen/_10sdp"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:text="@string/app_theme"
+                            android:textColor="@color/black_color" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/tv_theme_type"
+                                style="@style/TextStyle.Small"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginStart="@dimen/_10sdp"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical"
+                                android:text="@string/light_mode"
+                                android:textColor="@color/setting_grey_color" />
+
+                            <ImageView
+                                android:layout_width="@dimen/_20sdp"
+                                android:layout_height="@dimen/_20sdp"
+                                android:rotation="180"
+                                android:src="@drawable/ic_back_arrow"
+                                app:tint="@color/setting_grey_color" />
+
+                        </LinearLayout>
+
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:layout_marginVertical="@dimen/_10sdp"
+                        android:layout_marginStart="@dimen/_40sdp"
+                        android:background="@color/setting_grey_color" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="@dimen/_35sdp"
+                            android:layout_height="@dimen/_35sdp"
+                            android:contentDescription="@string/caller_id_disables"
+                            android:src="@drawable/ic_language" />
+
+                        <TextView
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="@dimen/_10sdp"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:text="@string/language"
+                            android:textColor="@color/black_color" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/tv_language"
+                                style="@style/TextStyle.Small"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginStart="@dimen/_10sdp"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical"
+                                android:text="@string/system_english"
+                                android:textColor="@color/setting_grey_color" />
+
+                            <ImageView
+                                android:layout_width="@dimen/_20sdp"
+                                android:layout_height="@dimen/_20sdp"
+                                android:rotation="180"
+                                android:src="@drawable/ic_back_arrow"
+                                app:tint="@color/setting_grey_color" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+
+                <TextView
+                    style="@style/TextStyle.Medium"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:gravity="start"
+                    android:text="@string/general"
+                    android:textColor="@color/setting_grey_color" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/rounded_corner_with_stroke_bg"
+                    android:orientation="vertical"
+                    android:padding="@dimen/_10sdp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="@dimen/_35sdp"
+                            android:layout_height="@dimen/_35sdp"
+                            android:contentDescription="@string/caller_id_disables"
+                            android:src="@drawable/ic_block_number" />
+
+                        <TextView
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="@dimen/_10sdp"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:text="@string/block_number"
+                            android:textColor="@color/black_color" />
+
+                        <ImageView
+                            android:layout_width="@dimen/_20sdp"
+                            android:layout_height="@dimen/_20sdp"
+                            android:rotation="180"
+                            android:src="@drawable/ic_back_arrow"
+                            app:tint="@color/setting_grey_color" />
+
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:layout_marginVertical="@dimen/_10sdp"
+                        android:layout_marginStart="@dimen/_40sdp"
+                        android:background="@color/setting_grey_color" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="@dimen/_35sdp"
+                            android:layout_height="@dimen/_35sdp"
+                            android:contentDescription="@string/caller_id_disables"
+                            android:src="@drawable/ic_manage_contact" />
+
+                        <TextView
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginHorizontal="@dimen/_10sdp"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:text="@string/manage_create_contact_show_fields"
+                            android:textColor="@color/black_color" />
+
+                        <ImageView
+                            android:layout_width="@dimen/_20sdp"
+                            android:layout_height="@dimen/_20sdp"
+                            android:rotation="180"
+                            android:src="@drawable/ic_back_arrow"
+                            app:tint="@color/setting_grey_color" />
+
+                    </LinearLayout>
+
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:layout_marginVertical="@dimen/_10sdp"
+                        android:layout_marginStart="@dimen/_40sdp"
+                        android:background="@color/setting_grey_color" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="@dimen/_35sdp"
+                            android:layout_height="@dimen/_35sdp"
+                            android:contentDescription="@string/caller_id_disables"
+                            android:src="@drawable/ic_call_information" />
+
+                        <TextView
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginHorizontal="@dimen/_10sdp"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:text="@string/show_a_call_confirmation"
+                            android:textColor="@color/black_color" />
+
+                        <ImageView
+                            android:layout_width="@dimen/_20sdp"
+                            android:layout_height="@dimen/_20sdp"
+                            android:rotation="180"
+                            android:src="@drawable/ic_back_arrow"
+                            app:tint="@color/setting_grey_color" />
+
+                    </LinearLayout>
+
+
+                </LinearLayout>
+
+
+                <TextView
+                    style="@style/TextStyle.Medium"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:gravity="start"
+                    android:text="Main Screen"
+                    android:textColor="@color/setting_grey_color" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/rounded_corner_with_stroke_bg"
+                    android:orientation="vertical"
+                    android:padding="@dimen/_10sdp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="@dimen/_35sdp"
+                            android:layout_height="@dimen/_35sdp"
+                            android:contentDescription="@string/caller_id_disables"
+                            android:src="@drawable/ic_block_number" />
+
+                        <TextView
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="@dimen/_10sdp"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:text="@string/block_number"
+                            android:textColor="@color/black_color" />
+
+                        <ImageView
+                            android:layout_width="@dimen/_20sdp"
+                            android:layout_height="@dimen/_20sdp"
+                            android:rotation="180"
+                            android:src="@drawable/ic_back_arrow"
+                            app:tint="@color/setting_grey_color" />
+
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:layout_marginVertical="@dimen/_10sdp"
+                        android:layout_marginStart="@dimen/_40sdp"
+                        android:background="@color/setting_grey_color" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="@dimen/_35sdp"
+                            android:layout_height="@dimen/_35sdp"
+                            android:contentDescription="@string/caller_id_disables"
+                            android:src="@drawable/ic_manage_contact" />
+
+                        <TextView
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginHorizontal="@dimen/_10sdp"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:text="@string/manage_create_contact_show_fields"
+                            android:textColor="@color/black_color" />
+
+                        <ImageView
+                            android:layout_width="@dimen/_20sdp"
+                            android:layout_height="@dimen/_20sdp"
+                            android:rotation="180"
+                            android:src="@drawable/ic_back_arrow"
+                            app:tint="@color/setting_grey_color" />
+
+                    </LinearLayout>
+
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:layout_marginVertical="@dimen/_10sdp"
+                        android:layout_marginStart="@dimen/_40sdp"
+                        android:background="@color/setting_grey_color" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="@dimen/_35sdp"
+                            android:layout_height="@dimen/_35sdp"
+                            android:contentDescription="@string/caller_id_disables"
+                            android:src="@drawable/ic_call_information" />
+
+                        <TextView
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginHorizontal="@dimen/_10sdp"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:text="@string/show_a_call_confirmation"
+                            android:textColor="@color/black_color" />
+
+                        <ImageView
+                            android:layout_width="@dimen/_20sdp"
+                            android:layout_height="@dimen/_20sdp"
+                            android:rotation="180"
+                            android:src="@drawable/ic_back_arrow"
+                            app:tint="@color/setting_grey_color" />
+
+                    </LinearLayout>
+
+
+                </LinearLayout>
+
+
+            </LinearLayout>
+
+
+        </androidx.core.widget.NestedScrollView>
+
+    </LinearLayout>
+</layout>
