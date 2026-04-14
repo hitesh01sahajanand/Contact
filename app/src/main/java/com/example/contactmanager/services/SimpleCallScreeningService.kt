@@ -12,15 +12,15 @@ import android.telecom.CallScreeningService
 import android.util.Log
 
 class SimpleCallScreeningService : CallScreeningService() {
-    companion object {
-//        var callerIdPopupmain: CallerIdPopup? = null
+   /* companion object {
+        var callerIdPopupmain: CallerIdPopup? = null
 
-//        fun getCallerIdPopup(): CallerIdPopup? = callerIdPopupmain
+        fun getCallerIdPopup(): CallerIdPopup? = callerIdPopupmain
 
-        /* fun setCallerIdPopup(popup: CallerIdPopup?) {
+         fun setCallerIdPopup(popup: CallerIdPopup?) {
              callerIdPopupmain = popup
-         }*/
-    }
+         }
+    }*/
 
     override fun onScreenCall(details: Call.Details) {
 

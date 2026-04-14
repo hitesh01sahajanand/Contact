@@ -1,4 +1,8 @@
 <resources>
+
+    <string name="default_incoming_notification_channel_id" translatable="false">FCMaQ12Cfx@14_silent_v2</string>
+
+
     <string name="app_name">ContactManager</string>
     <string name="permission_access">Enable required permissions to ensure full functionality ot the app.</string>
     <string name="calls">Calls</string>
@@ -41,4 +45,16 @@
     <string name="block_number">Block Number</string>
     <string name="manage_create_contact_show_fields">Manage create contact show fields</string>
     <string name="show_a_call_confirmation">Show a call confirmation dialog before initiating a call</string>
+    <string name="calling">Calling</string>
+    <string name="remind_me">Remind Me</string>
+    <string name="message">Message</string>
+    <string name="accept">Accept</string>
+    <string name="decline">Decline</string>
+    <string name="add_call">Add Call</string>
+    <string name="hold">Hold</string>
+    <string name="bluetooth">Bluetooth</string>
+    <string name="speaker">Speaker</string>
+    <string name="mute">Mute</string>
+
+
 </resources>

@@ -10,6 +10,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.os.PowerManager
 import android.provider.ContactsContract
 import android.telephony.PhoneNumberUtils
 import android.view.LayoutInflater
@@ -325,5 +326,8 @@ object Common {
             popupWindow.dismiss()
         }
     }
+
+    val Context.powerManager: PowerManager
+        get() = getSystemService(Context.POWER_SERVICE) as PowerManager
 
 }

@@ -111,6 +111,7 @@
                         android:id="@+id/rv_suggestions"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="@dimen/_10sdp"
                         android:visibility="gone" />
 
                     <LinearLayout
@@ -121,7 +122,7 @@
                         android:orientation="vertical"
                         android:paddingHorizontal="@dimen/_15sdp"
                         android:paddingVertical="@dimen/_5sdp"
-                        android:visibility="visible">
+                        android:visibility="gone">
 
                         <LinearLayout
                             android:id="@+id/ll_create_new_contact"

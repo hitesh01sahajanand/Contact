@@ -18,7 +18,7 @@
         android:orientation="vertical"
         tools:context=".activities.settings.SettingsActivity">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="?actionBarSize"
             android:layout_gravity="center_vertical"
@@ -28,24 +28,29 @@
 
             <ImageView
                 android:id="@+id/iv_back"
-                android:layout_width="@dimen/_25sdp"
-                android:layout_height="@dimen/_25sdp"
+                android:layout_width="@dimen/_35sdp"
+                android:layout_height="@dimen/_35sdp"
                 android:contentDescription="@string/setting"
                 android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
-                android:src="@drawable/ic_back_arrow" />
+                android:src="@drawable/ic_back"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 style="@style/TextStyle.Medium"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center"
-
                 android:gravity="center"
-
                 android:text="@string/setting"
-                android:textColor="@color/black" />
+                android:textColor="@color/black"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
@@ -74,7 +79,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/_10sdp"
-                    android:background="@drawable/rounded_corner_with_stroke_bg"
+                    android:background="@drawable/rounded_corner_bg"
                     android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                     android:orientation="vertical"
                     android:padding="@dimen/_10sdp">
@@ -132,7 +137,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/_10sdp"
-                    android:background="@drawable/rounded_corner_with_stroke_bg"
+                    android:background="@drawable/rounded_corner_bg"
                     android:orientation="vertical"
                     android:padding="@dimen/_10sdp">
 
@@ -266,7 +271,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/_10sdp"
-                    android:background="@drawable/rounded_corner_with_stroke_bg"
+                    android:background="@drawable/rounded_corner_bg"
                     android:orientation="vertical"
                     android:padding="@dimen/_10sdp">
 
@@ -403,7 +408,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/_10sdp"
-                    android:background="@drawable/rounded_corner_with_stroke_bg"
+                    android:background="@drawable/rounded_corner_bg"
                     android:orientation="vertical"
                     android:padding="@dimen/_10sdp">
 

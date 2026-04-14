@@ -2,16 +2,18 @@ package com.example.contactmanager.utils
 
 import android.telecom.Call
 import android.telecom.VideoProfile
+import androidx.lifecycle.MutableLiveData
 
 object CallManager {
-    var currentCall: Call? = null
-    var phoneNumber: String? = null
+    val callState = MutableLiveData<Pair<Call, Int>>()
 
-    fun answer() {
-        currentCall?.answer(VideoProfile.STATE_AUDIO_ONLY)
+    val callList = MutableLiveData<List<Call>>()
+
+    fun updateCall(call: Call, state: Int) {
+        callState.postValue(call to state)
     }
 
-    fun disconnect() {
-        currentCall?.disconnect()
+    fun updateCallList(list: List<Call>) {
+        callList.postValue(list)
     }
 }

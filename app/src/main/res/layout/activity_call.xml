@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
@@ -15,36 +14,19 @@
         android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/white"
         android:orientation="vertical"
         tools:context=".activities.call.CallActivity">
 
-        <TextView
-            android:id="@+id/tv_caller_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="@dimen/_20sdp"
-            android:text=""
-            android:textSize="@dimen/_20sdp"
-            android:textStyle="bold" />
+        <include
+            android:id="@+id/in_incoming_layout"
+            layout="@layout/incoming_call_design"
+            android:visibility="gone" />
 
-
-        <Button
-            android:id="@+id/btn_call_Receive"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
-            android:text="Call Recive" />
-
-        <Button
-            android:id="@+id/btn_call_end"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="@dimen/_10sdp"
-            android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
-            android:text="Call End" />
+        <include
+            android:id="@+id/in_outgoing_call_layout"
+            layout="@layout/outgoing_call_design"
+            android:visibility="gone" />
 
 
     </LinearLayout>

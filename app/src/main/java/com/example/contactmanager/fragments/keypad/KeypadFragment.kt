@@ -3,40 +3,57 @@ package com.example.contactmanager.fragments.keypad
 import android.Manifest
 import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_OK
+import android.app.Dialog
 import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.telecom.TelecomManager
+import android.telephony.SubscriptionManager
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.contactmanager.databinding.FragmentKeypadBinding
 import com.example.contactmanager.utils.OnClickHandler
-import com.example.contactmanager.utils.PermissionDialog
 import com.example.contactmanager.utils.PermissionManager
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.newContact.NewContactActivity
+import com.example.contactmanager.adapters.AllContactsAdapter.ContactViewHolder
+import com.example.contactmanager.adapters.AllContactsAdapter.HeaderViewHolder
+import com.example.contactmanager.adapters.SuggestionAdapter
+import com.example.contactmanager.models.CallLogEntry
+import com.example.contactmanager.models.ContactListItem
+import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
-import com.example.contactmanager.utils.Constance
+import com.example.contactmanager.utils.PermissionManager.isDefaultDialer
+import com.example.contactmanager.viewmodels.ContactViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import kotlin.getValue
 
 @AndroidEntryPoint
 class KeypadFragment : Fragment(), OnClickHandler {
     private lateinit var binding: FragmentKeypadBinding
+    private val viewModel: ContactViewModel by viewModels()
+    private var contactList: ArrayList<ContactModel> = ArrayList()
+
+    private lateinit var adapter: SuggestionAdapter
 
     private val keyMap = mapOf(
         R.id.linear1 to "1",
@@ -159,6 +176,48 @@ class KeypadFragment : Fragment(), OnClickHandler {
         binding.inHeader.tvTitle.text = requireActivity().getString(R.string.phone)
         binding.inHeader.cvMore.isVisible = true
 
+        allPermissionGranted()
+
+        adapter = SuggestionAdapter()
+        binding.rvSuggestions.adapter = adapter
+        binding.rvSuggestions.layoutManager = LinearLayoutManager(requireActivity())
+
+        if (PermissionManager.hasPermissions(requireActivity())) {
+            viewModel.loadAllContacts()
+        }
+
+        viewModel.allContactList.observe(requireActivity()) { allContacts ->
+            if (allContacts.isNotEmpty()) {
+                val list = allContacts
+                    .filterIsInstance<ContactListItem.Contact>()
+                    .map { it.data }
+                contactList.addAll(ArrayList(list))
+                adapter.addAll(contactList)
+            } else {
+                binding.rvSuggestions.isVisible = false
+                binding.llOptionsSuggestions.isVisible = false
+            }
+        }
+
+        binding.edtDisplayNumber.addTextChangedListener { editable ->
+
+            val query = editable.toString().trim()
+
+            if (query.isEmpty()) {
+                binding.rvSuggestions.isVisible = false
+                return@addTextChangedListener
+            }
+
+            val result = adapter.filter(query)
+
+            if (result.isEmpty()) {
+                binding.rvSuggestions.isVisible = false
+            } else {
+                binding.rvSuggestions.isVisible = true
+            }
+            binding.llOptionsSuggestions.isVisible = true
+        }
+
         binding.buttonDelete.setOnLongClickListener {
             clearNumber()
             true
@@ -223,7 +282,7 @@ class KeypadFragment : Fragment(), OnClickHandler {
     fun allPermissionGranted() {
         if (PermissionManager.hasPermissions(requireActivity()) && Settings.canDrawOverlays(
                 requireActivity()
-            )
+            ) && isDefaultDialer(requireActivity())
         ) {
             Log.e("TAG", "allPermissionGranted: false")
             binding.llDefaultUi.visibility = View.GONE
@@ -297,6 +356,7 @@ class KeypadFragment : Fragment(), OnClickHandler {
                      intent.data = Uri.parse("tel:$number")
                      startActivity(intent)
                      makeCall(number)*/
+                    actionCall(number,requireActivity())
                 }
             }
 
@@ -333,20 +393,73 @@ class KeypadFragment : Fragment(), OnClickHandler {
         }
     }
 
-    fun makeCall(number: String) {
+    fun actionCall(phoneNumber: String, context: Context) {
+        if (phoneNumber.isEmpty()) return
 
-        val telecomManager =
-            requireContext().getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+        val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
+            ?: return
 
-        val uri = Uri.fromParts("tel", number, null)
+        val callUri = Uri.fromParts("tel", phoneNumber, null)
+        val callBundle = Bundle().apply {
+            putBoolean("android.telecom.extra.START_CALL_WITH_SPEAKERPHONE", false)
+        }
 
-        if (ContextCompat.checkSelfPermission(
-                requireContext(), Manifest.permission.CALL_PHONE
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CALL_PHONE
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            telecomManager.placeCall(uri, Bundle())
-        } else {
-            Toast.makeText(requireContext(), "Permission required", Toast.LENGTH_SHORT).show()
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+                val subscriptionManager =
+                    context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+                val activeSimList = subscriptionManager?.activeSubscriptionInfoList
+
+                if (!activeSimList.isNullOrEmpty() && activeSimList.size > 1) {
+
+                    val simNames = Array(activeSimList.size) { i ->
+                        "SIM ${i + 1}"
+                    }
+
+                    val builder = MaterialAlertDialogBuilder(context)
+
+                    builder.setTitle("Select SIM")
+                        .setItems(simNames) { _, which ->
+
+                            val selectedSim = activeSimList[which]
+
+                            val callBundle2 = Bundle().apply {
+                                putParcelable(
+                                    TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
+                                    Common.getHandleForSubId(
+                                        selectedSim.subscriptionId,
+                                        context
+                                    )
+                                )
+                            }
+
+                            val callUri2 = Uri.fromParts("tel", phoneNumber, null)
+                            telecomManager.placeCall(callUri2, callBundle2)
+                        }
+
+                    val dialog = builder.create()
+                    dialog.show()
+
+                    dialog.getButton(Dialog.BUTTON_POSITIVE)?.setTextColor(Color.RED)
+
+                } else {
+                    // Single SIM
+                    telecomManager.placeCall(callUri, callBundle)
+                }
+
+            } else {
+                // Pre-Marshmallow
+                val intent = Intent(Intent.ACTION_CALL).apply {
+                    data = "tel:${phoneNumber}".toUri()
+                }
+                context.startActivity(intent)
+            }
         }
     }
 }

@@ -1,10 +1,9 @@
 plugins {
     alias(libs.plugins.android.application)
 //    alias(libs.plugins.kotlin.android)
-    id("org.jetbrains.kotlin.plugin.parcelize")
+
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
-    id("kotlin-parcelize")
 }
 
 android {
@@ -34,6 +33,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -53,7 +53,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
+    implementation(libs.eventbus)
 
     //lifeCycleScopes
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0")
@@ -74,7 +74,8 @@ dependencies {
 
     implementation("com.googlecode.libphonenumber:libphonenumber:8.13.38")
 
-    implementation("io.github.jeremyliao:live-event-bus:1.8.0")
+
+//    implementation("io.github.jeremyliao:live-event-bus:1.8.0")
 
 
 }

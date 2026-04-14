@@ -9,6 +9,7 @@ import dagger.hilt.android.HiltAndroidApp
 class ApplicationClass : Application() {
 
     var appCall: Call? = null
+    var newCall: Call? = null
     var inCallService: InCallMainService? = null
 
     override fun onCreate() {

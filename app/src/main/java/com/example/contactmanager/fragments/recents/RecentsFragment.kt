@@ -50,6 +50,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import androidx.core.net.toUri
+import com.example.contactmanager.activities.call.CallActivity
 
 @AndroidEntryPoint
 class RecentsFragment : Fragment(), OnClickHandler {
@@ -148,7 +149,12 @@ class RecentsFragment : Fragment(), OnClickHandler {
                     clearHistory,
                     settings,
                     option1Click = {
-                        Toast.makeText(requireActivity(), clearHistory, Toast.LENGTH_SHORT).show()
+                        requireActivity().startActivity(
+                            Intent(
+                                requireActivity(),
+                                CallActivity::class.java
+                            )
+                        )
                     },
                     option2Click = {
                         requireActivity().startActivity(

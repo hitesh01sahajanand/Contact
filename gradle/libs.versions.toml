@@ -9,6 +9,11 @@ material = "1.13.0"
 activity = "1.13.0"
 constraintlayout = "2.2.1"
 kotlin = "2.0.0"
+#Goodwy
+right-commons = "e00d817e3e"
+#Eventbus
+eventbus = "3.3.1"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -19,6 +24,14 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+
+#Goodwy
+goodwy-commons-gplay = { module = "com.github.goodwy.goodwy-commons:commons-gplay", version.ref = "right-commons" }
+goodwy-commons-foss = { module = "com.github.goodwy.goodwy-commons:commons-foss", version.ref = "right-commons" }
+goodwy-commons-rustore = { module = "com.github.goodwy.goodwy-commons:commons-rustore", version.ref = "right-commons" }
+goodwy-commons-hms = { module = "com.github.goodwy.goodwy-commons:commons-hms", version.ref = "right-commons" }
+#EventBus
+eventbus = { module = "org.greenrobot:eventbus", version.ref = "eventbus" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -1,29 +1,101 @@
 package com.example.contactmanager.services
 
-import android.app.Notification
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Person
 import android.content.Intent
-import android.os.Build
-import android.os.Handler
-import android.os.Looper
-import android.os.Message
 import android.telecom.Call
 import android.telecom.InCallService
-import com.example.contactmanager.ApplicationClass
-import com.example.contactmanager.R
 import com.example.contactmanager.activities.call.CallActivity
-import com.example.contactmanager.models.CallObjModel
-import com.example.contactmanager.utils.CallListenerService
-import com.example.contactmanager.utils.Constance
-import com.jeremyliao.liveeventbus.LiveEventBus
+import com.example.contactmanager.utils.Common.powerManager
+import com.example.contactmanager.utils.NewCallManager
+import com.example.contactmanager.utils.isOutgoing
+
 
 class InCallMainService : InCallService() {
+    private val context = this
 
-    var call: Call? = null
+    private val callListener = object : Call.Callback() {
+        override fun onStateChanged(call: Call, state: Int) {
+            super.onStateChanged(call, state)
+            if (state == Call.STATE_DISCONNECTED || state == Call.STATE_DISCONNECTING) {
+//                callNotificationManager.cancelNotification()
+            } else {
+//                callNotificationManager.setupNotification()
+            }
+
+            /*try {
+                if (baseConfig.flashForAlerts) MyCameraImpl.newInstance(context).stopSOS()
+            } catch (_: Exception) { }*/
+        }
+    }
+
+    override fun onCallAdded(call: Call) {
+        super.onCallAdded(call)
+        NewCallManager.onCallAdded(call)
+        NewCallManager.inCallService = this
+        call.registerCallback(callListener)
+
+        try {
+            val intent = CallActivity.getStartIntent(this)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        // Incoming/Outgoing (locked): high priority (FSI)
+        // Incoming (unlocked): if user opted in, low priority ➜ manual activity start, otherwise high priority (FSI)
+        // Outgoing (unlocked): low priority ➜ manual activity start
+        val isOutgoing = call.isOutgoing()
+        val isIncoming = !isOutgoing
+        val isDeviceLocked = !powerManager.isInteractive //|| keyguardManager.isDeviceLocked
+        val lowPriority = when {
+            isDeviceLocked -> false // High priority on locked screen
+//            isIncoming && !isDeviceLocked -> config.showIncomingCallsFullScreen
+            else -> true
+        }
+
+        /*if (
+            lowPriority
+            || !hasPermission(PERMISSION_POST_NOTIFICATIONS)
+            || !canUseFullScreenIntent()
+        ) {
+            try {
+                val needSelectSIM = isOutgoing && call.details.accountHandle == null
+                startActivity(CallActivity.getStartIntent(this, needSelectSIM = needSelectSIM))
+            } catch (e: Exception) {
+                // seems like startActivity can throw AndroidRuntimeException and
+                // ActivityNotFoundException, not yet sure when and why, lets show a notification
+//                callNotificationManager.setupNotification()
+                context.baseConfig.lastError = "CallService: $e"
+            }
+        }
+        callNotificationManager.setupNotification(lowPriority)*/
+    }
+
+    override fun onCallRemoved(call: Call) {
+        super.onCallRemoved(call)
+        call.unregisterCallback(callListener)
+//        callNotificationManager.cancelNotification()
+        val wasPrimaryCall = call == NewCallManager.getPrimaryCall()
+        NewCallManager.onCallRemoved(call)
+//        EventBus.getDefault().post(Events.RefreshCallLog)
+        if (NewCallManager.getPhoneState() == NewCallManager.NoCall) {
+            NewCallManager.inCallService = null
+//            callNotificationManager.cancelNotification()
+        } else {
+//            callNotificationManager.setupNotification()
+            if (wasPrimaryCall) {
+                startActivity(CallActivity.getStartIntent(this))
+            }
+        }
+
+        /* try {
+             if (baseConfig.flashForAlerts) MyCameraImpl.newInstance(this).stopSOS()
+         } catch (_: Exception) { }*/
+    }
+
+    /*var call: Call? = null
     var callService: InCallMainService? = null
-    var colorCallNotificationListenerService: CallListenerService? = null
+//    var colorCallNotificationListenerService: CallListenerService? = null
     private var incomingNumber: String? = null
 //    private var preference: Preference? = null
 
@@ -54,15 +126,15 @@ class InCallMainService : InCallService() {
 
                     startActivity(intent)
 
-                    /* if (message.arg1 == 1 && calls.size > 1) {
-                         LiveEventBus.get(ConstantUtils.UPDATE_CALL_LIST)
-                             .postDelay(call, 100L)
-                     }*/
+                    if (message.arg1 == 1 && calls.size > 1) {
+                        CallManager.updateCallList(calls)
+
+                    }
                 }
 
-                /*if (message.what == 269488144 && isXiaomiFamily()) {
-                    colorCallNotificationListenerService?.createIncomingNotification(message.obj as NotificationViewModel)
-                }*/
+                if (message.what == 269488144 && isXiaomiFamily()) {
+//                    colorCallNotificationListenerService?.createIncomingNotification(message.obj as NotificationViewModel)
+                }
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -73,39 +145,52 @@ class InCallMainService : InCallService() {
     inner class CallbackService(val service: InCallMainService) : Call.Callback() {
 
         override fun onChildrenChanged(call: Call, list: MutableList<Call>) {
-            LiveEventBus
-                .get<Call>(Constance.UPDATE_CALL_TO_CONFERENCE)
-                .post(call)
+            CallManager.updateCallList(service.calls)
         }
 
         override fun onParentChanged(call: Call, parent: Call?) {
             parent?.let {
-                LiveEventBus.get<Call>(Constance.UPDATE_CALL_TO_CONFERENCE).post(it)
+                CallManager.updateCallList(service.calls)
             }
         }
 
         override fun onStateChanged(call: Call, state: Int) {
-            LiveEventBus
-                .get<CallObjModel>(Constance.UPDATE_CALL_STATE)
-                .post(CallObjModel(call, state))
 
-            (applicationContext as ApplicationClass).appCall = call
-            stopLED()
+            val app = applicationContext as ApplicationClass
+
+            app.appCall = call
+
+            CallManager.updateCall(call, state)
+            CallManager.updateCallList(service.calls)
 
             when (state) {
-                Call.STATE_ACTIVE -> showOngoingCallNotification(call)
 
-                Call.STATE_DISCONNECTED,
+                Call.STATE_RINGING -> {
+                    // incoming
+                }
+
+                Call.STATE_DIALING,
+                Call.STATE_CONNECTING -> {
+                    // outgoing
+                }
+
+                Call.STATE_ACTIVE -> {
+                    // active
+                }
+
+                // 🔥 FIX HERE
                 Call.STATE_DISCONNECTING -> {
-                    stopOngoingCallNotification()
-                    cancelLegacyCallNotifications()
+                    // 🔥 immediately close UI
+                    CallManager.updateCallList(emptyList())
+                }
 
-                    /*SimpleCallScreeningService.getCallerIdPopup()?.apply {
-                        close()
-                        SimpleCallScreeningService.setCallerIdPopup(null)
-                    }*/
+                Call.STATE_DISCONNECTED -> {
+                    app.appCall = null
+                    CallManager.updateCallList(emptyList())
                 }
             }
+
+            stopLED()
         }
     }
 
@@ -179,37 +264,83 @@ class InCallMainService : InCallService() {
 
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
+        Log.e("TAG", "onCallAdded: $calls")
+
 
         this.call = call
-        (applicationContext as ApplicationClass).appCall = call
+
+        val app = applicationContext as ApplicationClass
+        app.appCall = call
 
         call.registerCallback(callbackService)
 
-        incomingNumber = call.details?.handle?.schemeSpecificPart
+        val state = call.state
 
-        if (call.state == Call.STATE_RINGING) {
-            handler.sendMessage(Message().apply {
-                what = 1010109
-                arg1 = -1
-            })
+        // ✅ IMPORTANT: update LiveData
+        CallManager.updateCall(call, state)
+        CallManager.updateCallList(calls)
+
+        if (state == Call.STATE_RINGING) {
+            sendCallActivityMessage(-1)
+            return
         }
 
-        if (call.state == Call.STATE_ACTIVE) {
-            showOngoingCallNotification(call)
+        if (state == Call.STATE_DIALING || state == Call.STATE_CONNECTING) {
+            sendCallActivityMessage(1)
         }
+    }
+
+    private fun sendCallActivityMessage(arg: Int) {
+        handler.sendMessage(Message().apply {
+            what = 1010109
+            arg1 = arg
+        })
+    }
+
+    private fun createIncomingNotification(callModel: CallingModel) {
+
+        val notificationModel = NotificationViewModel().apply {
+            this.callModel = callModel
+
+            val number = callModel.call?.details?.handle?.schemeSpecificPart
+
+            phoneNumberOfCall = number
+//            nameFromCall = PhoneBookUtils.searchDisplayName(this@InCallMainService, number)
+//            imageOfUserCall = Utility.getImageOfUserCall(callModel, this@InCallMainService)
+        }
+
+        val message = Message().apply {
+            obj = notificationModel
+            what = 269488144
+        }
+
+        handler.sendMessage(message)
     }
 
     override fun onCallRemoved(call: Call) {
         super.onCallRemoved(call)
         call.unregisterCallback(callbackService)
 
+        val app = applicationContext as ApplicationClass
+
+        if (app.appCall == call) {
+            app.appCall = null
+        }
+
+        if (app.newCall == call) {
+            app.newCall = null
+        }
+
+
+        CallManager.updateCallList(emptyList())
+
         stopOngoingCallNotification()
         cancelLegacyCallNotifications()
 
-        /*SimpleCallScreeningService.getCallerIdPopup()?.apply {
+        *//*SimpleCallScreeningService.getCallerIdPopup()?.apply {
             close()
             SimpleCallScreeningService.setCallerIdPopup(null)
-        }*/
+        }*//*
     }
 
     override fun onCreate() {
@@ -218,23 +349,23 @@ class InCallMainService : InCallService() {
 //        preference = Preference(this)
 
         (applicationContext as ApplicationClass).inCallService = this
-        colorCallNotificationListenerService = CallListenerService(applicationContext)
+//        colorCallNotificationListenerService = CallListenerService(applicationContext)
     }
 
     fun starLED() {
-        /*if (!isLedOn && PreferenceUtils.getInstance()
+        *//*if (!isLedOn && PreferenceUtils.getInstance()
                 .getBoolean(ConstantUtils.LED_FLASH)
         ) {
             FlashLightUtils.get(this).blink(800, -1)
             isLedOn = true
-        }*/
+        }*//*
     }
 
     fun stopLED() {
-        /*if (isLedOn) {
+        *//*if (isLedOn) {
             FlashLightUtils.get(this).stopBlinking()
             FlashLightUtils.get(this).blink(800, 1)
             isLedOn = false
-        }*/
-    }
+        }*//*
+    }*/
 }
