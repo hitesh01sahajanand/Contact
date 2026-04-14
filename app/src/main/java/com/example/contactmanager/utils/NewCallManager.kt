@@ -121,11 +121,15 @@ class NewCallManager {
             call?.answer(VideoProfile.STATE_AUDIO_ONLY)
         }
 
-        fun reject(rejectWithMessage: Boolean = false, textMessage: String? = null) {
+        fun reject() {
             if (call != null) {
                 val state = getState()
                 if (state == Call.STATE_RINGING) {
-                    call!!.reject(rejectWithMessage, textMessage)
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                        call!!.reject(Call.REJECT_REASON_DECLINED)
+                    } else {
+                        call!!.reject(false, null)
+                    }
                 } else if (state != Call.STATE_DISCONNECTED && state != Call.STATE_DISCONNECTING) {
                     call!!.disconnect()
                 }

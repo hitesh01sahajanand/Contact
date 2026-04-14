@@ -2,11 +2,9 @@ package com.example.contactmanager.activities.call
 
 import android.annotation.SuppressLint
 import android.app.KeyguardManager
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
@@ -19,39 +17,26 @@ import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
-import com.example.contactmanager.ApplicationClass
 import com.example.contactmanager.R
 import com.example.contactmanager.databinding.ActivityCallBinding
+import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.NewCallManager
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.getStateCompat
-import com.example.contactmanager.viewmodels.CallViewModel
-import dagger.hilt.android.AndroidEntryPoint
 
-@AndroidEntryPoint
 class CallActivity : AppCompatActivity(), OnClickHandler {
     private lateinit var binding: ActivityCallBinding
-    private val viewModel: CallViewModel by viewModels()
-
-    val messages = listOf(
-        "Can't talk right now",
-        "Call you later",
-        "In a meeting",
-        "Busy, text me"
-    )
-
     private var mProximityWakeLock: WakeLock? = null
 
     companion object {
-        fun getStartIntent(context: Context, needSelectSIM: Boolean = false): Intent {
+        fun getStartIntent(context: Context): Intent {
             val openAppIntent = Intent(context, CallActivity::class.java)
-//            openAppIntent.putExtra(NEED_SELECT_SIM, needSelectSIM)
-            //Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT --removed it, it can cause a full screen ringing instead of notifications
             openAppIntent.flags =
                 Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
             return openAppIntent
@@ -65,28 +50,14 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         initView()
     }
 
-    private val receiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            finish()
-        }
-    }
-
     private fun initView() {
-
         binding.onClickHandler = this
         binding.inIncomingLayout.onClickHandler = this
         binding.inOutgoingCallLayout.onClickHandler = this
 
         makeFullScreenImmersive()
 
-        val isFromNotification = intent.getBooleanExtra("fromNotification", false)
-        val isNew = intent.getBooleanExtra("isNew", false)
-
-        if (isFromNotification || isNew) {
-//            setUI()
-        }
-
-//        observeViewModel()
+        updateUI()
     }
 
     override fun onStart() {
@@ -113,66 +84,96 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
             updateUI()
         }
 
-        override fun onAudioStateChanged() {}
-        override fun onMuteChanged(isMuted: Boolean) {}
+        override fun onAudioStateChanged() {
+            runOnUiThread {
+                NewCallManager.inCallService?.callAudioState?.let {
+                    updateAudioUI(it)
+                }
+            }
+        }
+
+        override fun onMuteChanged(isMuted: Boolean) {
+            runOnUiThread {
+                NewCallManager.inCallService?.callAudioState?.let {
+                    updateAudioUI(it)
+                }
+            }
+        }
     }
 
     private fun updateUI() {
-        val call = NewCallManager.getPrimaryCall() ?: return
+        val call = NewCallManager.getPrimaryCall()
+        if (call == null) {
+            // Support explicit manual testing launch from Recent Fragment
+            val isNew = intent.getBooleanExtra("isNew", false)
+            if (isNew) {
+                // Dummy UI rendering for testing since there's no live call
+                binding.inIncomingLayout.root.isVisible = true
+                binding.inOutgoingCallLayout.root.isVisible = false
+                binding.inIncomingLayout.tvNumberName.text = "Test Caller"
+                binding.inIncomingLayout.tvCalling.text = "Incoming Call"
+                return
+            }
+
+            removeProximitySensor()
+            finish()
+            return
+        }
+
+        // Keep visual buttons synced
+        updateHoldUI(call)
+        NewCallManager.inCallService?.callAudioState?.let { updateAudioUI(it) }
+
         val state = call.getStateCompat()
         val number = call.details.handle?.schemeSpecificPart ?: "Unknown"
         val name = call.details.callerDisplayName ?: number
         when (state) {
             Call.STATE_RINGING -> {
-//                showIncomingUI()
                 binding.inIncomingLayout.tvNumberName.text = name
-                binding.inIncomingLayout.tvCalling.text = "Incoming Call"
+                binding.inIncomingLayout.tvCalling.text = getString(R.string.incoming_call)
 
                 binding.inIncomingLayout.root.isVisible = true
                 binding.inOutgoingCallLayout.root.isVisible = false
-
-                Toast.makeText(
-                    this,
-                    "Incoming Call ${call.details.callerDisplayName}",
-                    Toast.LENGTH_SHORT
-                ).show()
             }
 
             Call.STATE_DIALING, Call.STATE_CONNECTING -> {
-//                showOutgoingUI()
-
                 binding.inOutgoingCallLayout.root.isVisible = true
                 binding.inIncomingLayout.root.isVisible = false
 
                 binding.inOutgoingCallLayout.tvNumberName.text = name
                 binding.inOutgoingCallLayout.tvNumber.text = number
-                Toast.makeText(
-                    this,
-                    "Outgoing ${call.details.callerDisplayName}",
-                    Toast.LENGTH_SHORT
-                ).show()
-
+                binding.inOutgoingCallLayout.chronometer.stop()
+                binding.inOutgoingCallLayout.chronometer.text = getString(R.string.calling_)
             }
 
             Call.STATE_ACTIVE -> {
-//                showOngoingUI()
-                Toast.makeText(
-                    this,
-                    "OnGoing Call ${call.details.callerDisplayName}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                startProximitySensor()
+                binding.inOutgoingCallLayout.root.isVisible = true
+                binding.inIncomingLayout.root.isVisible = false
+
+                binding.inOutgoingCallLayout.tvNumberName.text = name
+                binding.inOutgoingCallLayout.tvNumber.text = number
+
+                val connectTimeMillis = call.details.connectTimeMillis
+                if (connectTimeMillis > 0) {
+                    val durationMillis = System.currentTimeMillis() - connectTimeMillis
+                    binding.inOutgoingCallLayout.chronometer.base =
+                        android.os.SystemClock.elapsedRealtime() - durationMillis
+                } else {
+                    binding.inOutgoingCallLayout.chronometer.base =
+                        android.os.SystemClock.elapsedRealtime()
+                }
+                binding.inOutgoingCallLayout.chronometer.start()
             }
 
             Call.STATE_HOLDING -> {
-//                showHoldUI()
-                Toast.makeText(
-                    this,
-                    "ON Hold Call ${call.details.callerDisplayName}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                binding.inOutgoingCallLayout.chronometer.stop()
+                binding.inOutgoingCallLayout.chronometer.text = getString(R.string.on_hold)
             }
 
-            Call.STATE_DISCONNECTED -> {
+            Call.STATE_DISCONNECTED, Call.STATE_DISCONNECTING -> {
+                binding.inOutgoingCallLayout.chronometer.stop()
+                removeProximitySensor()
                 finish()
             }
         }
@@ -180,44 +181,25 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
 
     override fun onClick(view: View) {
         when (view.id) {
-
             binding.inIncomingLayout.llRemindMe.id -> {
-
-                /*  val number = (application as ApplicationClass).appCall
-                      ?.details?.handle?.schemeSpecificPart
-
-                  Toast.makeText(this, "Reminder set for $number", Toast.LENGTH_SHORT).show()
-
-                  Handler(Looper.getMainLooper()).postDelayed({
-                      Toast.makeText(this, "Call back $number", Toast.LENGTH_LONG).show()
-                  }, 10 * 60 * 1000) // 10 min*/
+                Common.showRemindMeDialog(this, onReminderSet = {
+                    Toast.makeText(this, getString(R.string.remind_me), Toast.LENGTH_SHORT).show()
+                })
 
             }
 
             binding.inIncomingLayout.llMessage.id -> {
-
-                /*  val number = (application as ApplicationClass).appCall
-                      ?.details?.handle?.schemeSpecificPart
-
-                  val smsIntent = Intent(Intent.ACTION_SENDTO).apply {
-                      data = "smsto:$number".toUri()
-                      putExtra("sms_body", messages[0]) // default
-                  }
-                  startActivity(smsIntent)*/
+                Common.showMessageDialog(this, onItemClick = { messages ->
+                    sendSMSMessage(messages)
+                    NewCallManager.reject()
+                })
             }
 
             binding.inIncomingLayout.llCallDecline.id -> {
-                /*  val call = (application as ApplicationClass).appCall
-                  call?.reject(false, null)
-                  CallManager.updateCallList(emptyList())
-                  finish()*/
                 NewCallManager.reject()
-                finish()
             }
 
             binding.inIncomingLayout.llCallAccept.id -> {
-                /* val call = (application as ApplicationClass).appCall
-                 call?.answer(call.details.videoState)*/
                 NewCallManager.accept()
             }
 
@@ -225,261 +207,129 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
 
             }
 
-            binding.inOutgoingCallLayout.llHold.id -> {
+            binding.inOutgoingCallLayout.llMerge.id -> {
 
+            }
+
+            binding.inOutgoingCallLayout.llSwap.id -> {
+
+            }
+
+            binding.inOutgoingCallLayout.llHold.id -> {
+                NewCallManager.toggleHold()
             }
 
             binding.inOutgoingCallLayout.llBluetooth.id -> {
+                val service = NewCallManager.inCallService ?: return
+                val isBluetooth = service.callAudioState.route == CallAudioState.ROUTE_BLUETOOTH
 
+                service.setAudioRoute(
+                    if (isBluetooth)
+                        CallAudioState.ROUTE_WIRED_OR_EARPIECE
+                    else
+                        CallAudioState.ROUTE_BLUETOOTH
+                )
             }
 
             binding.inOutgoingCallLayout.llSpeaker.id -> {
+                val service = NewCallManager.inCallService ?: return
 
+                val isSpeaker = service.callAudioState.route == CallAudioState.ROUTE_SPEAKER
+
+                service.setAudioRoute(
+                    if (isSpeaker)
+                        CallAudioState.ROUTE_WIRED_OR_EARPIECE   // 📞 Earpiece
+                    else
+                        CallAudioState.ROUTE_SPEAKER             // 📢 Loudspeaker
+                )
             }
 
             binding.inOutgoingCallLayout.llMute.id -> {
-
+                val service = NewCallManager.inCallService ?: return
+                service.setMuted(!service.callAudioState.isMuted)
             }
 
             binding.inOutgoingCallLayout.ivRejectCall.id -> {
-                /*val call = (application as ApplicationClass).appCall
-                call?.disconnect()
-                finish()*/
                 NewCallManager.reject()
-                finish()
             }
-
-            /*binding.ll.id -> {
-                CallManager.disconnect()
-                finish()
-            }*/
         }
     }
 
-    private fun observeViewModel() {
 
-        viewModel.callState.observe(this) { (call, state) ->
-
-            val number = call.details.handle?.schemeSpecificPart ?: "Unknown"
-            val name = call.details.callerDisplayName ?: number
-
-            when (state) {
-
-                Call.STATE_RINGING -> {
-                    // ✅ Incoming call
-
-                    binding.inIncomingLayout.tvNumberName.text = name
-                    binding.inIncomingLayout.tvCalling.text = "Incoming Call"
-
-                    binding.inIncomingLayout.root.isVisible = true
-                    binding.inOutgoingCallLayout.root.isVisible = false
-
-                    Toast.makeText(
-                        this,
-                        "Incoming Call ${call.details.callerDisplayName}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-
-                Call.STATE_CONNECTING,
-                Call.STATE_DIALING -> {
-                    // ✅ Outgoing call
-                    binding.inOutgoingCallLayout.root.isVisible = true
-                    binding.inIncomingLayout.root.isVisible = false
-
-                    binding.inOutgoingCallLayout.tvNumberName.text = name
-                    binding.inOutgoingCallLayout.tvNumber.text = number
-                    Toast.makeText(
-                        this,
-                        "Outgoing ${call.details.callerDisplayName}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-
-                Call.STATE_ACTIVE -> {
-                    // ✅ Call connected (incoming ya outgoing dono ho sakta hai)
-                    startProximitySensor()
-                    binding.inOutgoingCallLayout.root.isVisible = true
-                    binding.inIncomingLayout.root.isVisible = false
-                    binding.inOutgoingCallLayout.tvNumberName.text = name
-                    binding.inOutgoingCallLayout.tvNumber.text = number
-
-                    Toast.makeText(this, "Active Call", Toast.LENGTH_SHORT).show()
-                }
-
-                Call.STATE_DISCONNECTING -> {
-                    removeProximitySensor()
-                    finish()
-                }
-
-                Call.STATE_DISCONNECTED -> {
-                    removeProximitySensor()
-                    (application as ApplicationClass).appCall = null
-                    finish()
-                    Toast.makeText(this, "End Call", Toast.LENGTH_SHORT).show()
-                }
-
-
-            }
-
-        }
-
-        /*viewModel.callList.observe(this) { list ->
-            if (list.isEmpty()) {
-                removeProximitySensor()
-                finish()
-                return@observe
-            }
-
-            val call = list.first()
-            val state = call.state
-
-            val name = call.details.handle?.schemeSpecificPart ?: "Unknown"
-
-            when (state) {
-                Call.STATE_RINGING -> {
-                    binding.inIncomingLayout.root.isVisible = true
-                    binding.inOutgoingCallLayout.root.isVisible = false
-                }
-
-                Call.STATE_DIALING,
-                Call.STATE_CONNECTING,
-                Call.STATE_ACTIVE -> {
-                    binding.inIncomingLayout.root.isVisible = false
-                    binding.inOutgoingCallLayout.root.isVisible = true
-                }
-            }
-        }*/
-    }
-
-
-    private fun toggleSpeaker() {
-        val service = (application as ApplicationClass).inCallService ?: return
-        val state = service.callAudioState
-
-        if (state.route != CallAudioState.ROUTE_SPEAKER) {
-            service.setAudioRoute(CallAudioState.ROUTE_SPEAKER)
-        } else {
-            service.setAudioRoute(CallAudioState.ROUTE_EARPIECE)
-        }
-    }
-
-    private fun toggleHold(call: Call) {
-        if (call.state == Call.STATE_HOLDING) {
-            call.unhold()
-        } else {
-            call.hold()
-        }
-    }
-
-    private fun showDialer(call: Call) {
-        /* val dialer = DialerNumberControl(this, binding.swapContactName)
-         if (!dialer.isVisible) {
-             dialer.showDialer(call)
-         }*/
-    }
-
-    private fun handleVideoCall(call: Call) {
-
-        val number = call.details.handle.schemeSpecificPart
-        val DUO = "com.google.android.apps.tachyon"
-
+    private fun sendSMSMessage(msg: String) {
         try {
-            val intent = Intent().apply {
-                action = "com.google.android.apps.tachyon.action.DIAL"
-                setPackage(DUO)
-                data = Uri.parse("tel:$number")
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            startActivity(intent)
-
-        } catch (e: Exception) {
-            Toast.makeText(this, "Something went wrong!", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun updateAudioUI(state: CallAudioState) {
-
-        // Speaker
-        val isSpeaker = state.route == CallAudioState.ROUTE_SPEAKER
-        /*binding.inOutgoingCallLayout.ivSpeaker.setBackgroundResource(
-            if (isSpeaker) R.drawable.call_vector_bg else 0
-        )
-
-        // Mute
-        binding.inOutgoingCallLayout.ivMute.setBackgroundResource(
-            if (state.isMuted) R.drawable.call_vector_bg else 0
-        )*/
-    }
-
-    private fun openQuickReplyDialog(call: Call) {
-
-        /*val prefs = getSharedPreferences("QuickResponsePrefs", Context.MODE_PRIVATE)
-        val list = prefs.getStringSet("quick_responses", emptySet())?.toList() ?: emptyList()
-
-        val arr = list.toTypedArray()
-
-        DialogViewManege.openMsgDialog(this, arr) { pos ->
-
-            if (pos == -100) {
-                declineCall(call)
-                sendSMS(call, "")
-            } else {
-                declineCall(call, arr[pos])
-            }
-        }*/
-    }
-
-    private fun openReminderDialog(call: Call) {
-
-        /*val times = longArrayOf(5 * 60 * 1000, 10 * 60 * 1000, 30 * 60 * 1000)
-
-        DialogViewManege.openReminderDialog(
-            this,
-            arrayOf("In 5 minute", "In 10 minute", "In 30 minute")
-        ) { pos ->
-
-            val intent = Intent(this, ReminderBroadCastReceive::class.java)
-            intent.putExtra("reminderNumber", call.details.handle.schemeSpecificPart)
-
-            val pendingIntent = PendingIntent.getBroadcast(
-                this,
-                0,
-                intent,
-                PendingIntent.FLAG_MUTABLE
-            )
-
-            val alarm = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-            val delay = if (pos == -100) 60 * 60 * 1000 else times[pos]
-
-            alarm.set(
-                AlarmManager.RTC_WAKEUP,
-                System.currentTimeMillis() + delay,
-                pendingIntent
-            )
-
-            declineCall(call)
-        }*/
-    }
-
-    private fun sendSMS(call: Call, msg: String) {
-        try {
+            val call = NewCallManager.getPrimaryCall() ?: return
             val number = call.details.handle.schemeSpecificPart
 
             val intent = Intent(Intent.ACTION_SENDTO).apply {
-                data = Uri.parse("smsto:$number")
+                data = "smsto:$number".toUri()
                 putExtra("sms_body", msg)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
-
             startActivity(intent)
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
+    private fun updateAudioUI(state: CallAudioState) {
+
+        val iconActiveColor = ContextCompat.getColor(this, R.color.white)
+        val iconInactiveColor = ContextCompat.getColor(this, R.color.black_color)
+
+        val cardActiveColor = ContextCompat.getColor(this, R.color.black_color)
+        val cardInactiveColor = ContextCompat.getColor(this, R.color.bg_color)
+
+        val route = state.route
+
+        val isSpeaker = route == CallAudioState.ROUTE_SPEAKER
+        val isBluetooth = route == CallAudioState.ROUTE_BLUETOOTH
+        val isEarpiece = route == CallAudioState.ROUTE_WIRED_OR_EARPIECE
+
+        val isMuted = state.isMuted
+
+        // 🔊 Speaker
+        binding.inOutgoingCallLayout.ivSpeaker.setColorFilter(
+            if (isSpeaker) iconActiveColor else iconInactiveColor
+        )
+        binding.inOutgoingCallLayout.cvSpeaker.setCardBackgroundColor(
+            if (isSpeaker) cardActiveColor else cardInactiveColor
+        )
+
+        // 🎧 Bluetooth
+        binding.inOutgoingCallLayout.ivBluetooth.setColorFilter(
+            if (isBluetooth) iconActiveColor else iconInactiveColor
+        )
+        binding.inOutgoingCallLayout.cvBluetooth.setCardBackgroundColor(
+            if (isBluetooth) cardActiveColor else cardInactiveColor
+        )
+
+        // 🎤 Mute
+        binding.inOutgoingCallLayout.ivMute.setColorFilter(
+            if (isMuted) iconActiveColor else iconInactiveColor
+        )
+        binding.inOutgoingCallLayout.cvMute.setCardBackgroundColor(
+            if (isMuted) cardActiveColor else cardInactiveColor
+        )
+    }
+
+
+    private fun updateHoldUI(call: Call) {
+        val isOnHold = call.getStateCompat() == Call.STATE_HOLDING
+
+        val iconActiveColor = ContextCompat.getColor(this, R.color.white)
+        val iconInactiveColor = ContextCompat.getColor(this, R.color.black_color)
+
+        val cardActiveColor = ContextCompat.getColor(this, R.color.black_color)
+        val cardInactiveColor = ContextCompat.getColor(this, R.color.bg_color)
+
+        binding.inOutgoingCallLayout.ivHold.setColorFilter(
+            if (isOnHold) iconActiveColor else iconInactiveColor
+        )
+        binding.inOutgoingCallLayout.cvHold.setCardBackgroundColor(
+            if (isOnHold) cardActiveColor else cardInactiveColor
+        )
+    }
 
     fun makeFullScreenImmersive() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -550,21 +400,11 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onResume() {
         super.onResume()
-        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(
-                receiver,
-                IntentFilter(Constance.CALL_DISCONNECTED),
-                RECEIVER_NOT_EXPORTED
-            )
-        } else {
-            registerReceiver(receiver, IntentFilter(Constance.CALL_DISCONNECTED))
-        }
-
-        val call = (application as ApplicationClass).appCall
-
-        if (call == null) {
+        val call = NewCallManager.getPrimaryCall()
+        val isNew = intent.getBooleanExtra("isNew", false)
+        if (call == null && !isNew) {
             finish()
-        }*/
+        }
     }
 
 
@@ -598,13 +438,5 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-
-    private fun getNumberFromCall(call: Call?): String? {
-        if (call == null || call.details == null) {
-            return null
-        }
-        val handle = call.details.handle ?: return null
-        return handle.schemeSpecificPart
     }
 }

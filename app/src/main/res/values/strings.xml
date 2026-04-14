@@ -29,6 +29,9 @@
     <string name="all_calls">All Calls</string>
     <string name="missed_calls">Missed Calls</string>
     <string name="incoming_calls">Incoming Calls</string>
+    <string name="incoming_call">Incoming Call</string>
+    <string name="calling_">Calling...</string>
+    <string name="on_hold">On Hold</string>
     <string name="outgoing_calls">Outgoing Calls</string>
     <string name="create_a_new_group">Create a new Group</string>
     <string name="speed_dial_number">Speed Dial Number</string>
@@ -55,6 +58,15 @@
     <string name="bluetooth">Bluetooth</string>
     <string name="speaker">Speaker</string>
     <string name="mute">Mute</string>
+    <string name="please_text_me">Please text me</string>
+    <string name="can_you_call_back_later">Can you call back later?</string>
+    <string name="i_ll_call_you_back">I’ll call you back</string>
+    <string name="enter_massage">Enter Massage</string>
+    <string name="send">Send</string>
+    <string name="write_a_new_message">Write a new message</string>
+    <string name="set_reminder">Set Reminder</string>
+    <string name="merge">Merge</string>
+    <string name="swap">Swap</string>
 
 
 </resources>

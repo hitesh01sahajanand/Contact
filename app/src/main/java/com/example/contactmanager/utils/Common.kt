@@ -2,7 +2,12 @@ package com.example.contactmanager.utils
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlarmManager
+import android.app.Dialog
+import android.app.PendingIntent
+import android.app.TimePickerDialog
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -10,24 +15,32 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.os.Build
 import android.os.PowerManager
 import android.provider.ContactsContract
+import android.provider.Settings
 import android.telephony.PhoneNumberUtils
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import android.widget.PopupWindow
+import android.widget.Toast
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.core.graphics.createBitmap
-import androidx.core.graphics.toColorInt
+import androidx.core.view.isVisible
 import com.example.contactmanager.R
 import com.example.contactmanager.databinding.PopUpMenuDesignBinding
+import com.example.contactmanager.databinding.SendMessageDialogDesignBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.io.ByteArrayOutputStream
 import java.util.Calendar
+import androidx.core.graphics.drawable.toDrawable
+import com.example.contactmanager.databinding.RemindMeDialogDesignBinding
+import com.example.contactmanager.receivers.ReminderReceiver
 
 object Common {
 
@@ -325,6 +338,161 @@ object Common {
             option2Click()
             popupWindow.dismiss()
         }
+    }
+
+    fun showMessageDialog(
+        context: Context,
+        onItemClick: (String) -> Unit
+    ) {
+
+        val dialog = Dialog(context)
+        val bindingSendMessage =
+            SendMessageDialogDesignBinding.inflate(LayoutInflater.from(context))
+
+        dialog.setContentView(bindingSendMessage.root)
+
+        // Optional: transparent background (important)
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+
+        val margin = (10 * context.resources.displayMetrics.density).toInt()
+
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+
+        dialog.window?.setLayout(
+            screenWidth - (margin * 3),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+
+        bindingSendMessage.tvTextMe.setOnClickListener {
+            onItemClick(bindingSendMessage.tvTextMe.text.toString())
+            dialog.dismiss()
+        }
+
+        bindingSendMessage.tvCallBack.setOnClickListener {
+            onItemClick(bindingSendMessage.tvCallBack.text.toString())
+            dialog.dismiss()
+        }
+
+        bindingSendMessage.tvCallLater.setOnClickListener {
+            onItemClick(bindingSendMessage.tvCallLater.text.toString())
+            dialog.dismiss()
+        }
+
+        bindingSendMessage.cvAddMessage.setOnClickListener {
+            bindingSendMessage.llSendMessage.isVisible = !bindingSendMessage.llSendMessage.isVisible
+        }
+
+        bindingSendMessage.cvSend.setOnClickListener {
+            onItemClick(bindingSendMessage.edtSendMassage.text.toString())
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+
+    fun showRemindMeDialog(
+        context: Context,
+        onReminderSet: () -> Unit = {}
+    ) {
+        val dialog = Dialog(context)
+        val binding = RemindMeDialogDesignBinding.inflate(LayoutInflater.from(context))
+
+        dialog.setContentView(binding.root)
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+
+        val margin = (20 * context.resources.displayMetrics.density).toInt()
+        val screenWidth = context.resources.displayMetrics.widthPixels
+
+        dialog.window?.setLayout(
+            screenWidth - margin,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        // ✅ Set current time by default
+        val now = Calendar.getInstance()
+
+        binding.timePicker.hour = now.get(Calendar.HOUR_OF_DAY)
+        binding.timePicker.minute = now.get(Calendar.MINUTE)
+
+        // ✅ 12-hour format (AM/PM)
+        binding.timePicker.setIs24HourView(false)
+
+        // ⏰ Set Reminder Click
+        binding.cvSetReminder.setOnClickListener {
+
+            val hour: Int = binding.timePicker.hour
+            val minute: Int = binding.timePicker.minute
+
+            val selectedCal = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, hour)
+                set(Calendar.MINUTE, minute)
+                set(Calendar.SECOND, 0)
+            }
+
+            if (selectedCal.before(Calendar.getInstance())) {
+                Toast.makeText(context, "Please select future time", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // ✅ Set reminder
+            setReminder(context, hour, minute)
+
+            onReminderSet()
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    fun setReminder(context: Context, hour: Int, minute: Int) {
+
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
+            set(Calendar.SECOND, 0)
+        }
+
+        val now = Calendar.getInstance()
+
+        // ❗ Only today allowed
+        if (calendar.before(now)) {
+            Toast.makeText(context, "Please select future time", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val intent = Intent(context, ReminderReceiver::class.java)
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            System.currentTimeMillis().toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+
+            if (!alarmManager.canScheduleExactAlarms()) {
+                // ❗ open settings safely
+                val intentSetting = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                intentSetting.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                context.startActivity(intentSetting)
+
+                Toast.makeText(context, "Please allow exact alarm permission", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+
+        // ✅ Alarm set
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            calendar.timeInMillis,
+            pendingIntent
+        )
     }
 
     val Context.powerManager: PowerManager
