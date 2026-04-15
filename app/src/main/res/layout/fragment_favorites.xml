@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="@dimen/_10sdp"
             android:layout_marginTop="@dimen/_3sdp"
-            app:cardBackgroundColor="@color/bg_color"
+            app:cardBackgroundColor="@color/white"
             app:cardCornerRadius="@dimen/_10sdp"
             app:cardElevation="0dp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -92,22 +92,28 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:gravity="center"
-                android:text="Tap the “+” button and \nadd favorite contact"
+                android:text="@string/tap_the_button"
                 android:textColor="@color/black_color" />
 
         </LinearLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_favorite"
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="wrap_content"
             android:layout_marginHorizontal="@dimen/_10sdp"
-            android:paddingTop="@dimen/_10sdp"
-            android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginTop="@dimen/_10sdp"
+            app:cardCornerRadius="@dimen/_10sdp"
+            app:cardElevation="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/cv_search" />
+            app:layout_constraintTop_toBottomOf="@+id/cv_search">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_favorite"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="visible" />
+        </androidx.cardview.widget.CardView>
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

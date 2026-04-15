@@ -14,6 +14,7 @@
     <color name="main_color">#327DFF</color>
     <color name="black_color">#151515</color>
     <color name="border_color">#CDD1D6</color>
+    <color name="border_color_2">#DBE2E5</color>
 
 
     <color name="color_1">#E5847D</color>
@@ -22,6 +23,8 @@
     <color name="color_4">#F26D97</color>
     <color name="color_5">#5FCA83</color>
     <color name="color_6">#F8C65A</color>
+    <color name="color_block">#E92011</color>
+    <color name="black_new_light">#808080</color>
 
 
 </resources>

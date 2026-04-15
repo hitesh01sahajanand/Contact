@@ -131,7 +131,8 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         val phoneState = NewCallManager.getPhoneState()
         binding.inOutgoingCallLayout.llConference.isVisible = phoneState is NewCallManager.TwoCalls
         binding.inOutgoingCallLayout.llAddCall.isVisible = NewCallManager.canAddCall()
-        binding.inOutgoingCallLayout.llAddCall.alpha = if (NewCallManager.canAddCall()) 1.0f else 0.5f
+        binding.inOutgoingCallLayout.llAddCall.alpha =
+            if (NewCallManager.canAddCall()) 1.0f else 0.5f
 
         // Let the system handle capability-based merging
         binding.inOutgoingCallLayout.llMerge.isEnabled = true

@@ -14,7 +14,6 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white"
         android:orientation="vertical"
         tools:context=".fragments.keypad.KeypadFragment">
 
@@ -93,7 +92,7 @@
             android:id="@+id/ll_keypad_ui"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/white"
+            android:background="@color/bg_color"
             android:orientation="vertical"
             android:visibility="visible">
 
@@ -104,21 +103,19 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:orientation="vertical">
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/rv_suggestions"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="@dimen/_10sdp"
-                        android:visibility="gone" />
+                        android:visibility="visible" />
 
                     <LinearLayout
                         android:id="@+id/ll_options_suggestions"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_below="@+id/rvSuggestions"
                         android:orientation="vertical"
                         android:paddingHorizontal="@dimen/_15sdp"
                         android:paddingVertical="@dimen/_5sdp"
@@ -131,6 +128,7 @@
                             android:foreground="?android:attr/selectableItemBackground"
                             android:gravity="center_vertical"
                             android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
                             android:paddingVertical="@dimen/_8sdp">
 
                             <ImageView
@@ -154,6 +152,7 @@
                             android:layout_height="wrap_content"
                             android:foreground="?android:attr/selectableItemBackground"
                             android:gravity="center_vertical"
+                            android:orientation="horizontal"
                             android:paddingVertical="@dimen/_8sdp">
 
                             <ImageView
@@ -177,6 +176,7 @@
                             android:layout_height="wrap_content"
                             android:foreground="?android:attr/selectableItemBackground"
                             android:gravity="center_vertical"
+                            android:orientation="horizontal"
                             android:paddingVertical="@dimen/_8sdp">
 
                             <ImageView
@@ -217,7 +217,7 @@
                     <EditText
                         android:id="@+id/edt_display_number"
                         style="@style/TextStyle.Medium"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="@dimen/_15sdp"
                         android:layout_weight="1"
@@ -227,7 +227,7 @@
                         android:gravity="center"
                         android:includeFontPadding="false"
                         android:inputType="phone"
-                        android:paddingVertical="@dimen/_2sdp"
+                        android:paddingVertical="@dimen/_3sdp"
                         android:singleLine="true"
                         android:text=""
                         android:textColor="@color/black_color"

@@ -1,12 +1,18 @@
 package com.example.contactmanager.adapters
 
+import android.transition.ChangeBounds
+import android.transition.Fade
+import android.transition.TransitionManager
+import android.transition.TransitionSet
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.example.contactmanager.R
 import com.example.contactmanager.databinding.DateHeaderDesignBinding
 import com.example.contactmanager.databinding.RecentsDesignBinding
 import com.example.contactmanager.models.CallHistoryListItems
@@ -21,6 +27,8 @@ class RecentAdapter(
         private const val TYPE_HEADER = 0
         private const val TYPE_CONTACT = 1
     }
+
+    private var expandedPosition = -1
 
     private val originalList = ArrayList<CallHistoryListItems>()
     private var filteredList = ArrayList<CallHistoryListItems>()
@@ -79,7 +87,7 @@ class RecentAdapter(
         notifyDataSetChanged()
     }
 
-    fun clearList(){
+    fun clearList() {
         originalList.clear()
         filteredList.clear()
         notifyDataSetChanged()
@@ -148,23 +156,103 @@ class RecentAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: CallHistoryListItems.Contact, position: Int) {
-
             val data = item.data
 
-            binding.run {
+            val context = binding.root.context
+            val isExpanded = position == expandedPosition
 
+            binding.llCollapseView.visibility = if (isExpanded) View.GONE else View.VISIBLE
+            binding.llExpandedView.visibility = if (isExpanded) View.VISIBLE else View.GONE
+
+            // 🔥 Check neighbors (ignore headers)
+            val isNextExpanded = position + 1 == expandedPosition
+            val isPrevExpanded = position - 1 == expandedPosition
+
+            val isFirst = position == 0 || filteredList[position - 1] is CallHistoryListItems.Header || isPrevExpanded
+            val isLast = position == filteredList.size - 1 ||
+                    filteredList.getOrNull(position + 1) is CallHistoryListItems.Header || isNextExpanded
+
+            val backgroundRes = when {
+                isExpanded -> R.drawable.bg_all_rounded
+                isFirst && isLast -> R.drawable.bg_all_rounded
+                isFirst -> R.drawable.bg_top_rounded
+                isLast -> R.drawable.bg_bottom_rounded
+                else -> R.drawable.bg_middle
+            }
+
+            binding.llMainView.setBackgroundResource(backgroundRes)
+
+            val params = binding.root.layoutParams as RecyclerView.LayoutParams
+            val vertical = context.resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._10sdp)
+
+            if (isExpanded) {
+                binding.viewSep.isVisible = false
+                params.setMargins(0, vertical, 0, vertical)
+            } else {
+                // Separator should be hidden if this is the last in its visual group (includes if next is expanded)
+                binding.viewSep.isVisible = !isLast
+                params.setMargins(0, 0, 0, 0)
+            }
+
+            binding.root.layoutParams = params
+
+            binding.llMainView.setOnClickListener {
+
+                val previousPosition = expandedPosition
+                expandedPosition = if (isExpanded) -1 else position
+
+                val transition = TransitionSet()
+                    .addTransition(Fade())
+                    .addTransition(ChangeBounds())
+                    .setDuration(250)
+
+                TransitionManager.beginDelayedTransition(binding.llMainView, transition)
+
+                // Notify all affected items
+                val itemsToNotify = mutableSetOf<Int>()
+                if (previousPosition != -1) {
+                    itemsToNotify.add(previousPosition)
+                    itemsToNotify.add(previousPosition - 1)
+                    itemsToNotify.add(previousPosition + 1)
+                }
+                itemsToNotify.add(position)
+                itemsToNotify.add(position - 1)
+                itemsToNotify.add(position + 1)
+
+                itemsToNotify.forEach { pos ->
+                    if (pos in 0 until itemCount) {
+                        notifyItemChanged(pos)
+                    }
+                }
+            }
+
+
+            binding.run {
                 val name = if (data.callCount > 1) {
                     "${data.stringCallName ?: data.stringNumber} (${data.callCount})"
                 } else {
                     data.stringCallName ?: data.stringNumber
                 }
 
-                binding.tvCallType.text = Common.getCallType(data.intType)
+                tvExpandedCallType.text = Common.getCallType(data.intType)
 
-                tvName.text = name
+                tvCollapseName.text = name
+                tvExpandedName.text = name
 
-                tvTime.text = Common.extractTimeFromDate(data.dateData.toString())
-                ivCallType.setImageDrawable(Common.getCallImageType(data.intType, root.context))
+                tvCollapseTime.text = Common.extractTimeFromDate(data.dateData.toString())
+                tvExpandedTime.text = Common.extractTimeFromDate(data.dateData.toString())
+                ivExpandedCallType.setImageDrawable(
+                    Common.getCallImageType(
+                        data.intType,
+                        root.context
+                    )
+                )
+                ivCollapseCallType.setImageDrawable(
+                    Common.getCallImageType(
+                        data.intType,
+                        root.context
+                    )
+                )
 
                 ivCall.setOnClickListener {
                     onClickCall(item.data)
@@ -174,38 +262,38 @@ class RecentAdapter(
                 if (data.stringPhotoUri.isNullOrEmpty()) {
 
                     if (data.stringCallName.isNullOrEmpty()) {
-                        tvContactName.isVisible = false
-                        ivContactPhoto.isVisible = false
-                        ivUser.isVisible = true
+                        tvExpandedContactName.isVisible = false
+                        ivExpandedContactPhoto.isVisible = false
+                        ivExpandedUser.isVisible = true
 
                         val color = Common.profileColors[position % Common.profileColors.size]
-                        cvProfile.setCardBackgroundColor(
+                        cvExpandedProfile.setCardBackgroundColor(
                             ContextCompat.getColor(root.context, color)
                         )
 
                     } else {
-                        tvContactName.isVisible = true
-                        ivContactPhoto.isVisible = false
-                        ivUser.isVisible = false
+                        tvExpandedContactName.isVisible = true
+                        ivExpandedContactPhoto.isVisible = false
+                        ivExpandedUser.isVisible = false
 
                         val color = Common.profileColors[position % Common.profileColors.size]
-                        cvProfile.setCardBackgroundColor(
+                        cvExpandedProfile.setCardBackgroundColor(
                             ContextCompat.getColor(root.context, color)
                         )
 
                         val firstChar =
                             data.stringCallName?.firstOrNull()?.uppercase() ?: ""
-                        tvContactName.text = firstChar
+                        tvExpandedContactName.text = firstChar
                     }
 
                 } else {
-                    tvContactName.isVisible = false
-                    ivContactPhoto.isVisible = true
-                    ivUser.isVisible = false
+                    tvExpandedContactName.isVisible = false
+                    ivExpandedContactPhoto.isVisible = true
+                    ivExpandedUser.isVisible = false
 
-                    Glide.with(ivContactPhoto.context)
+                    Glide.with(ivExpandedContactPhoto.context)
                         .load(data.stringPhotoUri)
-                        .into(ivContactPhoto)
+                        .into(ivExpandedContactPhoto)
                 }
             }
         }

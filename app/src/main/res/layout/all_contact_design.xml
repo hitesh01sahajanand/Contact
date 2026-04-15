@@ -6,7 +6,7 @@
 
     </data>
 
-    <LinearLayout
+    <!--<LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="@dimen/_10sdp"
@@ -58,6 +58,160 @@
                 android:singleLine="true"
                 android:textColor="@color/black" />
         </LinearLayout>
+
+    </LinearLayout>-->
+
+
+    <LinearLayout
+        android:id="@+id/ll_main_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/_10sdp"
+        android:background="@color/white"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/_10sdp">
+
+            <LinearLayout
+                android:id="@+id/ll_collapse_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cv_collapse_profile"
+                    android:layout_width="@dimen/_34sdp"
+                    android:layout_height="@dimen/_34sdp"
+                    android:layout_gravity="end"
+                    app:cardCornerRadius="@dimen/_40sdp"
+                    app:cardElevation="0dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <ImageView
+                        android:id="@+id/iv_collapse_contact_photo"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_launcher_background"
+                        android:visibility="gone" />
+
+                    <ImageView
+                        android:id="@+id/iv_collapse_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:padding="@dimen/_12sdp"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_user"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/tv_collapse_contact_name"
+                        style="@style/TextStyle.Large"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:text=""
+                        android:textColor="@color/white" />
+
+                </androidx.cardview.widget.CardView>
+
+                <TextView
+                    android:id="@+id/tv_collapse_name"
+                    style="@style/TextStyle.Medium"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="@dimen/_10sdp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:gravity="center_vertical"
+                    android:singleLine="true"
+                    android:text="dgkdgkdgkdmgk"
+                    android:textColor="@color/black" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_expanded_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="visible">
+
+                <TextView
+                    android:id="@+id/tv_expanded_contact_number"
+                    style="@style/TextStyle.Regular"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="@dimen/_30sdp"
+                    android:layout_marginTop="@dimen/_4sdp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:gravity="center_vertical"
+                    android:singleLine="true"
+                    android:text="dgkdgkdgkdmgk"
+                    android:textColor="@color/black" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_22sdp"
+                    android:layout_marginTop="@dimen/_16sdp"
+                    android:layout_marginBottom="@dimen/_6sdp"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/iv_call"
+                        android:layout_width="@dimen/_38sdp"
+                        android:layout_height="@dimen/_38sdp"
+                        android:layout_weight="1"
+                        android:src="@drawable/ic_call_info" />
+
+                    <ImageView
+                        android:id="@+id/iv_message"
+                        android:layout_width="@dimen/_38sdp"
+                        android:layout_height="@dimen/_38sdp"
+                        android:layout_weight="1"
+                        android:src="@drawable/ic_message_info" />
+
+
+                    <ImageView
+                        android:id="@+id/iv_video_call"
+                        android:layout_width="@dimen/_38sdp"
+                        android:layout_height="@dimen/_38sdp"
+                        android:layout_weight="1"
+                        android:src="@drawable/ic_video_call_info" />
+
+
+                    <ImageView
+                        android:id="@+id/iv_call_info"
+                        android:layout_width="@dimen/_38sdp"
+                        android:layout_height="@dimen/_38sdp"
+                        android:layout_weight="1"
+                        android:src="@drawable/ic_new_call_info" />
+
+                </LinearLayout>
+
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <View
+            android:id="@+id/view_sep"
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:layout_marginHorizontal="@dimen/_10sdp"
+            android:background="@color/border_color" />
+
 
     </LinearLayout>
 </layout>

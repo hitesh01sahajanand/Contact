@@ -6,7 +6,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.example.contactmanager.databinding.FavoriteDesignBinding
+import com.example.contactmanager.databinding.SuggestionDesignBinding
 import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
 
@@ -18,7 +18,7 @@ class SuggestionAdapter : RecyclerView.Adapter<SuggestionAdapter.SuggestionHolde
         p1: Int
     ): SuggestionHolder {
         val binding =
-            FavoriteDesignBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            SuggestionDesignBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return SuggestionHolder(binding)
     }
 
@@ -27,7 +27,7 @@ class SuggestionAdapter : RecyclerView.Adapter<SuggestionAdapter.SuggestionHolde
         p1: Int
     ) {
         val itemData = filteredList[p1]
-        holder.setData(itemData,p1)
+        holder.setData(itemData, p1)
 
     }
 
@@ -59,14 +59,15 @@ class SuggestionAdapter : RecyclerView.Adapter<SuggestionAdapter.SuggestionHolde
         return filteredList
     }
 
-    class SuggestionHolder(private val binding: FavoriteDesignBinding) :
+    class SuggestionHolder(private val binding: SuggestionDesignBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun setData(itemData: ContactModel, position: Int) {
 
             binding.run {
                 tvName.text = itemData.displayName
+                tvNumber.text = itemData.number
 
-                binding.ivCall.isVisible = true
+//                binding.ivCall.isVisible = true
 
                 if (itemData.userThumbnail.isNullOrEmpty()) {
                     binding.tvContactName.isVisible = true

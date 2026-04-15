@@ -38,7 +38,6 @@ import kotlin.getValue
 class ContactsFragment : Fragment(), OnClickHandler {
     private lateinit var binding: FragmentContactsBinding
     private lateinit var allContactsAdapter: AllContactsAdapter
-
     private val viewModel: ContactViewModel by viewModels()
 
     override fun onCreateView(
@@ -97,7 +96,7 @@ class ContactsFragment : Fragment(), OnClickHandler {
         binding.inHeader.onClickHandler = this
         binding.inHeader.tvTitle.text = requireActivity().getString(R.string.contact)
         binding.inHeader.cvMore.isVisible = true
-        binding.inHeader.cvMore.isVisible = true
+        binding.inHeader.cvAdd.isVisible = true
 
         allContactsAdapter = AllContactsAdapter(onClick = { item: ContactListItem, i: Int ->
 

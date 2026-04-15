@@ -67,6 +67,12 @@
     <string name="set_reminder">Set Reminder</string>
     <string name="merge">Merge</string>
     <string name="swap">Swap</string>
+    <string name="tap_the_button">Tap the “+” button and \nadd favorite contact</string>
+    <string name="add_tag">Add Tag</string>
+    <string name="add_to_contacts">Add to Contacts</string>
+    <string name="more">More</string>
+    <string name="video_call">Video Call</string>
+    <string name="manage">Manage</string>
 
 
 </resources>
