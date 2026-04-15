@@ -352,11 +352,12 @@ class KeypadFragment : Fragment(), OnClickHandler {
             binding.buttonCall.id -> {
                 val number = binding.edtDisplayNumber.text.toString()
 
-                if (number.isNotEmpty()) {/* val intent = Intent(Intent.ACTION_DIAL)
-                     intent.data = Uri.parse("tel:$number")
-                     startActivity(intent)
-                     makeCall(number)*/
-                    actionCall(number,requireActivity())
+                if (number.isNotEmpty()) {
+                    if (com.example.contactmanager.utils.NewCallManager.isNumberActive(number)) {
+                        Toast.makeText(requireActivity(), "Number already in a call", Toast.LENGTH_SHORT).show()
+                        return
+                    }
+                    actionCall(number, requireActivity())
                 }
             }
 

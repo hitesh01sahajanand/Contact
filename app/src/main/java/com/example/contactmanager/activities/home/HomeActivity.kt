@@ -25,6 +25,7 @@ import com.example.contactmanager.fragments.contacts.ContactsFragment
 import com.example.contactmanager.fragments.favorites.FavoritesFragment
 import com.example.contactmanager.fragments.keypad.KeypadFragment
 import com.example.contactmanager.fragments.recents.RecentsFragment
+import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager.isDefaultDialer
 import dagger.hilt.android.AndroidEntryPoint
@@ -63,6 +64,9 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
     }
 
     private fun setupFragments() {
+
+        val isDialer = intent.getBooleanExtra(Constance.IS_Dialer, false)
+
         favoritesFragment = FavoritesFragment()
         recentsFragment = RecentsFragment()
         contactsFragment = ContactsFragment()
@@ -80,6 +84,12 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
             activeFragment = recentsFragment
             updateTabUI(binding.llRecents)
         } else {
+            transaction.show(keypadFragment)
+            activeFragment = keypadFragment
+            updateTabUI(binding.llKeypad)
+        }
+
+        if (isDialer) {
             transaction.show(keypadFragment)
             activeFragment = keypadFragment
             updateTabUI(binding.llKeypad)

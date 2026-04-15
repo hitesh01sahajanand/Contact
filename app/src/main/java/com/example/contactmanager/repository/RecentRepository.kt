@@ -342,51 +342,11 @@ class RecentRepository @Inject constructor(@param:ApplicationContext private val
                                 .toString()
                         val duration = if (durationIdx != -1) cursor.getString(durationIdx) else "0"
 
-                        val normNum = number?.replace(Regex("[^0-9+]"), "") ?: ""
-
+                        val normNum = Common.cleanNumber(number)
                         var cacheData = contactCache[normNum]
 
                         if (cacheData == null) {
                             cacheData = ContactCacheData()
-
-                            if (normNum.isNotEmpty()) {
-                                try {
-                                    val uri = Uri.withAppendedPath(
-                                        ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
-                                        Uri.encode(number)
-                                    )
-
-                                    contentResolver.query(
-                                        uri,
-                                        arrayOf(
-                                            ContactsContract.PhoneLookup._ID,
-                                            ContactsContract.PhoneLookup.DISPLAY_NAME,
-                                            ContactsContract.PhoneLookup.PHOTO_URI
-                                        ),
-                                        null,
-                                        null,
-                                        null
-                                    )?.use { lookup ->
-
-                                        if (lookup.moveToFirst()) {
-                                            val idI =
-                                                lookup.getColumnIndex(ContactsContract.PhoneLookup._ID)
-                                            val nameI =
-                                                lookup.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME)
-                                            val photoI =
-                                                lookup.getColumnIndex(ContactsContract.PhoneLookup.PHOTO_URI)
-
-                                            if (idI != -1) cacheData.contactId =
-                                                lookup.getString(idI)
-                                            if (nameI != -1) cacheData.name =
-                                                lookup.getString(nameI)
-                                            if (photoI != -1) cacheData.photoUri =
-                                                lookup.getString(photoI)
-                                        }
-                                    }
-                                } catch (_: Exception) {
-                                }
-                            }
                         }
 
                         val date = Date(dateStr.toLong())

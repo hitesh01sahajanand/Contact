@@ -11,6 +11,7 @@ import android.os.PowerManager
 import android.os.PowerManager.WakeLock
 import android.telecom.Call
 import android.telecom.CallAudioState
+import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
@@ -24,11 +25,14 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import com.example.contactmanager.R
+import com.example.contactmanager.activities.home.HomeActivity
 import com.example.contactmanager.databinding.ActivityCallBinding
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.NewCallManager
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.getStateCompat
+import com.example.contactmanager.utils.isConference
 
 class CallActivity : AppCompatActivity(), OnClickHandler {
     private lateinit var binding: ActivityCallBinding
@@ -108,8 +112,8 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
             val isNew = intent.getBooleanExtra("isNew", false)
             if (isNew) {
                 // Dummy UI rendering for testing since there's no live call
-                binding.inIncomingLayout.root.isVisible = true
-                binding.inOutgoingCallLayout.root.isVisible = false
+                binding.inIncomingLayout.root.isVisible = false
+                binding.inOutgoingCallLayout.root.isVisible = true
                 binding.inIncomingLayout.tvNumberName.text = "Test Caller"
                 binding.inIncomingLayout.tvCalling.text = "Incoming Call"
                 return
@@ -124,9 +128,32 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         updateHoldUI(call)
         NewCallManager.inCallService?.callAudioState?.let { updateAudioUI(it) }
 
+        val phoneState = NewCallManager.getPhoneState()
+        binding.inOutgoingCallLayout.llConference.isVisible = phoneState is NewCallManager.TwoCalls
+        binding.inOutgoingCallLayout.llAddCall.isVisible = NewCallManager.canAddCall()
+        binding.inOutgoingCallLayout.llAddCall.alpha = if (NewCallManager.canAddCall()) 1.0f else 0.5f
+
+        // Let the system handle capability-based merging
+        binding.inOutgoingCallLayout.llMerge.isEnabled = true
+        binding.inOutgoingCallLayout.llMerge.alpha = 1.0f
+        binding.inOutgoingCallLayout.llSwap.isEnabled = true
+        binding.inOutgoingCallLayout.llSwap.alpha = 1.0f
+
         val state = call.getStateCompat()
-        val number = call.details.handle?.schemeSpecificPart ?: "Unknown"
-        val name = call.details.callerDisplayName ?: number
+        var number = call.details.handle?.schemeSpecificPart ?: "Unknown"
+        var name = call.details.callerDisplayName ?: number
+
+        if (call.isConference()) {
+            name = "Conference Call"
+            val participants =
+                NewCallManager.getConferenceCalls().joinToString(", ") { conferenceCall ->
+                    val handleNumber =
+                        conferenceCall.details.handle?.schemeSpecificPart ?: "Unknown"
+                    conferenceCall.details.callerDisplayName ?: handleNumber
+                }
+            number = participants.ifEmpty { "Multiple Participants" }
+        }
+
         when (state) {
             Call.STATE_RINGING -> {
                 binding.inIncomingLayout.tvNumberName.text = name
@@ -169,6 +196,11 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
             Call.STATE_HOLDING -> {
                 binding.inOutgoingCallLayout.chronometer.stop()
                 binding.inOutgoingCallLayout.chronometer.text = getString(R.string.on_hold)
+
+                binding.inOutgoingCallLayout.root.isVisible = true
+                binding.inIncomingLayout.root.isVisible = false
+                binding.inOutgoingCallLayout.tvNumberName.text = name
+                binding.inOutgoingCallLayout.tvNumber.text = number
             }
 
             Call.STATE_DISCONNECTED, Call.STATE_DISCONNECTING -> {
@@ -204,15 +236,17 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
             }
 
             binding.inOutgoingCallLayout.llAddCall.id -> {
-
+                val intent = Intent(this, HomeActivity::class.java)
+                intent.putExtra(Constance.IS_Dialer, true)
+                startActivity(intent)
             }
 
             binding.inOutgoingCallLayout.llMerge.id -> {
-
+                NewCallManager.merge()
             }
 
             binding.inOutgoingCallLayout.llSwap.id -> {
-
+                NewCallManager.swap()
             }
 
             binding.inOutgoingCallLayout.llHold.id -> {

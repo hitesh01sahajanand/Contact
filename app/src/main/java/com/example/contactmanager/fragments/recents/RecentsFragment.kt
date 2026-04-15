@@ -13,8 +13,6 @@ import android.provider.CallLog
 import android.telecom.TelecomManager
 import android.telephony.PhoneNumberUtils
 import android.telephony.SubscriptionManager
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -35,20 +33,13 @@ import com.example.contactmanager.databinding.FilterBottomSheetDialogBinding
 import com.example.contactmanager.databinding.FragmentRecentsBinding
 import com.example.contactmanager.models.CallHistoryListItems
 import com.example.contactmanager.models.CallLogEntry
-import com.example.contactmanager.models.ContactListItem
-import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager
-import com.example.contactmanager.utils.SendData
 import com.example.contactmanager.viewmodels.RecentViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 import androidx.core.net.toUri
 import com.example.contactmanager.activities.call.CallActivity
 
@@ -75,11 +66,7 @@ class RecentsFragment : Fragment(), OnClickHandler {
         binding.inHeader.cvMore.isVisible = true
         binding.inHeader.cvFilter.isVisible = true
 
-        adapter = RecentAdapter(/*onclickDetails = { logModel ->
-            SendData.contactDetails = logModel
-            val intent = Intent(requireActivity(), ContactsDetailsActivity::class.java)
-            requireActivity().startActivity(intent)
-        }*/ onClickCall = { logEntry ->
+        adapter = RecentAdapter(onClickCall = { logEntry ->
             actionCall(logEntry, requireActivity())
         })
 
@@ -87,23 +74,14 @@ class RecentsFragment : Fragment(), OnClickHandler {
         binding.rvRecents.layoutManager = LinearLayoutManager(requireActivity())
 
 
-        if (SendData.isFirstTime) {
-            SendData.isFirstTime = false
-            SendData.allRecentCallHistory.observe(requireActivity()) { recentList ->
-                allList.clear()
-                allList.addAll(processRawCallLogs(recentList))
-                adapter.submitList(allList)
-            }
-        } else {
-            if (PermissionManager.hasPermissions(requireActivity())) {
-                viewModel.loadAllRecentsHistory(0, 1000)
-            }
+        viewModel.allRecentCallHistory.observe(viewLifecycleOwner) { recentList ->
+            allList.clear()
+            allList.addAll(recentList)
+            adapter.submitList(ArrayList(allList))
+        }
 
-            viewModel.allRecentCallHistory.observe(requireActivity()) { recentList ->
-                allList.clear()
-                allList.addAll(processRawCallLogs(recentList))
-                adapter.submitList(allList)
-            }
+        if (PermissionManager.hasPermissions(requireActivity())) {
+            viewModel.loadAllRecentsHistory(0, 1000)
         }
 
 
@@ -128,17 +106,6 @@ class RecentsFragment : Fragment(), OnClickHandler {
 
     override fun onClick(view: View) {
         when (view.id) {
-            /* binding.tvAll.id -> {
-                 adapter.clearList()
-                 adapter.addAll(allList)
-             }
-
-             binding.tvMissed.id -> {
-                 adapter.clearList()
-                 val missedCalls = allList.filter { it.intType == 3 }
-                 adapter.addAll(missedCalls)
-             }*/
-
             binding.inHeader.cvMore.id -> {
 
                 val clearHistory = requireActivity().getString(R.string.clear_history)
@@ -361,235 +328,4 @@ class RecentsFragment : Fragment(), OnClickHandler {
             }
         }
     }
-
-    /*fun processRawCallLogs(
-        list: ArrayList<CallLogEntry>
-    ): ArrayList<CallLogEntry> {
-
-        if (list.isEmpty()) return ArrayList()
-
-        val colorList = listOf(
-            Color.parseColor("#2173C2"),
-            Color.parseColor("#FFB950"),
-            Color.parseColor("#AEB33C"),
-            Color.parseColor("#FF6082"),
-            Color.parseColor("#60CB6B")
-        )
-
-        val processedList = ArrayList<CallLogEntry>()
-        var lastEntry: CallLogEntry? = null
-        var lastDateCategory = ""
-
-        // Today & Yesterday setup
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-
-        val todayStart = calendar.time
-        calendar.add(Calendar.DAY_OF_YEAR, -1)
-        val yesterdayStart = calendar.time
-
-        val todayStr = getString(R.string.today)
-        val yesterdayStr = getString(R.string.yesterday)
-        val olderStr = getString(R.string.older)
-
-        for (entry in list) {
-
-            val entryNum = entry.stringNumber
-            val entryName = entry.stringCallName
-
-            // 🚫 Skip entries without number
-            if (entryNum.isNullOrEmpty()) continue
-
-            // 1. Color assign (based only on number)
-            val key = entryNum.replace(Regex("[^0-9+]"), "")
-            val colorIndex = (key.hashCode() and Int.MAX_VALUE) % colorList.size
-            entry.intColor = colorList[colorIndex]
-
-            // 2. Date category
-            val entryDate = entry.dateData
-
-            val currentCategory = when {
-                entryDate != null && entryDate.after(todayStart) -> todayStr
-                entryDate != null && entryDate.after(yesterdayStart) -> yesterdayStr
-                else -> olderStr
-            }
-
-            entry.stringDateCategory = currentCategory
-
-            // 3. Duplicate check (same day + same number/name)
-            var isDuplicate = false
-
-            lastEntry?.let { last ->
-
-                val sameDay = isSameDayStatic(entryDate, last.dateData)
-
-                if (sameDay) {
-                    val isSameNumber =
-                        !last.stringNumber.isNullOrEmpty() &&
-                                PhoneNumberUtils.compare(entryNum, last.stringNumber)
-
-                    val isSameName =
-                        !entryName.isNullOrEmpty() &&
-                                entryName == last.stringCallName
-
-                    if (isSameNumber || isSameName) {
-                        isDuplicate = true
-                    }
-                }
-            }
-
-            if (isDuplicate) {
-                lastEntry?.apply {
-                    callCount += 1
-                    callIds.addAll(entry.callIds)
-                }
-            } else {
-                // 📌 Add header when category changes
-                if (processedList.isNotEmpty() && currentCategory != lastDateCategory) {
-                    val header = CallLogEntry().apply {
-                        stringDateCategory = currentCategory
-                    }
-                    processedList.add(header)
-                }
-
-                lastDateCategory = currentCategory
-
-                entry.callCount = 1
-                processedList.add(entry)
-                lastEntry = entry
-            }
-        }
-        processedList.removeIf { it.stringNumber.isNullOrEmpty() }
-
-        return processedList
-    }*/
-
-    fun processRawCallLogs(
-        list: ArrayList<CallLogEntry>
-    ): ArrayList<CallHistoryListItems> {
-
-        if (list.isEmpty()) return ArrayList()
-
-        val colorList = listOf(
-            Color.parseColor("#2173C2"),
-            Color.parseColor("#FFB950"),
-            Color.parseColor("#AEB33C"),
-            Color.parseColor("#FF6082"),
-            Color.parseColor("#60CB6B")
-        )
-
-        val processedList = ArrayList<CallHistoryListItems>()
-        var lastEntry: CallLogEntry? = null
-        var lastDateCategory = ""
-
-        // 📅 Date formatter for older dates
-        val dateFormat = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
-
-        // Today & Yesterday setup
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-
-        val todayStart = calendar.time
-        calendar.add(Calendar.DAY_OF_YEAR, -1)
-        val yesterdayStart = calendar.time
-
-        val todayStr = "Today"       // ya getString(R.string.today)
-        val yesterdayStr = "Yesterday"
-
-        for (entry in list) {
-
-            val entryNum = entry.stringNumber
-            val entryName = entry.stringCallName
-
-            // 🚫 Skip entries without number
-            if (entryNum.isNullOrEmpty()) continue
-
-            // 🎨 Color assign
-            val key = entryNum.replace(Regex("[^0-9+]"), "")
-            val colorIndex = (key.hashCode() and Int.MAX_VALUE) % colorList.size
-            entry.intColor = colorList[colorIndex]
-
-            val entryDate = entry.dateData
-
-            // 📅 Category decide
-            val currentCategory = when {
-                entryDate != null && entryDate.after(todayStart) -> todayStr
-                entryDate != null && entryDate.after(yesterdayStart) -> yesterdayStr
-                entryDate != null -> dateFormat.format(entryDate)
-                else -> ""
-            }
-
-            // 🔁 Duplicate check
-            var isDuplicate = false
-
-            lastEntry?.let { last ->
-
-                val sameDay = isSameDayStatic(entryDate, last.dateData)
-
-                if (sameDay) {
-                    val isSameNumber =
-                        !last.stringNumber.isNullOrEmpty() &&
-                                PhoneNumberUtils.compare(entryNum, last.stringNumber)
-
-                    val isSameName =
-                        !entryName.isNullOrEmpty() &&
-                                entryName == last.stringCallName
-
-                    if (isSameNumber || isSameName) {
-                        isDuplicate = true
-                    }
-                }
-            }
-
-            if (isDuplicate) {
-                lastEntry?.apply {
-                    callCount += 1
-                    callIds.addAll(entry.callIds)
-                }
-            } else {
-
-                // 📌 Add Header when category changes
-                if (currentCategory != lastDateCategory) {
-                    processedList.add(
-                        CallHistoryListItems.Header(currentCategory)
-                    )
-                    lastDateCategory = currentCategory
-                }
-
-                entry.callCount = 1
-
-                processedList.add(
-                    CallHistoryListItems.Contact(entry)
-                )
-
-                lastEntry = entry
-            }
-        }
-
-        return processedList
-    }
-
-
-    private fun isSameDayStatic(date1: Date?, date2: Date?): Boolean {
-        if (date1 == null || date2 == null) return false
-
-        val cal1 = Calendar.getInstance()
-        val cal2 = Calendar.getInstance()
-
-        cal1.time = date1
-        cal2.time = date2
-
-        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
-                cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
-    }
-
-
 }

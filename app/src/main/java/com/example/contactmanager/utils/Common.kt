@@ -498,4 +498,14 @@ object Common {
     val Context.powerManager: PowerManager
         get() = getSystemService(Context.POWER_SERVICE) as PowerManager
 
+    fun cleanNumber(number: String?): String {
+        if (number == null) return ""
+        val sb = StringBuilder()
+        for (char in number) {
+            if (char.isDigit() || char == '+') {
+                sb.append(char)
+            }
+        }
+        return sb.toString()
+    }
 }
