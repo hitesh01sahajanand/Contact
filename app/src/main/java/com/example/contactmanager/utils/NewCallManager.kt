@@ -14,6 +14,7 @@ class NewCallManager {
         private var call: Call? = null
         private val calls = mutableListOf<Call>()
         private val listeners = CopyOnWriteArraySet<CallManagerListener>()
+        var isCallActivityVisible: Boolean = false
 
         fun onCallAdded(call: Call) {
             this.call = call
@@ -33,6 +34,14 @@ class NewCallManager {
                 override fun onConferenceableCallsChanged(call: Call, conferenceableCalls: MutableList<Call>) {
                     updateState()
                 }
+
+                override fun onParentChanged(call: Call, parent: Call?) {
+                    updateState()
+                }
+
+                override fun onChildrenChanged(call: Call, children: MutableList<Call>) {
+                    updateState()
+                }
             })
         }
 
@@ -42,6 +51,9 @@ class NewCallManager {
         }
 
         private fun updateState() {
+            // remove all disconnected calls manually early to avoid picking them as primary
+            calls.removeAll { it.getStateCompat() == Call.STATE_DISCONNECTED }
+
             val primaryCall = when (val phoneState = getPhoneState()) {
                 is NoCall -> null
                 is SingleCall -> phoneState.call
@@ -58,24 +70,34 @@ class NewCallManager {
                 notify = false
             }
             if (notify) {
-                for (listener in listeners) {
-                    listener.onStateChanged()
-                }
+                notifyListeners()
             }
+        }
 
-            // remove all disconnected calls manually in case they are still here
-            calls.removeAll { it.getStateCompat() == Call.STATE_DISCONNECTED }
+        fun notifyListeners() {
+            for (listener in listeners) {
+                listener.onStateChanged()
+            }
         }
 
         fun getPhoneState(): PhoneState {
             val topLevelCalls = calls.filter { it.parent == null }
-            return when (topLevelCalls.size) {
-                0 -> NoCall
-                1 -> SingleCall(topLevelCalls.first())
+            val nonDisconnected = topLevelCalls.filter { 
+                val state = it.getStateCompat()
+                state != Call.STATE_DISCONNECTED && state != Call.STATE_DISCONNECTING 
+            }
+
+            if (nonDisconnected.isEmpty()) {
+                return if (topLevelCalls.isEmpty()) NoCall else SingleCall(topLevelCalls.first())
+            }
+
+            return when (nonDisconnected.size) {
+                1 -> SingleCall(nonDisconnected.first())
                 2 -> {
-                    val active = topLevelCalls.find { it.getStateCompat() == Call.STATE_ACTIVE }
-                    val newCall = topLevelCalls.find { it.getStateCompat() == Call.STATE_CONNECTING || it.getStateCompat() == Call.STATE_DIALING }
-                    val onHold = topLevelCalls.find { it.getStateCompat() == Call.STATE_HOLDING }
+                    val active = nonDisconnected.find { it.getStateCompat() == Call.STATE_ACTIVE }
+                    val newCall = nonDisconnected.find { it.getStateCompat() == Call.STATE_CONNECTING || it.getStateCompat() == Call.STATE_DIALING || it.getStateCompat() == Call.STATE_RINGING }
+                    val onHold = nonDisconnected.find { it.getStateCompat() == Call.STATE_HOLDING }
+
                     if (active != null && newCall != null) {
                         TwoCalls(newCall, active)
                     } else if (newCall != null && onHold != null) {
@@ -83,14 +105,23 @@ class NewCallManager {
                     } else if (active != null && onHold != null) {
                         TwoCalls(active, onHold)
                     } else {
-                        TwoCalls(topLevelCalls[0], topLevelCalls[1])
+                        TwoCalls(nonDisconnected[0], nonDisconnected[1])
                     }
                 }
 
                 else -> {
-                    if (topLevelCalls.isEmpty()) return NoCall
-                    val activeOrNew = topLevelCalls.find { it.getStateCompat() != Call.STATE_HOLDING } ?: topLevelCalls[0]
-                    val onHold = topLevelCalls.find { it.getStateCompat() == Call.STATE_HOLDING } ?: topLevelCalls.find { it != activeOrNew } ?: topLevelCalls[0]
+                    val activeConference = nonDisconnected.find { it.isConference() && it.getStateCompat() == Call.STATE_ACTIVE }
+                    val conferenceCall = nonDisconnected.find { it.isConference() }
+
+                    val activeOrNew = activeConference
+                        ?: nonDisconnected.find { it.getStateCompat() == Call.STATE_ACTIVE }
+                        ?: conferenceCall
+                        ?: nonDisconnected.find { it.getStateCompat() != Call.STATE_HOLDING }
+                        ?: nonDisconnected[0]
+                    
+                    val onHold = nonDisconnected.find { it != activeOrNew && it.getStateCompat() == Call.STATE_HOLDING } 
+                        ?: nonDisconnected.find { it != activeOrNew } 
+                        ?: nonDisconnected[0]
                     TwoCalls(activeOrNew, onHold)
                 }
             }
@@ -123,14 +154,30 @@ class NewCallManager {
             }
         }
 
-        fun getState() = getPrimaryCall()?.getStateCompat()
+        fun getState(): Int {
+            val call = getPrimaryCall() ?: return Call.STATE_DISCONNECTED
+            if (call.isConference()) {
+                val children = call.children
+                if (children != null && children.isNotEmpty() && children.all { it.getStateCompat() == Call.STATE_HOLDING }) {
+                    return Call.STATE_HOLDING
+                }
+            }
+            return call.getStateCompat()
+        }
 
         fun toggleHold(): Boolean {
+            val primaryCall = getPrimaryCall() ?: return false
             val isOnHold = getState() == Call.STATE_HOLDING
             if (isOnHold) {
-                call?.unhold()
+                primaryCall.unhold()
+                if (primaryCall.isConference()) {
+                    primaryCall.children?.forEach { it.unhold() }
+                }
             } else {
-                call?.hold()
+                primaryCall.hold()
+                if (primaryCall.isConference()) {
+                    primaryCall.children?.forEach { it.hold() }
+                }
             }
             return !isOnHold
         }
@@ -177,11 +224,8 @@ class NewCallManager {
         }
 
         fun isNumberActive(number: String?): Boolean {
-            if (number == null) return false
-            val sanitizedNew = number.replace(Regex("[^0-9+]"), "")
             return calls.any {
-                val callNumber = it.details.handle?.schemeSpecificPart?.replace(Regex("[^0-9+]"), "")
-                callNumber == sanitizedNew
+                Common.compareNumbers(it.details.handle?.schemeSpecificPart, number)
             }
         }
 

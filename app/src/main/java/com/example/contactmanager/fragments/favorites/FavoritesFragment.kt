@@ -38,6 +38,20 @@ class FavoritesFragment : Fragment(), OnClickHandler {
         return binding.root
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (PermissionManager.hasPermissions(requireActivity())) {
+            viewModel.getAllFavoriteContact()
+        }
+    }
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        if (!hidden && PermissionManager.hasPermissions(requireActivity())) {
+            viewModel.getAllFavoriteContact()
+        }
+    }
+
     private fun initView() {
         binding.onClickHandler = this
         binding.inHeader.onClickHandler = this
@@ -47,10 +61,10 @@ class FavoritesFragment : Fragment(), OnClickHandler {
         viewModel.allFavoriteContacts.observe(requireActivity()) { favoriteList ->
             if (favoriteList.isNotEmpty()) {
                 favoriteAdapter.addAll(favoriteList)
-                binding.rvFavorite.isVisible = true
+                binding.cvFavorite.isVisible = true
                 binding.llFavoriteSpaceHolder.isVisible = false
             } else {
-                binding.rvFavorite.isVisible = false
+                binding.cvFavorite.isVisible = false
                 binding.llFavoriteSpaceHolder.isVisible = true
             }
         }
@@ -98,13 +112,5 @@ class FavoritesFragment : Fragment(), OnClickHandler {
             }
 
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (PermissionManager.hasPermissions(requireActivity())) {
-            viewModel.getAllFavoriteContact()
-        }
-
     }
 }

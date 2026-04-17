@@ -41,6 +41,7 @@ import com.example.contactmanager.models.CallLogEntry
 import com.example.contactmanager.models.ContactListItem
 import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.NewCallManager
 import com.example.contactmanager.utils.PermissionManager.isDefaultDialer
 import com.example.contactmanager.viewmodels.ContactViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -175,10 +176,18 @@ class KeypadFragment : Fragment(), OnClickHandler {
         binding.inHeader.onClickHandler = this
         binding.inHeader.tvTitle.text = requireActivity().getString(R.string.phone)
         binding.inHeader.cvMore.isVisible = true
+        binding.edtDisplayNumber.apply {
+            showSoftInputOnFocus = false
+            isFocusable = true
+            isFocusableInTouchMode = true
+        }
 
         allPermissionGranted()
 
-        adapter = SuggestionAdapter()
+        adapter = SuggestionAdapter(onClick = { number ->
+            binding.edtDisplayNumber.setText(number)
+        })
+
         binding.rvSuggestions.adapter = adapter
         binding.rvSuggestions.layoutManager = LinearLayoutManager(requireActivity())
 
@@ -205,6 +214,7 @@ class KeypadFragment : Fragment(), OnClickHandler {
 
             if (query.isEmpty()) {
                 binding.rvSuggestions.isVisible = false
+                binding.llOptionsSuggestions.isVisible = false
                 return@addTextChangedListener
             }
 
@@ -294,30 +304,6 @@ class KeypadFragment : Fragment(), OnClickHandler {
         }
     }
 
-    /* private fun setupKeypad() {
-
-         val buttons: List<Button> = listOf(
-             binding.btn1, binding.btn2, binding.btn3,
-             binding.btn4, binding.btn5, binding.btn6,
-             binding.btn7, binding.btn8, binding.btn9,
-             binding.btn0, binding.btnStar, binding.btnHasTag
-         )
-
-         buttons.forEach { btn ->
-             btn.setOnClickListener {
-                 number += btn.text.toString()
-                 binding.tvNumber.text = number
-             }
-         }
-
-
-         binding.btnClear.setOnLongClickListener {
-             number = ""
-             binding.tvNumber.text = ""
-             true
-         }
-     }*/
-
     fun openDefaultAppDialog(context: Context) {
         try {
             if (Build.VERSION.SDK_INT >= 29) {
@@ -353,8 +339,12 @@ class KeypadFragment : Fragment(), OnClickHandler {
                 val number = binding.edtDisplayNumber.text.toString()
 
                 if (number.isNotEmpty()) {
-                    if (com.example.contactmanager.utils.NewCallManager.isNumberActive(number)) {
-                        Toast.makeText(requireActivity(), "Number already in a call", Toast.LENGTH_SHORT).show()
+                    if (NewCallManager.isNumberActive(number)) {
+                        Toast.makeText(
+                            requireActivity(),
+                            "Number already in a call",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         return
                     }
                     actionCall(number, requireActivity())

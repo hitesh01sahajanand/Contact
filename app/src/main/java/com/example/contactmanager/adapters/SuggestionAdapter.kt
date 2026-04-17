@@ -10,12 +10,12 @@ import com.example.contactmanager.databinding.SuggestionDesignBinding
 import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
 
-class SuggestionAdapter : RecyclerView.Adapter<SuggestionAdapter.SuggestionHolder>() {
+class SuggestionAdapter(private val onClick: (String) -> Unit) :
+    RecyclerView.Adapter<SuggestionAdapter.SuggestionHolder>() {
     var contactList: ArrayList<ContactModel> = ArrayList()
     private var filteredList: MutableList<ContactModel> = mutableListOf()
     override fun onCreateViewHolder(
-        parent: ViewGroup,
-        p1: Int
+        parent: ViewGroup, p1: Int
     ): SuggestionHolder {
         val binding =
             SuggestionDesignBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -23,12 +23,15 @@ class SuggestionAdapter : RecyclerView.Adapter<SuggestionAdapter.SuggestionHolde
     }
 
     override fun onBindViewHolder(
-        holder: SuggestionHolder,
-        p1: Int
+        holder: SuggestionHolder, p1: Int
     ) {
         val itemData = filteredList[p1]
         holder.setData(itemData, p1)
-
+        holder.itemView.setOnClickListener {
+            itemData.number?.let {
+                onClick(it)
+            }
+        }
     }
 
     override fun getItemCount(): Int {

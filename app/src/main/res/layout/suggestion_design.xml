@@ -19,8 +19,8 @@
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/cv_profile"
-                android:layout_width="@dimen/_42sdp"
-                android:layout_height="@dimen/_42sdp"
+                android:layout_width="@dimen/_35sdp"
+                android:layout_height="@dimen/_35sdp"
                 app:cardBackgroundColor="@color/color_1"
                 app:cardCornerRadius="@dimen/_40sdp"
                 app:cardElevation="0dp">
@@ -35,7 +35,7 @@
 
                 <TextView
                     android:id="@+id/tv_contact_name"
-                    style="@style/TextStyle.Large"
+                    style="@style/TextStyle.Medium"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_gravity="center"

@@ -16,7 +16,6 @@ import java.util.Date
     var avatar: Bitmap? = null,
     var isRejected: Boolean,
 )*/
-
 data class CallLogEntry(
     var stringNumber: String? = null,
     var stringType: String? = null,

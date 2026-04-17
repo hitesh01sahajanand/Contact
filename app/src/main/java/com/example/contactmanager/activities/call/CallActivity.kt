@@ -5,10 +5,12 @@ import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
+import android.provider.ContactsContract
 import android.telecom.Call
 import android.telecom.CallAudioState
 import android.util.Log
@@ -26,17 +28,27 @@ import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.home.HomeActivity
+import com.example.contactmanager.adapters.ConferenceParticipantsAdapter
 import com.example.contactmanager.databinding.ActivityCallBinding
+import com.example.contactmanager.databinding.ConferenceManagerBottomSheetBinding
+import com.example.contactmanager.databinding.ItemVideoCallBinding
+import com.example.contactmanager.databinding.VideoCallDialogBinding
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.NewCallManager
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.getStateCompat
 import com.example.contactmanager.utils.isConference
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class CallActivity : AppCompatActivity(), OnClickHandler {
     private lateinit var binding: ActivityCallBinding
     private var mProximityWakeLock: WakeLock? = null
+    private var isMoreExpanded = false
 
     companion object {
         fun getStartIntent(context: Context): Intent {
@@ -67,15 +79,24 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
     override fun onStart() {
         super.onStart()
         NewCallManager.addListener(callListener)
+        NewCallManager.isCallActivityVisible = true
+        NewCallManager.notifyListeners()
     }
 
     override fun onStop() {
         super.onStop()
         NewCallManager.removeListener(callListener)
+        NewCallManager.isCallActivityVisible = false
+        NewCallManager.notifyListeners()
     }
 
     override fun onPause() {
         super.onPause()
+        removeProximitySensor()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
         removeProximitySensor()
     }
 
@@ -129,20 +150,60 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         NewCallManager.inCallService?.callAudioState?.let { updateAudioUI(it) }
 
         val phoneState = NewCallManager.getPhoneState()
-        binding.inOutgoingCallLayout.llConference.isVisible = phoneState is NewCallManager.TwoCalls
-        binding.inOutgoingCallLayout.llAddCall.isVisible = NewCallManager.canAddCall()
+        val isConference = call.isConference()
+
+        // Toggle Row 1 Visibility
+        binding.inOutgoingCallLayout.llRow1.isVisible = isMoreExpanded
+
+        // Hold Banner logic
+        if (phoneState is NewCallManager.TwoCalls) {
+            binding.inOutgoingCallLayout.llHoldNumber.isVisible = true
+            val holdCall = phoneState.onHold
+            val holdNumber = holdCall.details.handle?.schemeSpecificPart ?: "Unknown"
+            val holdName = Common.getDisplayName(this, holdNumber, holdCall.details.callerDisplayName)
+            binding.inOutgoingCallLayout.tvHoldNumber.text = "$holdName - ${getString(R.string.hold)}"
+        } else {
+            binding.inOutgoingCallLayout.llHoldNumber.isVisible = false
+        }
+
+        // Dynamic Button Visibility based on State
+        when {
+            isConference -> {
+                binding.inOutgoingCallLayout.llHold.isVisible = true
+                binding.inOutgoingCallLayout.llVideoCall.isVisible = true
+                binding.inOutgoingCallLayout.llAddCall.isVisible = true
+                binding.inOutgoingCallLayout.llSwap.isVisible = false
+                binding.inOutgoingCallLayout.llMerge.isVisible = false
+                binding.inOutgoingCallLayout.llManage.isVisible = true
+            }
+
+            phoneState is NewCallManager.TwoCalls -> {
+                binding.inOutgoingCallLayout.llHold.isVisible = false
+                binding.inOutgoingCallLayout.llVideoCall.isVisible = true
+                binding.inOutgoingCallLayout.llAddCall.isVisible = true
+                binding.inOutgoingCallLayout.llSwap.isVisible = true
+                binding.inOutgoingCallLayout.llMerge.isVisible = true
+                binding.inOutgoingCallLayout.llManage.isVisible = false
+            }
+
+            else -> {
+                binding.inOutgoingCallLayout.llHold.isVisible = true
+                binding.inOutgoingCallLayout.llVideoCall.isVisible = true
+                binding.inOutgoingCallLayout.llAddCall.isVisible = true
+                binding.inOutgoingCallLayout.llSwap.visibility = View.INVISIBLE
+//                binding.inOutgoingCallLayout.llSwap.isVisible = false
+                binding.inOutgoingCallLayout.llMerge.isVisible = false
+                binding.inOutgoingCallLayout.llManage.isVisible = false
+            }
+        }
+
+        binding.inOutgoingCallLayout.llAddCall.isEnabled = NewCallManager.canAddCall()
         binding.inOutgoingCallLayout.llAddCall.alpha =
             if (NewCallManager.canAddCall()) 1.0f else 0.5f
 
-        // Let the system handle capability-based merging
-        binding.inOutgoingCallLayout.llMerge.isEnabled = true
-        binding.inOutgoingCallLayout.llMerge.alpha = 1.0f
-        binding.inOutgoingCallLayout.llSwap.isEnabled = true
-        binding.inOutgoingCallLayout.llSwap.alpha = 1.0f
-
-        val state = call.getStateCompat()
+        val state = NewCallManager.getState()
         var number = call.details.handle?.schemeSpecificPart ?: "Unknown"
-        var name = call.details.callerDisplayName ?: number
+        var name = Common.getDisplayName(this, number, call.details.callerDisplayName)
 
         if (call.isConference()) {
             name = "Conference Call"
@@ -150,13 +211,14 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                 NewCallManager.getConferenceCalls().joinToString(", ") { conferenceCall ->
                     val handleNumber =
                         conferenceCall.details.handle?.schemeSpecificPart ?: "Unknown"
-                    conferenceCall.details.callerDisplayName ?: handleNumber
+                    Common.getDisplayName(this, handleNumber, conferenceCall.details.callerDisplayName)
                 }
             number = participants.ifEmpty { "Multiple Participants" }
         }
 
         when (state) {
             Call.STATE_RINGING -> {
+                Log.e("TAG", "updateUI: gggg $number $name", )
                 binding.inIncomingLayout.tvNumberName.text = name
                 binding.inIncomingLayout.tvCalling.text = getString(R.string.incoming_call)
 
@@ -175,7 +237,6 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
             }
 
             Call.STATE_ACTIVE -> {
-                startProximitySensor()
                 binding.inOutgoingCallLayout.root.isVisible = true
                 binding.inIncomingLayout.root.isVisible = false
 
@@ -206,10 +267,12 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
 
             Call.STATE_DISCONNECTED, Call.STATE_DISCONNECTING -> {
                 binding.inOutgoingCallLayout.chronometer.stop()
-                removeProximitySensor()
-                finish()
+                if (NewCallManager.getPhoneState() is NewCallManager.NoCall) {
+                    finish()
+                }
             }
         }
+        updateProximitySensor()
     }
 
     override fun onClick(view: View) {
@@ -238,7 +301,7 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
 
             binding.inOutgoingCallLayout.llAddCall.id -> {
                 val intent = Intent(this, HomeActivity::class.java)
-                intent.putExtra(Constance.IS_Dialer, true)
+                intent.putExtra(Constance.IS_DIALER, true)
                 startActivity(intent)
             }
 
@@ -250,11 +313,24 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                 NewCallManager.swap()
             }
 
+            binding.inOutgoingCallLayout.llManage.id -> {
+                showConferenceManager()
+            }
+
             binding.inOutgoingCallLayout.llHold.id -> {
                 NewCallManager.toggleHold()
             }
 
-            binding.inOutgoingCallLayout.llBluetooth.id -> {
+            binding.inOutgoingCallLayout.llVideoCall.id -> {
+                onVideoCallClicked()
+            }
+
+            binding.inOutgoingCallLayout.llMore.id -> {
+                isMoreExpanded = !isMoreExpanded
+                updateUI()
+            }
+
+            /*binding.inOutgoingCallLayout.llBluetooth.id -> {
                 val service = NewCallManager.inCallService ?: return
                 val isBluetooth = service.callAudioState.route == CallAudioState.ROUTE_BLUETOOTH
 
@@ -264,7 +340,7 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                     else
                         CallAudioState.ROUTE_BLUETOOTH
                 )
-            }
+            }*/
 
             binding.inOutgoingCallLayout.llSpeaker.id -> {
                 val service = NewCallManager.inCallService ?: return
@@ -289,6 +365,30 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
             }
         }
     }
+
+    fun onVideoCallClicked() {
+        val call = NewCallManager.getPrimaryCall()
+        val currentCall = call ?: return
+
+        if (currentCall.isConference()) return
+
+        val number = currentCall.details.handle.schemeSpecificPart
+
+        Common.showVideoAppChooser(this, number) {
+            disconnectAndCall { }
+        }
+    }
+
+    private fun disconnectAndCall(action: () -> Unit) {
+        val call = NewCallManager.getPrimaryCall()
+        call?.disconnect()
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(500)
+            action()
+        }
+    }
+
+
 
 
     private fun sendSMSMessage(msg: String) {
@@ -332,12 +432,12 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         )
 
         // 🎧 Bluetooth
-        binding.inOutgoingCallLayout.ivBluetooth.setColorFilter(
+        /*binding.inOutgoingCallLayout.ivBluetooth.setColorFilter(
             if (isBluetooth) iconActiveColor else iconInactiveColor
         )
         binding.inOutgoingCallLayout.cvBluetooth.setCardBackgroundColor(
             if (isBluetooth) cardActiveColor else cardInactiveColor
-        )
+        )*/
 
         // 🎤 Mute
         binding.inOutgoingCallLayout.ivMute.setColorFilter(
@@ -346,11 +446,12 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         binding.inOutgoingCallLayout.cvMute.setCardBackgroundColor(
             if (isMuted) cardActiveColor else cardInactiveColor
         )
+        updateProximitySensor()
     }
 
 
     private fun updateHoldUI(call: Call) {
-        val isOnHold = call.getStateCompat() == Call.STATE_HOLDING
+        val isOnHold = NewCallManager.getState() == Call.STATE_HOLDING
 
         val iconActiveColor = ContextCompat.getColor(this, R.color.white)
         val iconInactiveColor = ContextCompat.getColor(this, R.color.black_color)
@@ -440,38 +541,108 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         if (call == null && !isNew) {
             finish()
         }
+        updateProximitySensor()
     }
 
+
+    private fun updateProximitySensor() {
+        val state = NewCallManager.getState()
+        val audioRoute = NewCallManager.inCallService?.callAudioState?.route ?: CallAudioState.ROUTE_EARPIECE
+
+        // Check for both ROUTE_EARPIECE and the legacy/combined ROUTE_WIRED_OR_EARPIECE
+        val isEarpiece = audioRoute == CallAudioState.ROUTE_EARPIECE || 
+                        audioRoute == CallAudioState.ROUTE_WIRED_OR_EARPIECE
+        
+        // However, if it's explicitly SPEKAER or BLUETOOTH, we definitely don't want proximity
+        val isSpeaker = audioRoute == CallAudioState.ROUTE_SPEAKER
+        val isBluetooth = audioRoute == CallAudioState.ROUTE_BLUETOOTH
+        
+        val isVideo = NewCallManager.getPrimaryCall()?.details?.videoState?.let {
+            it != android.telecom.VideoProfile.STATE_AUDIO_ONLY
+        } ?: false
+
+        Log.d("CallActivity", "updateProximitySensor: state=$state, route=$audioRoute, isEarpiece=$isEarpiece, isSpeaker=$isSpeaker, isBluetooth=$isBluetooth, isVideo=$isVideo")
+
+        val shouldActivate = (state == Call.STATE_ACTIVE || state == Call.STATE_DIALING || state == Call.STATE_CONNECTING)
+                && isEarpiece && !isSpeaker && !isBluetooth && !isVideo
+
+        if (shouldActivate) {
+            startProximitySensor()
+        } else {
+            removeProximitySensor()
+        }
+    }
 
     fun removeProximitySensor() {
         try {
             mProximityWakeLock?.let { wakeLock ->
                 if (wakeLock.isHeld) {
+                    Log.d("CallActivity", "releasing proximity wake lock")
                     wakeLock.release()
                 }
             }
             mProximityWakeLock = null
+            // Re-enable screen on if needed
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("CallActivity", "Error releasing proximity wake lock", e)
         }
     }
 
     fun startProximitySensor() {
         try {
-            val powerManager = applicationContext.getSystemService(POWER_SERVICE) as? PowerManager
+            val powerManager = getSystemService(POWER_SERVICE) as? PowerManager
+            if (powerManager == null) {
+                Log.e("CallActivity", "PowerManager is null")
+                return
+            }
 
-            if (mProximityWakeLock == null && powerManager != null) {
-                mProximityWakeLock =
-                    powerManager.newWakeLock(32, "color:Salut_ddd")
+            if (mProximityWakeLock == null) {
+                val isSupported = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    powerManager.isWakeLockLevelSupported(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK)
+                } else {
+                    true // Assume supported for legacy
+                }
+
+                if (isSupported) {
+                    mProximityWakeLock = powerManager.newWakeLock(
+                        PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
+                        "ContactManager:ProximityWakeLock"
+                    )
+                    Log.d("CallActivity", "Created proximity wake lock")
+                } else {
+                    Log.w("CallActivity", "Proximity screen off wake lock NOT supported on this device")
+                }
             }
 
             mProximityWakeLock?.let { wakeLock ->
                 if (!wakeLock.isHeld) {
-                    wakeLock.acquire(10 * 60 * 1000L /*10 minutes*/)
+                    Log.d("CallActivity", "acquiring proximity wake lock")
+                    wakeLock.acquire(30 * 60 * 1000L /* 30 minutes */)
+                    // Some devices require clearing this flag for proximity screen off to work
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("CallActivity", "Error acquiring proximity wake lock", e)
         }
+    }
+
+    private fun showConferenceManager() {
+        val participants = NewCallManager.getConferenceCalls()
+        if (participants.isEmpty()) return
+
+        val bottomSheet = BottomSheetDialog(this)
+        val dialogBinding = ConferenceManagerBottomSheetBinding.inflate(
+                layoutInflater
+            )
+        bottomSheet.setContentView(dialogBinding.root)
+
+        val adapter = ConferenceParticipantsAdapter(participants) { participant ->
+            participant.disconnect()
+            bottomSheet.dismiss()
+        }
+        dialogBinding.rvParticipants.adapter = adapter
+        bottomSheet.show()
     }
 }

@@ -110,14 +110,14 @@
                         android:id="@+id/rv_suggestions"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:visibility="visible" />
+                        android:visibility="gone" />
 
                     <LinearLayout
                         android:id="@+id/ll_options_suggestions"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:paddingHorizontal="@dimen/_15sdp"
+                        android:paddingHorizontal="@dimen/_10sdp"
                         android:paddingVertical="@dimen/_5sdp"
                         android:visibility="gone">
 
@@ -132,16 +132,16 @@
                             android:paddingVertical="@dimen/_8sdp">
 
                             <ImageView
-                                android:layout_width="@dimen/_20sdp"
-                                android:layout_height="@dimen/_20sdp"
-                                android:src="@drawable/ic_call" />
+                                android:layout_width="@dimen/_35sdp"
+                                android:layout_height="@dimen/_35sdp"
+                                android:src="@drawable/ic_new_add_new_contact" />
 
                             <TextView
                                 style="@style/TextStyle.Medium"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="@dimen/_10sdp"
-                                android:text="Create New Contactc"
+                                android:text="@string/create_new_contact"
                                 android:textColor="@color/black_color"
                                 android:textSize="@dimen/_11sdp" />
                         </LinearLayout>
@@ -156,16 +156,16 @@
                             android:paddingVertical="@dimen/_8sdp">
 
                             <ImageView
-                                android:layout_width="@dimen/_20sdp"
-                                android:layout_height="@dimen/_20sdp"
-                                android:src="@drawable/ic_call" />
+                                android:layout_width="@dimen/_35sdp"
+                                android:layout_height="@dimen/_35sdp"
+                                android:src="@drawable/ic_new_video_call" />
 
                             <TextView
                                 style="@style/TextStyle.Medium"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="@dimen/_10sdp"
-                                android:text="Video Call"
+                                android:text="@string/video_call"
                                 android:textColor="@color/black_color"
                                 android:textSize="@dimen/_11sdp" />
                         </LinearLayout>
@@ -180,9 +180,9 @@
                             android:paddingVertical="@dimen/_8sdp">
 
                             <ImageView
-                                android:layout_width="@dimen/_20sdp"
-                                android:layout_height="@dimen/_20sdp"
-                                android:src="@drawable/ic_call" />
+                                android:layout_width="@dimen/_35sdp"
+                                android:layout_height="@dimen/_35sdp"
+                                android:src="@drawable/ic_send_massage" />
 
                             <TextView
                                 style="@style/TextStyle.Medium"
@@ -210,43 +210,42 @@
                     android:id="@+id/displayArea"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
                     android:layout_marginTop="@dimen/_5sdp"
                     android:gravity="center"
                     android:orientation="horizontal">
 
                     <EditText
                         android:id="@+id/edt_display_number"
-                        style="@style/TextStyle.Medium"
+                        style="@style/TextStyle.Large"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="@dimen/_15sdp"
                         android:layout_weight="1"
                         android:background="@null"
                         android:backgroundTint="@color/border_color"
                         android:ellipsize="end"
                         android:gravity="center"
                         android:includeFontPadding="false"
-                        android:inputType="phone"
-                        android:paddingVertical="@dimen/_3sdp"
+                        android:paddingVertical="@dimen/_6sdp"
                         android:singleLine="true"
                         android:text=""
                         android:textColor="@color/black_color"
                         android:textSize="26sp" />
 
-                    <!--<ImageView
+                    <ImageView
                         android:id="@+id/buttonDelete"
-                        android:layout_width="wrap_content"
-                        android:layout_height="@dimen/_22sdp"
+                        android:layout_width="@dimen/_20sdp"
+                        android:layout_height="@dimen/_20sdp"
                         android:layout_marginHorizontal="@dimen/_5sdp"
                         android:adjustViewBounds="true"
-                        android:padding="@dimen/_3sdp"
-                        android:src="@drawable/ic_key_delete" />-->
+                        android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
+                        android:src="@drawable/ic_key_delete" />
                 </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/_1sdp"
-                    android:layout_marginHorizontal="@dimen/_5sdp"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
                     android:layout_marginBottom="@dimen/_5sdp"
                     android:background="@color/bg_color" />
 
@@ -260,7 +259,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="@dimen/_15sdp"
+                        android:layout_marginHorizontal="@dimen/_10sdp"
                         android:layout_marginTop="@dimen/_8sdp"
                         android:orientation="horizontal"
                         android:weightSum="3">
@@ -274,8 +273,8 @@
 
                             <ImageView
                                 android:id="@+id/linear1"
-                                android:layout_width="@dimen/_55sdp"
-                                android:layout_height="@dimen/_55sdp"
+                                android:layout_width="@dimen/_90sdp"
+                                android:layout_height="@dimen/_50sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -291,8 +290,8 @@
 
                             <ImageView
                                 android:id="@+id/linear2"
-                                android:layout_width="@dimen/_55sdp"
-                                android:layout_height="@dimen/_55sdp"
+                                android:layout_width="@dimen/_90sdp"
+                                android:layout_height="@dimen/_50sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -308,8 +307,8 @@
 
                             <ImageView
                                 android:id="@+id/linear3"
-                                android:layout_width="@dimen/_55sdp"
-                                android:layout_height="@dimen/_55sdp"
+                                android:layout_width="@dimen/_90sdp"
+                                android:layout_height="@dimen/_50sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -322,7 +321,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="@dimen/_15sdp"
+                        android:layout_marginHorizontal="@dimen/_10sdp"
                         android:layout_marginTop="@dimen/_8sdp"
                         android:orientation="horizontal"
                         android:weightSum="3">
@@ -336,8 +335,8 @@
 
                             <ImageView
                                 android:id="@+id/linear4"
-                                android:layout_width="@dimen/_55sdp"
-                                android:layout_height="@dimen/_55sdp"
+                                android:layout_width="@dimen/_90sdp"
+                                android:layout_height="@dimen/_50sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -353,8 +352,8 @@
 
                             <ImageView
                                 android:id="@+id/linear5"
-                                android:layout_width="@dimen/_55sdp"
-                                android:layout_height="@dimen/_55sdp"
+                                android:layout_width="@dimen/_90sdp"
+                                android:layout_height="@dimen/_50sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -370,8 +369,8 @@
 
                             <ImageView
                                 android:id="@+id/linear6"
-                                android:layout_width="@dimen/_55sdp"
-                                android:layout_height="@dimen/_55sdp"
+                                android:layout_width="@dimen/_90sdp"
+                                android:layout_height="@dimen/_50sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -382,7 +381,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="@dimen/_15sdp"
+                        android:layout_marginHorizontal="@dimen/_10sdp"
                         android:layout_marginTop="@dimen/_8sdp"
                         android:orientation="horizontal"
                         android:weightSum="3">
@@ -396,8 +395,8 @@
 
                             <ImageView
                                 android:id="@+id/linear7"
-                                android:layout_width="@dimen/_55sdp"
-                                android:layout_height="@dimen/_55sdp"
+                                android:layout_width="@dimen/_90sdp"
+                                android:layout_height="@dimen/_50sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -415,8 +414,8 @@
 
                             <ImageView
                                 android:id="@+id/linear8"
-                                android:layout_width="@dimen/_55sdp"
-                                android:layout_height="@dimen/_55sdp"
+                                android:layout_width="@dimen/_90sdp"
+                                android:layout_height="@dimen/_50sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -432,8 +431,8 @@
 
                             <ImageView
                                 android:id="@+id/linear9"
-                                android:layout_width="@dimen/_55sdp"
-                                android:layout_height="@dimen/_55sdp"
+                                android:layout_width="@dimen/_90sdp"
+                                android:layout_height="@dimen/_50sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -444,7 +443,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="@dimen/_15sdp"
+                        android:layout_marginHorizontal="@dimen/_10sdp"
                         android:layout_marginTop="@dimen/_8sdp"
                         android:orientation="horizontal"
                         android:weightSum="3">
@@ -458,8 +457,8 @@
 
                             <ImageView
                                 android:id="@+id/linear10"
-                                android:layout_width="@dimen/_55sdp"
-                                android:layout_height="@dimen/_55sdp"
+                                android:layout_width="@dimen/_90sdp"
+                                android:layout_height="@dimen/_50sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -475,8 +474,8 @@
 
                             <ImageView
                                 android:id="@+id/linear11"
-                                android:layout_width="@dimen/_55sdp"
-                                android:layout_height="@dimen/_55sdp"
+                                android:layout_width="@dimen/_90sdp"
+                                android:layout_height="@dimen/_50sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -492,8 +491,8 @@
 
                             <ImageView
                                 android:id="@+id/linear12"
-                                android:layout_width="@dimen/_55sdp"
-                                android:layout_height="@dimen/_55sdp"
+                                android:layout_width="@dimen/_90sdp"
+                                android:layout_height="@dimen/_50sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -506,64 +505,28 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:layout_marginHorizontal="@dimen/_15sdp"
-                    android:layout_marginTop="@dimen/_14sdp"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_18sdp"
                     android:layout_marginBottom="@dimen/_10sdp"
                     android:gravity="center"
-                    android:orientation="horizontal"
-                    android:weightSum="3">
+                    android:orientation="horizontal">
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="horizontal"
-                        android:visibility="invisible">
-
-                        <ImageView
-                            android:layout_width="@dimen/_55sdp"
-                            android:layout_height="@dimen/_55sdp"
-                            android:adjustViewBounds="true"
-                            android:clickable="true"
-                            android:foreground="@drawable/iv_effect_white_round3"
-                            android:src="@drawable/ic_key_star" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:gravity="center"
                         android:orientation="horizontal">
 
                         <ImageView
                             android:id="@+id/buttonCall"
-                            android:layout_width="@dimen/_55sdp"
-                            android:layout_height="@dimen/_55sdp"
+                            android:layout_width="@dimen/_80sdp"
+                            android:layout_height="@dimen/_50sdp"
                             android:adjustViewBounds="true"
                             android:clickable="true"
+                            android:focusable="true"
                             android:foreground="@drawable/iv_effect_white_round3"
                             android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
                             android:src="@drawable/ic_key_calling" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:id="@+id/buttonDelete"
-                            android:layout_width="@dimen/_30sdp"
-                            android:layout_height="@dimen/_30sdp"
-                            android:adjustViewBounds="true"
-                            android:clickable="true"
-                            android:foreground="@drawable/iv_effect_white_round3"
-                            android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                            android:src="@drawable/ic_key_delete" />
                     </LinearLayout>
                 </LinearLayout>
 

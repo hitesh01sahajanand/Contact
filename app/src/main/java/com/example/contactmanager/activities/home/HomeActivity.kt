@@ -65,7 +65,7 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
 
     private fun setupFragments() {
 
-        val isDialer = intent.getBooleanExtra(Constance.IS_Dialer, false)
+        val isDialer = intent.getBooleanExtra(Constance.IS_DIALER, false)
 
         favoritesFragment = FavoritesFragment()
         recentsFragment = RecentsFragment()

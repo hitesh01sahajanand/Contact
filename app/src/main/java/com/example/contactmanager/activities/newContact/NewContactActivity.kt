@@ -3,6 +3,7 @@ package com.example.contactmanager.activities.newContact
 import android.Manifest
 import android.app.AlertDialog
 import android.content.ContentProviderOperation
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -42,7 +43,10 @@ import com.example.contactmanager.databinding.ItemEmailDesignBinding
 import com.example.contactmanager.databinding.ItemPhoneDesignBinding
 import com.example.contactmanager.models.AccountModel
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
+import com.example.contactmanager.utils.SendData
+import com.example.contactmanager.viewmodels.ContactDetailsViewModel
 import com.example.contactmanager.viewmodels.HomeViewModel
 import com.example.contactmanager.viewmodels.NewContactViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -53,19 +57,14 @@ import java.io.File
 import java.io.FileOutputStream
 import kotlin.getValue
 import kotlin.text.get
+import androidx.core.net.toUri
 
 @AndroidEntryPoint
 class NewContactActivity : AppCompatActivity(), OnClickHandler {
     private lateinit var binding: ActivityNewContactBinding
-
     private val viewModel: NewContactViewModel by viewModels()
+    private val contactDetailViewModel: ContactDetailsViewModel by viewModels()
     private var newDisplayList: ArrayList<AccountModel> = ArrayList()
-
-    val phoneTypes = listOf(
-        "Mobile", "Work", "Home", "Main",
-        "Work Fax", "Home Fax", "Pager", "Other"
-    )
-    val emailTypes = listOf("Mobile", "Work", "Home", "Main", "Other")
 
     var selectedImageUri: Uri? = null
     var accountModel: AccountModel? = null
@@ -119,6 +118,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
                     avtar = Common.generateAvatar("Device Only")
                 )
             )
+
             list.forEach {
                 newDisplayList.add(
                     AccountModel(
@@ -132,35 +132,59 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             if (newDisplayList.isNotEmpty()) {
                 val itemData = newDisplayList[0]
                 binding.inAccountDesign.tvIdName.text = itemData.name
-                binding.inAccountDesign.tvId.text = itemData.email
-                Glide.with(binding.inAccountDesign.ivIdPhoto.context).load(itemData.avtar)
-                    .into(binding.inAccountDesign.ivIdPhoto)
+                val color = Common.profileColors[1 % Common.profileColors.size]
+                binding.inAccountDesign.cvProfile.setCardBackgroundColor(
+                    ContextCompat.getColor(binding.root.context, color)
+                )
+                val firstChar = itemData.name.firstOrNull()?.uppercase() ?: ""
+                binding.inAccountDesign.tvContactName.text = firstChar
 
                 accountModel = itemData
             }
         }
 
-        val number = intent.getStringExtra("Number")
-        addPhoneRow(number!!)
+        val isContactSaved = intent.getBooleanExtra(Constance.IS_CONTACT_SAVED, false)
+        val contactId = intent.getStringExtra(Constance.CONTACT_ID)
 
+        if (isContactSaved) {
+            contactId?.let { id ->
+                contactDetailViewModel.getUpdatedContact(id)
+                contactDetailViewModel.contactData.observe(this) { contact ->
+                    contact?.let {
+                        binding.edtFirstName.setText(it.stringCallName)
+                        binding.edtPhone.setText(it.stringNumber)
+                        it.stringPhotoUri?.let { uri ->
+                            selectedImageUri = uri.toUri()
+                            Glide.with(this).load(uri).into(binding.ivContactPhoto)
+                        }
+
+                        // Fetch email
+                        it.contactId?.let { id ->
+                            viewModel.fetchContactEmail(id)
+                        }
+                    }
+                }
+            }
+
+        } else {
+            val number = intent.getStringExtra("Number")
+            binding.edtPhone.setText(number)
+        }
+
+        viewModel.contactEmail.observe(this) { email ->
+            binding.edtEmail.setText(email)
+        }
     }
 
 
     override fun onClick(view: View) {
         when (view.id) {
-            binding.cvAddPhone.id -> {
-                addPhoneRow()
-            }
 
-            binding.cvAddEmail.id -> {
-                addEmailRow()
-            }
-
-            binding.inAccountDesign.root.id -> {
+            binding.llAccounts.id -> {
                 showAccountPopup(binding.inAccountDesign.root, newDisplayList)
             }
 
-            binding.btnAddPhoto.id -> {
+            binding.cvAddPhoto.id -> {
                 if (hasPermissions()) {
                     showImagePickerDialog()
                 } else {
@@ -168,56 +192,56 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
                 }
             }
 
-            binding.tvDone.id -> {
+            binding.cvSave.id -> {
 
-                val phoneList = getPhoneList().toMutableList()
+                val isContactSaved = intent.getBooleanExtra(Constance.IS_CONTACT_SAVED, false)
+                val account = accountModel
+                val name = binding.edtFirstName.text.toString().trim()
+                val email = binding.edtEmail.text.toString().trim()
+                val number = binding.edtPhone.text.toString().trim()
+                val imageUrl = selectedImageUri
+                val isValidEmail = !Common.isValidEmail(email)
 
-                val number = intent.getStringExtra("Number")
-                Log.e("TAG", "onClick: number $number")
 
-                /*if (!number.isNullOrEmpty()) {
-                    phoneList.add(Pair(number, "Mobile"))
-                    *//*viewModel.isSaveContact(number)
-                    viewModel.isSavedNumber.observe(this) {
-                        Log.e("TAG", "initView:isSaved Number ${it}")
-                    }*//*
-                }*/
-                val emailList = getEmailList()
+
+                Log.e(
+                    "TAG",
+                    "onClick: $isContactSaved  $account  $name  $email  $number  $imageUrl  $isValidEmail",
+                )
 
                 when {
-                    binding.edtFirstName.text.isEmpty() -> {
-                        Toast.makeText(this, "Please enter first name", Toast.LENGTH_SHORT).show()
+                    name.isEmpty() -> {
+                        binding.edtFirstName.error = "Enter first name"
                     }
 
-                    binding.edtLastName.text.isEmpty() -> {
-                        Toast.makeText(this, "Please enter last name", Toast.LENGTH_SHORT).show()
+                    number.isEmpty() -> {
+                        binding.edtPhone.error = "Enter number"
                     }
 
-                    phoneList.isEmpty() -> {
-                        Toast.makeText(
-                            this,
-                            "Please enter at least one phone number",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                    isValidEmail -> {
+                        binding.edtEmail.error = "Enter valid email"
                     }
 
                     else -> {
 
-                        Log.e(
-                            "TAG",
-                            "onClick: ${phoneList.size} $number, ${emailList.size}  $selectedImageUri ",
-                        )
                         viewModel.savedContactMassage.observe(this) { msg ->
                             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                            val resultIntent = Intent().apply {
+                                putExtra(Constance.DATA_FETCH, true)
+                            }
+                            setResult(RESULT_OK, resultIntent)
+
+                            finish()
                         }
 
-                        viewModel.saveContact(
-                            firstName = binding.edtFirstName.text.toString().trim(),
-                            lastName = binding.edtLastName.text.toString().trim(),
-                            phoneList = phoneList,
-                            emailList = emailList,
-                            selectedImageUri = selectedImageUri,
-                            accountModel = accountModel!!
+                        viewModel.saveOrUpdateContact(
+                            name = name,
+                            number = number,
+                            email = email,
+                            selectedImageUri = imageUrl,
+                            accountModel = accountModel!!,
+                            isContactSaved = isContactSaved,
+                            contactId = intent.getStringExtra(Constance.CONTACT_ID)
                         )
                     }
                 }
@@ -225,13 +249,17 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             }
 
 
-            binding.tvClose.id -> {
+            binding.cvCancel.id -> {
+                finish()
+            }
+
+            binding.ivBack.id -> {
                 onBackPressedDispatcher.onBackPressed()
             }
         }
     }
 
-    private fun addPhoneRow(number: String = "") {
+    /*private fun addPhoneRow(number: String = "") {
         val bindingItem = ItemPhoneDesignBinding.inflate(layoutInflater, null, false)
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, phoneTypes)
         bindingItem.spinnerType.adapter = adapter
@@ -248,9 +276,9 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         }
 
         binding.llPhoneContainer.addView(bindingItem.root)
-    }
+    }*/
 
-    fun getPhoneList(): List<Pair<String, String>> {
+    /*fun getPhoneList(): List<Pair<String, String>> {
         val list = mutableListOf<Pair<String, String>>()
 
         for (i in 0 until binding.llPhoneContainer.childCount) {
@@ -265,9 +293,9 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         }
 
         return list
-    }
+    }*/
 
-    private fun addEmailRow() {
+    /*private fun addEmailRow() {
         val bindingItem = ItemEmailDesignBinding.inflate(layoutInflater, null, false)
 
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, emailTypes)
@@ -283,9 +311,9 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         }
 
         binding.llEmailContainer.addView(bindingItem.root)
-    }
+    }*/
 
-    fun getEmailList(): List<Pair<String, String>> {
+    /*fun getEmailList(): List<Pair<String, String>> {
         val list = mutableListOf<Pair<String, String>>()
 
         for (i in 0 until binding.llEmailContainer.childCount) {
@@ -300,7 +328,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         }
 
         return list
-    }
+    }*/
 
     private fun showAccountPopup(anchorView: View, list: List<AccountModel>) {
 
@@ -320,9 +348,12 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         val adapter = AllAccountAdapter(onClick = { accountModel ->
             this.accountModel = accountModel
             binding.inAccountDesign.tvIdName.text = accountModel.name
-            binding.inAccountDesign.tvId.text = accountModel.email
-            Glide.with(binding.inAccountDesign.ivIdPhoto.context).load(accountModel.avtar)
-                .into(binding.inAccountDesign.ivIdPhoto)
+            val color = Common.profileColors[1 % Common.profileColors.size]
+            binding.inAccountDesign.cvProfile.setCardBackgroundColor(
+                ContextCompat.getColor(binding.root.context, color)
+            )
+            val firstChar = accountModel.name.firstOrNull()?.uppercase() ?: ""
+            binding.inAccountDesign.tvContactName.text = firstChar
             popupWindow.dismiss()
         })
 

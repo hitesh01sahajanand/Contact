@@ -41,7 +41,13 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.core.net.toUri
+import androidx.recyclerview.widget.RecyclerView
 import com.example.contactmanager.activities.call.CallActivity
+import com.example.contactmanager.activities.details.ContactsDetailsActivity
+import com.example.contactmanager.activities.newContact.NewContactActivity
+import com.example.contactmanager.utils.Constance
+import com.example.contactmanager.utils.NewCallManager
+import com.example.contactmanager.utils.SendData
 
 @AndroidEntryPoint
 class RecentsFragment : Fragment(), OnClickHandler {
@@ -49,14 +55,28 @@ class RecentsFragment : Fragment(), OnClickHandler {
     private lateinit var adapter: RecentAdapter
     private val viewModel: RecentViewModel by viewModels()
     private var allList: ArrayList<CallHistoryListItems> = ArrayList()
+    private var selectedTypeFilter = ""
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         binding = FragmentRecentsBinding.inflate(inflater, container, false)
         initView()
         return binding.root
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (PermissionManager.hasPermissions(requireActivity())) {
+            viewModel.loadAllRecentsHistory(0, 1000)
+        }
+    }
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        if (!hidden && PermissionManager.hasPermissions(requireActivity())) {
+            viewModel.loadAllRecentsHistory(0, 1000)
+        }
     }
 
     private fun initView() {
@@ -65,10 +85,50 @@ class RecentsFragment : Fragment(), OnClickHandler {
         binding.inHeader.tvTitle.text = requireActivity().getString(R.string.recent)
         binding.inHeader.cvMore.isVisible = true
         binding.inHeader.cvFilter.isVisible = true
+        selectedTypeFilter = requireActivity().getString(R.string.all_calls)
 
-        adapter = RecentAdapter(onClickCall = { logEntry ->
-            actionCall(logEntry, requireActivity())
+        adapter = RecentAdapter(onClickCall = { callLogModel, clickAction ->
+
+            when (clickAction) {
+                Constance.ACTION_CALL -> {
+                    callLogModel.stringNumber?.let {
+                        Common.actionCall(it, requireActivity())
+                    }
+                }
+
+                Constance.ACTION_SEND_MESSAGE -> {
+                    callLogModel.stringNumber?.let {
+                        Common.showMessageAppChooser(requireActivity(), it)
+                    }
+                }
+
+                Constance.ACTION_VIDEO_CALL -> {
+                    callLogModel.stringNumber?.let {
+                        Common.showVideoAppChooser(requireActivity(), it)
+                    }
+                }
+
+                Constance.ACTION_INFO -> {
+                    val intent = Intent(requireActivity(), ContactsDetailsActivity::class.java)
+                    intent.putExtra(Constance.DATA_FETCH, callLogModel.contactId)
+                    requireActivity().startActivity(intent)
+                }
+
+                Constance.ACTION_ADD_TO_CONTACT -> {
+                    val isContactSaved = callLogModel.contactId.isNullOrEmpty()
+                    val intent = Intent(requireActivity(), NewContactActivity::class.java)
+                    intent.putExtra("Number", callLogModel.stringNumber)
+                    intent.putExtra(Constance.IS_CONTACT_SAVED, !isContactSaved)
+                    requireActivity().startActivity(intent)
+                }
+
+                Constance.ACTION_ADD_TAG -> {
+
+                }
+            }
+
         })
+
 
         binding.rvRecents.adapter = adapter
         binding.rvRecents.layoutManager = LinearLayoutManager(requireActivity())
@@ -77,12 +137,31 @@ class RecentsFragment : Fragment(), OnClickHandler {
         viewModel.allRecentCallHistory.observe(viewLifecycleOwner) { recentList ->
             allList.clear()
             allList.addAll(recentList)
-            adapter.submitList(ArrayList(allList))
+
+            updateAdapterList()
         }
 
-        if (PermissionManager.hasPermissions(requireActivity())) {
-            viewModel.loadAllRecentsHistory(0, 1000)
+        viewModel.isNextPageLoading.observe(viewLifecycleOwner) { isLoading ->
+            if (isLoading) {
+                adapter.showLoader()
+            } else {
+                adapter.hideLoader()
+            }
         }
+
+        binding.rvRecents.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                val totalItemCount = layoutManager.itemCount
+                val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
+
+                if (totalItemCount <= (lastVisibleItem + 5)) {
+                    viewModel.loadNextPage()
+                }
+            }
+        })
 
 
         binding.edtSearch.addTextChangedListener { editable ->
@@ -126,54 +205,39 @@ class RecentsFragment : Fragment(), OnClickHandler {
                     option2Click = {
                         requireActivity().startActivity(
                             Intent(
-                                requireActivity(),
-                                SettingsActivity::class.java
+                                requireActivity(), SettingsActivity::class.java
                             )
                         )
-                    }
-                )
+                    })
 
             }
 
             binding.inHeader.cvFilter.id -> {
-
-
                 showFilterBottomSheet(requireActivity(), onClick = { type ->
-                    when (type) {
-                        requireActivity().getString(R.string.all_calls) -> {
-                            val filteredList = filterCallLogs(allList, type)
-                            Log.e("TAG", "onClick: ${filteredList.size} ")
-                            adapter.clearList()
-                            adapter.submitList(filteredList)
-                        }
-
-                        requireActivity().getString(R.string.missed_calls) -> {
-                            val filteredList = filterCallLogs(allList, type)
-                            adapter.clearList()
-                            adapter.submitList(filteredList)
-                            Log.e("TAG", "onClick: ${filteredList.size} ")
-                        }
-
-                        requireActivity().getString(R.string.incoming_calls) -> {
-                            val filteredList = filterCallLogs(allList, type)
-                            adapter.clearList()
-                            adapter.submitList(filteredList)
-                        }
-
-                        requireActivity().getString(R.string.outgoing_calls) -> {
-                            val filteredList = filterCallLogs(allList, type)
-                            adapter.clearList()
-                            adapter.submitList(filteredList)
-                        }
-                    }
+                    selectedTypeFilter = type
+                    updateAdapterList()
                 })
             }
         }
     }
 
+    private fun updateAdapterList() {
+        val displayList = if (selectedTypeFilter.isEmpty() || selectedTypeFilter == getString(R.string.all_calls)) {
+            ArrayList(allList)
+        } else {
+            filterCallLogs(allList, selectedTypeFilter)
+        }
+
+        adapter.submitList(displayList)
+
+        val query = binding.edtSearch.text.toString()
+        if (query.isNotEmpty()) {
+            adapter.filter(query)
+        }
+    }
+
     fun filterCallLogs(
-        list: List<CallHistoryListItems>,
-        type: String
+        list: List<CallHistoryListItems>, type: String
     ): ArrayList<CallHistoryListItems> {
 
         val result = ArrayList<CallHistoryListItems>()
@@ -195,14 +259,11 @@ class RecentsFragment : Fragment(), OnClickHandler {
 
                         requireActivity().getString(R.string.all_calls) -> true
 
-                        requireActivity().getString(R.string.missed_calls) ->
-                            callType == CallLog.Calls.MISSED_TYPE
+                        requireActivity().getString(R.string.missed_calls) -> callType == CallLog.Calls.MISSED_TYPE
 
-                        requireActivity().getString(R.string.incoming_calls) ->
-                            callType == CallLog.Calls.INCOMING_TYPE
+                        requireActivity().getString(R.string.incoming_calls) -> callType == CallLog.Calls.INCOMING_TYPE
 
-                        requireActivity().getString(R.string.outgoing_calls) ->
-                            callType == CallLog.Calls.OUTGOING_TYPE
+                        requireActivity().getString(R.string.outgoing_calls) -> callType == CallLog.Calls.OUTGOING_TYPE
 
                         else -> false
                     }
@@ -215,6 +276,8 @@ class RecentsFragment : Fragment(), OnClickHandler {
                         }
                         result.add(item)
                     }
+                } else -> {
+
                 }
             }
         }
@@ -226,9 +289,7 @@ class RecentsFragment : Fragment(), OnClickHandler {
 
         val dialog = BottomSheetDialog(context)
         val filterBinding = FilterBottomSheetDialogBinding.inflate(
-            LayoutInflater.from(context),
-            null,
-            false
+            LayoutInflater.from(context), null, false
         )
 
         dialog.setContentView(filterBinding.root)
@@ -256,76 +317,6 @@ class RecentsFragment : Fragment(), OnClickHandler {
         filterBinding.llOutGoingCalls.setOnClickListener {
             onClick(context.getString(R.string.outgoing_calls))
             dialog.dismiss()
-        }
-    }
-
-    fun actionCall(callLogEntry: CallLogEntry, context: Context) {
-        if (callLogEntry.stringNumber.isNullOrEmpty()) return
-
-        val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
-            ?: return
-
-        val callUri = Uri.fromParts("tel", callLogEntry.stringNumber, null)
-        val callBundle = Bundle().apply {
-            putBoolean("android.telecom.extra.START_CALL_WITH_SPEAKERPHONE", false)
-        }
-
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.CALL_PHONE
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-                val subscriptionManager =
-                    context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
-                val activeSimList = subscriptionManager?.activeSubscriptionInfoList
-
-                if (!activeSimList.isNullOrEmpty() && activeSimList.size > 1) {
-
-                    val simNames = Array(activeSimList.size) { i ->
-                        "SIM ${i + 1}"
-                    }
-
-                    val builder = MaterialAlertDialogBuilder(context)
-
-                    builder.setTitle("Select SIM")
-                        .setItems(simNames) { _, which ->
-
-                            val selectedSim = activeSimList[which]
-
-                            val callBundle2 = Bundle().apply {
-                                putParcelable(
-                                    TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
-                                    Common.getHandleForSubId(
-                                        selectedSim.subscriptionId,
-                                        context
-                                    )
-                                )
-                            }
-
-                            val callUri2 = Uri.fromParts("tel", callLogEntry.stringNumber, null)
-                            telecomManager.placeCall(callUri2, callBundle2)
-                        }
-
-                    val dialog = builder.create()
-                    dialog.show()
-
-                    dialog.getButton(Dialog.BUTTON_POSITIVE)?.setTextColor(Color.RED)
-
-                } else {
-                    // Single SIM
-                    telecomManager.placeCall(callUri, callBundle)
-                }
-
-            } else {
-                // Pre-Marshmallow
-                val intent = Intent(Intent.ACTION_CALL).apply {
-                    data = "tel:${callLogEntry.stringNumber}".toUri()
-                }
-                context.startActivity(intent)
-            }
         }
     }
 }

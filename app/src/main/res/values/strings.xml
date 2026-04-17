@@ -73,6 +73,16 @@
     <string name="more">More</string>
     <string name="video_call">Video Call</string>
     <string name="manage">Manage</string>
+    <string name="create_new_contact">Create new contact</string>
+    <string name="first_name">First Name</string>
+    <string name="email">Email</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="history">History</string>
+    <string name="storage_location">Storage Location</string>
+    <string name="share">Share</string>
+    <string name="choose_your_preferred_app">Choose your preferred app</string>
+    <string name="conference_participants">Conference Participants</string>
 
 
 </resources>

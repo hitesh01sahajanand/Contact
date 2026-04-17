@@ -16,9 +16,11 @@ import com.example.contactmanager.databinding.AllContactDesignBinding
 import com.example.contactmanager.databinding.HeaderItemDesignBinding
 import com.example.contactmanager.models.CallHistoryListItems
 import com.example.contactmanager.models.ContactListItem
+import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Constance
 
-class AllContactsAdapter(private val onClick: (ContactListItem, Int) -> Unit) :
+class AllContactsAdapter(private val onClick: (ContactModel, String) -> Unit) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val contactList = ArrayList<ContactListItem>()
     private var filteredList: MutableList<ContactListItem> = mutableListOf()
@@ -212,13 +214,26 @@ class AllContactsAdapter(private val onClick: (ContactListItem, Int) -> Unit) :
             }
 
             binding.run {
+
+                ivCall.setOnClickListener {
+                    onClick(data, Constance.ACTION_CALL)
+                }
+
+                ivMessage.setOnClickListener {
+                    onClick(data, Constance.ACTION_SEND_MESSAGE)
+                }
+
+                ivVideoCall.setOnClickListener {
+                    onClick(data, Constance.ACTION_VIDEO_CALL)
+                }
+
+                ivCallInfo.setOnClickListener {
+                    onClick(data, Constance.ACTION_INFO)
+                }
+
+
                 tvCollapseName.text = data.displayName
                 tvExpandedContactNumber.text = "Mobile +${data.number}"
-
-                ivCall.setOnClickListener { onClick(item, position) }
-                ivMessage.setOnClickListener { onClick(item, position) }
-                ivVideoCall.setOnClickListener { onClick(item, position) }
-                ivCallInfo.setOnClickListener { onClick(item, position) }
 
                 if (data.userThumbnail.isNullOrEmpty()) {
                     binding.tvCollapseContactName.isVisible = true

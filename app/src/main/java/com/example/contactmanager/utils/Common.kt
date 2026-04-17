@@ -1,13 +1,14 @@
 package com.example.contactmanager.utils
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlarmManager
 import android.app.Dialog
 import android.app.PendingIntent
-import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -16,10 +17,14 @@ import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.PowerManager
 import android.provider.ContactsContract
 import android.provider.Settings
+import android.telecom.TelecomManager
 import android.telephony.PhoneNumberUtils
+import android.telephony.SubscriptionManager
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,6 +32,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -39,8 +45,14 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.io.ByteArrayOutputStream
 import java.util.Calendar
 import androidx.core.graphics.drawable.toDrawable
+import androidx.core.net.toUri
+import androidx.recyclerview.widget.GridLayoutManager
+import com.example.contactmanager.adapters.AppsAdapter
 import com.example.contactmanager.databinding.RemindMeDialogDesignBinding
 import com.example.contactmanager.receivers.ReminderReceiver
+import com.example.contactmanager.databinding.VideoCallDialogBinding
+import com.example.contactmanager.databinding.ItemVideoCallBinding
+import com.google.android.material.bottomsheet.BottomSheetDialog
 
 object Common {
 
@@ -136,7 +148,7 @@ object Common {
                     ?.uppercase()
                     ?: ""
 
-                val secondChar = secondPart.firstOrNull { it.isLetter() }
+                val secondChar = secondPart.firstOrNull() { it.isLetter() }
                     ?.uppercase()
                     ?: secondPart.firstOrNull()
                         ?.toString()
@@ -482,7 +494,8 @@ object Common {
                 intentSetting.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 context.startActivity(intentSetting)
 
-                Toast.makeText(context, "Please allow exact alarm permission", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Please allow exact alarm permission", Toast.LENGTH_SHORT)
+                    .show()
                 return
             }
         }
@@ -507,5 +520,402 @@ object Common {
             }
         }
         return sb.toString()
+    }
+
+    fun isValidEmail(email: String?): Boolean {
+        return !email.isNullOrEmpty() &&
+                android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+
+    fun sendSMSMessage(context: Context, number: String?, msg: String) {
+        if (number.isNullOrEmpty()) return
+
+        try {
+            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                data = "smsto:$number".toUri()
+                putExtra("sms_body", msg)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun actionCall(number: String?, context: Context) {
+        if (number.isNullOrEmpty()) return
+
+        if (NewCallManager.isNumberActive(number)) {
+            Toast.makeText(context, "Number already in a call", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val telecomManager =
+            context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager ?: return
+
+        val callUri = Uri.fromParts("tel", number, null)
+        val callBundle = Bundle().apply {
+            putBoolean("android.telecom.extra.START_CALL_WITH_SPEAKERPHONE", false)
+        }
+
+        if (ActivityCompat.checkSelfPermission(
+                context, Manifest.permission.CALL_PHONE
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+                val subscriptionManager =
+                    context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+                val activeSimList = subscriptionManager?.activeSubscriptionInfoList
+
+                if (!activeSimList.isNullOrEmpty() && activeSimList.size > 1) {
+
+                    val simNames = Array(activeSimList.size) { i ->
+                        "SIM ${i + 1}"
+                    }
+
+                    val builder = MaterialAlertDialogBuilder(context)
+
+                    builder.setTitle("Select SIM").setItems(simNames) { _, which ->
+
+                        val selectedSim = activeSimList[which]
+
+                        val callBundle2 = Bundle().apply {
+                            putParcelable(
+                                TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
+                                Common.getHandleForSubId(
+                                    selectedSim.subscriptionId, context
+                                )
+                            )
+                        }
+
+                        val callUri2 = Uri.fromParts("tel", number, null)
+                        telecomManager.placeCall(callUri2, callBundle2)
+                    }
+
+                    val dialog = builder.create()
+                    dialog.show()
+
+                    dialog.getButton(Dialog.BUTTON_POSITIVE)?.setTextColor(Color.RED)
+
+                } else {
+                    // Single SIM
+                    telecomManager.placeCall(callUri, callBundle)
+                }
+
+            } else {
+                // Pre-Marshmallow
+                val intent = Intent(Intent.ACTION_CALL).apply {
+                    data = "tel:$number".toUri()
+                }
+                context.startActivity(intent)
+            }
+        }
+    }
+
+    fun isAppInstalled(context: Context?, packageName: String?): Boolean {
+        if (context == null || packageName.isNullOrBlank()) return false
+
+        return try {
+            val pm = context.packageManager
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                pm.getPackageInfo(
+                    packageName,
+                    PackageManager.PackageInfoFlags.of(0)
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                pm.getPackageInfo(packageName, 0)
+            }
+
+            true
+        } catch (e: PackageManager.NameNotFoundException) {
+            false
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    fun showVideoAppChooser(activity: Activity, number: String, onSelection: (() -> Unit)? = null) {
+        val appList = Constance.videoCallList
+        val dialog = BottomSheetDialog(activity, R.style.TransparentDialog)
+        val view = VideoCallDialogBinding.inflate(activity.layoutInflater, null, false)
+        dialog.setContentView(view.root)
+        view.rvApps.isVisible = false
+        view.loutVideoCall.isVisible = true
+
+        view.loutVideoCall.removeAllViews()
+
+        appList.forEach { pkg ->
+            val isInstalled = isAppInstalled(activity, pkg)
+            val itemBinding =
+                ItemVideoCallBinding.inflate(activity.layoutInflater, view.loutVideoCall, false)
+
+            try {
+                if (isInstalled) {
+                    val info = activity.packageManager.getPackageInfo(pkg, 0)
+                    itemBinding.ivImage.setImageDrawable(info.applicationInfo?.loadIcon(activity.packageManager))
+                    itemBinding.tvTitle.text =
+                        info.applicationInfo?.loadLabel(activity.packageManager)
+                } else {
+                    itemBinding.ivImage.setImageResource(R.drawable.ic_video_call)
+                    itemBinding.tvTitle.text = when (pkg) {
+                        Constance.WHATSAPP -> "Install WhatsApp"
+                        Constance.WHATSAPP_BUSSINESS -> "Install WA Business"
+                        Constance.DUO -> "Install Meet"
+                        else -> "Install App"
+                    }
+                }
+            } catch (_: Exception) {
+                itemBinding.ivImage.setImageResource(R.drawable.ic_video_call)
+                itemBinding.tvTitle.text = if (pkg.contains("whatsapp")) "WhatsApp" else "Meet"
+            }
+
+            itemBinding.root.setOnClickListener {
+                dialog.dismiss()
+                if (isInstalled) {
+                    onSelection?.invoke()
+                    when (pkg) {
+                        Constance.DUO -> startDuoCall(activity, number)
+                        Constance.WHATSAPP -> {
+                            val waId = getVideoCallID(
+                                activity,
+                                number,
+                                "vnd.android.cursor.item/vnd.com.whatsapp.video.call"
+                            )
+                            waId?.let {
+                                launchContactIntent(
+                                    activity,
+                                    it,
+                                    pkg,
+                                    "vnd.android.cursor.item/vnd.com.whatsapp.video.call"
+                                )
+                            } ?: run {
+                                Toast.makeText(activity, "WhatsApp video call not available for this contact", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+
+                        Constance.WHATSAPP_BUSSINESS -> {
+                            val wabId = getVideoCallID(
+                                activity,
+                                number,
+                                "vnd.android.cursor.item/vnd.com.whatsapp.w4b.video.call"
+                            )
+                            wabId?.let {
+                                launchContactIntent(
+                                    activity,
+                                    it,
+                                    pkg,
+                                    "vnd.android.cursor.item/vnd.com.whatsapp.w4b.video.call"
+                                )
+                            } ?: run {
+                                Toast.makeText(activity, "WhatsApp Business video call not available for this contact", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+
+                        else -> {
+                            // Default fallback is to try Duo if it's the only other option
+                            if (pkg == Constance.DUO) {
+                                startDuoCall(activity, number)
+                            } else {
+                                activity.packageManager.getLaunchIntentForPackage(pkg)?.let {
+                                    activity.startActivity(it)
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    try {
+                        activity.startActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                "market://details?id=$pkg".toUri()
+                            )
+                        )
+                    } catch (e: Exception) {
+                        activity.startActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                "https://play.google.com/store/apps/details?id=$pkg".toUri()
+                            )
+                        )
+                    }
+                }
+            }
+
+            view.loutVideoCall.addView(itemBinding.root)
+        }
+
+        dialog.show()
+    }
+
+    fun startDuoCall(activity: Activity, number: String) {
+        try {
+            val intent = Intent("com.google.android.apps.tachyon.action.DIAL").apply {
+                setPackage(Constance.DUO)
+                data = "tel:$number".toUri()
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            activity.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(activity, "Meet not available", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun launchContactIntent(activity: Activity, id: Long, pkg: String, mime: String) {
+        try {
+            val uri = "content://com.android.contacts/data/$id".toUri()
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, mime)
+                setPackage(pkg)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            activity.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(activity, "Failed to start video call", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    @SuppressLint("Range")
+    fun getVideoCallID(context: Context, number: String, mimeType: String): Long? {
+        val cleanNumber = cleanNumber(number)
+        return try {
+            val resolver = context.applicationContext.contentResolver
+            resolver.query(
+                ContactsContract.Data.CONTENT_URI,
+                arrayOf(ContactsContract.Data._ID, ContactsContract.Data.DATA1),
+                "${ContactsContract.Data.MIMETYPE} = ?",
+                arrayOf(mimeType),
+                null
+            )?.use { cursor ->
+                while (cursor.moveToNext()) {
+                    val id = cursor.getLong(cursor.getColumnIndex(ContactsContract.Data._ID))
+                    val data1 = cursor.getString(cursor.getColumnIndex(ContactsContract.Data.DATA1))
+                    if (data1 != null) {
+                        val cleanData1 = cleanNumber(data1)
+                        if (PhoneNumberUtils.compare(context, cleanNumber, cleanData1)) {
+                            return id
+                        }
+                    }
+                }
+            }
+            null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun showMessageAppChooser(activity: Activity, number: String) {
+        val pm = activity.packageManager
+        val finalResolveInfos = mutableListOf<android.content.pm.ResolveInfo>()
+
+        // 1. Query smsto:
+        val smstoIntent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:$number"))
+        val smstoInfos = pm.queryIntentActivities(smstoIntent, 0)
+        finalResolveInfos.addAll(smstoInfos)
+
+        // 2. Query sms: (some apps might only handle this)
+        val smsIntent = Intent(Intent.ACTION_SENDTO, Uri.parse("sms:$number"))
+        val smsInfos = pm.queryIntentActivities(smsIntent, 0)
+        finalResolveInfos.addAll(smsInfos)
+
+        // 3. Explicitly check for default SMS app and add if missing
+        val defaultSmsPkg = android.provider.Telephony.Sms.getDefaultSmsPackage(activity)
+        if (defaultSmsPkg != null && finalResolveInfos.none { it.activityInfo.packageName == defaultSmsPkg }) {
+            val launchIntent = pm.getLaunchIntentForPackage(defaultSmsPkg)
+            if (launchIntent != null) {
+                pm.resolveActivity(launchIntent, 0)?.let {
+                    finalResolveInfos.add(it)
+                }
+            }
+        }
+
+        val dialog = BottomSheetDialog(activity, R.style.TransparentDialog)
+        val view = VideoCallDialogBinding.inflate(activity.layoutInflater, null, false)
+        dialog.setContentView(view.root)
+        view.tvTitleDialog.text = "Send Message"
+        view.tvSubtitle.text = "Choose your preferred messaging app"
+        view.loutVideoCall.isVisible = false
+        view.rvApps.isVisible = true
+
+        val  appsAdapter = AppsAdapter(pm, onClick =  { app ->
+            val pkg = app.activityInfo.packageName
+
+            dialog.dismiss()
+            val isWhatsApp = pkg == Constance.WHATSAPP || pkg == Constance.WHATSAPP_BUSSINESS
+            if (isWhatsApp) {
+                val mime = if (pkg == Constance.WHATSAPP) "vnd.android.cursor.item/vnd.com.whatsapp.profile"
+                else "vnd.android.cursor.item/vnd.com.whatsapp.w4b.profile"
+                val waId = getVideoCallID(activity, number, mime)
+                waId?.let {
+                    launchContactIntent(activity, it, pkg, mime)
+                } ?: launchGenericMessage(activity, pkg, number)
+            } else {
+                launchGenericMessage(activity, pkg, number)
+            }
+        })
+        view.rvApps.adapter = appsAdapter
+        view.rvApps.layoutManager = GridLayoutManager(activity, 4 )
+
+        // Filter duplicates by package name
+        val uniqueInfos = finalResolveInfos.distinctBy { it.activityInfo.packageName }
+        appsAdapter.addAll(uniqueInfos)
+
+        Log.e("TAG", "showMessageAppChooser: ${uniqueInfos.size}", )
+
+        dialog.show()
+    }
+
+    private fun launchGenericMessage(activity: Activity, pkg: String, number: String) {
+        try {
+            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                data = Uri.parse("smsto:$number")
+                setPackage(pkg)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            activity.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(activity, "Failed to send message", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun getContactName(context: Context, phoneNumber: String): String {
+        var name = phoneNumber
+        try {
+            val uri = Uri.withAppendedPath(
+                ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
+                Uri.encode(phoneNumber)
+            )
+
+            val cursor = context.contentResolver.query(
+                uri,
+                arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME),
+                null,
+                null,
+                null
+            )
+
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    name = it.getString(0)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("TAG", "getContactName: ${e.message}")
+        }
+        return name
+    }
+
+    fun getDisplayName(context: Context, number: String, callerDisplayName: String?): String {
+        val contactName = getContactName(context, number)
+        if (contactName != number) {
+            return contactName
+        }
+        if (!callerDisplayName.isNullOrBlank() && callerDisplayName != number) {
+            return callerDisplayName
+        }
+        return number
     }
 }

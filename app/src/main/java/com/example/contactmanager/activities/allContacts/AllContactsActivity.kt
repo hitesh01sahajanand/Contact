@@ -1,8 +1,10 @@
 package com.example.contactmanager.activities.allContacts
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -13,9 +15,12 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.contactmanager.R
+import com.example.contactmanager.activities.details.ContactsDetailsActivity
+import com.example.contactmanager.activities.newContact.NewContactActivity
 import com.example.contactmanager.adapters.AllContactsAdapter
 import com.example.contactmanager.databinding.ActivityAllContactsBinding
 import com.example.contactmanager.models.ContactListItem
+import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.CommonDialog
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
@@ -48,11 +53,47 @@ class AllContactsActivity : AppCompatActivity(), OnClickHandler {
     }
 
     private fun initView() {
-
         binding.onClickHandler = this
 
         allContactsAdapter =
-            AllContactsAdapter(onClick = { itemData: ContactListItem, position: Int ->
+            AllContactsAdapter(
+                onClick = { contactModel, clickAction ->
+
+                    when (clickAction) {
+                        Constance.ACTION_CALL -> {
+                            Common.actionCall(contactModel.number, this)
+
+                        }
+
+                        Constance.ACTION_SEND_MESSAGE -> {
+                            Common.sendSMSMessage(this, contactModel.number, "")
+                        }
+
+                        Constance.ACTION_VIDEO_CALL -> {
+
+                        }
+
+                        Constance.ACTION_INFO -> {
+                            val intent = Intent(this, ContactsDetailsActivity::class.java)
+                            intent.putExtra(Constance.DATA_FETCH, contactModel.contactId)
+                            startActivity(intent)
+                        }
+
+                        Constance.ACTION_ADD_TO_CONTACT -> {
+                            val isContactSaved = contactModel.contactId.isNullOrEmpty()
+                            val intent = Intent(this, NewContactActivity::class.java)
+                            intent.putExtra("Number", contactModel.number)
+                            intent.putExtra(Constance.IS_CONTACT_SAVED, !isContactSaved)
+                            startActivity(intent)
+                        }
+
+                        Constance.ACTION_ADD_TAG -> {
+
+                        }
+                    }
+
+
+                }/*onClick = { itemData: ContactListItem, position: Int ->
                 if (itemData is ContactListItem.Contact) {
 
                     val isFavorite = itemData.data.isFavourite == 1
@@ -94,7 +135,8 @@ class AllContactsActivity : AppCompatActivity(), OnClickHandler {
                         )
                     }
                 }
-            })
+            }*/
+            )
 
         binding.rvAllContacts.adapter = allContactsAdapter
         binding.rvAllContacts.layoutManager = LinearLayoutManager(this)

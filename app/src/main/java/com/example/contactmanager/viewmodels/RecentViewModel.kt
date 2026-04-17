@@ -1,6 +1,11 @@
 package com.example.contactmanager.viewmodels
 
+import android.content.Context
+import android.database.ContentObserver
 import android.graphics.Color
+import android.os.Handler
+import android.os.Looper
+import android.provider.CallLog
 import android.telephony.PhoneNumberUtils
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -11,6 +16,7 @@ import com.example.contactmanager.models.CallLogEntry
 import com.example.contactmanager.repository.RecentRepository
 import com.example.contactmanager.utils.Common
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -18,28 +24,104 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
+import androidx.core.graphics.toColorInt
 
 @HiltViewModel
 class RecentViewModel @Inject constructor(
-    private val repository: RecentRepository
+    private val repository: RecentRepository,
+    @param:ApplicationContext private val context: Context
 ) : ViewModel() {
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val observer = object : ContentObserver(handler) {
+        override fun onChange(selfChange: Boolean) {
+            super.onChange(selfChange)
+            handler.removeCallbacksAndMessages(null)
+            handler.postDelayed({
+                loadAllRecentsHistory(0, 1000)
+            }, 1000)
+        }
+    }
+
+    init {
+        context.contentResolver.registerContentObserver(
+            CallLog.Calls.CONTENT_URI,
+            true,
+            observer
+        )
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        context.contentResolver.unregisterContentObserver(observer)
+    }
+
+    private var currentOffset = 0
+    private var isLastPage = false
+    private var isLoading = false
+    private val allRawEntries = ArrayList<CallLogEntry>()
 
     private var _allRecentCallHistory = MutableLiveData<ArrayList<CallHistoryListItems>>()
     val allRecentCallHistory: LiveData<ArrayList<CallHistoryListItems>> = _allRecentCallHistory
 
+    private var _isNextPageLoading = MutableLiveData<Boolean>()
+    val isNextPageLoading: LiveData<Boolean> = _isNextPageLoading
+
     private val colorList = listOf(
-        Color.parseColor("#2173C2"),
-        Color.parseColor("#FFB950"),
-        Color.parseColor("#AEB33C"),
-        Color.parseColor("#FF6082"),
-        Color.parseColor("#60CB6B")
+        "#2173C2".toColorInt(),
+        "#FFB950".toColorInt(),
+        "#AEB33C".toColorInt(),
+        "#FF6082".toColorInt(),
+        "#60CB6B".toColorInt()
     )
 
     fun loadAllRecentsHistory(offset: Int, limit: Int) {
+        if (isLoading) return
+        isLoading = true
+        
+        if (offset == 0) {
+            currentOffset = 0
+            isLastPage = false
+        }
+
+        if (offset > 0) {
+            _isNextPageLoading.postValue(true)
+        }
+
         viewModelScope.launch(Dispatchers.IO) {
             val rawData = repository.getCallHistory(offset, limit)
-            val processedData = processRawCallLogs(rawData)
+            
+            if (rawData.isEmpty()) {
+                isLastPage = true
+                isLoading = false
+                _isNextPageLoading.postValue(false)
+                if (offset == 0) {
+                    _allRecentCallHistory.postValue(ArrayList())
+                }
+                return@launch
+            }
+
+            if (offset == 0) {
+                allRawEntries.clear()
+            }
+            allRawEntries.addAll(rawData)
+            currentOffset += rawData.size
+
+            val processedData = processRawCallLogs(allRawEntries)
             _allRecentCallHistory.postValue(processedData)
+            
+            isLoading = false
+            _isNextPageLoading.postValue(false)
+            
+            if (rawData.size < limit) {
+                isLastPage = true
+            }
+        }
+    }
+
+    fun loadNextPage() {
+        if (!isLoading && !isLastPage) {
+            loadAllRecentsHistory(currentOffset, 1000)
         }
     }
 

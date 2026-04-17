@@ -10,7 +10,7 @@
             type="com.example.contactmanager.utils.OnClickHandler" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
@@ -71,7 +71,7 @@
         <LinearLayout
             android:id="@+id/ll_favorite_space_holder"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
             android:gravity="center"
             android:orientation="vertical"
@@ -98,12 +98,15 @@
         </LinearLayout>
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/cv_favorite"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="@dimen/_10sdp"
             android:layout_marginTop="@dimen/_10sdp"
+            android:visibility="visible"
             app:cardCornerRadius="@dimen/_10sdp"
             app:cardElevation="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/cv_search">
@@ -111,10 +114,10 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_favorite"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:visibility="visible" />
         </androidx.cardview.widget.CardView>
 
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 </layout>

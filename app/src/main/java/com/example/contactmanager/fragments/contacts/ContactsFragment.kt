@@ -23,6 +23,7 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.allAccounts.AllAccountsActivity
+import com.example.contactmanager.activities.details.ContactsDetailsActivity
 import com.example.contactmanager.adapters.AllContactsAdapter
 import com.example.contactmanager.databinding.FragmentContactsBinding
 import com.example.contactmanager.models.ContactListItem
@@ -32,6 +33,9 @@ import com.example.contactmanager.utils.PermissionManager
 import com.example.contactmanager.viewmodels.ContactViewModel
 import com.example.contactmanager.viewmodels.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import com.example.contactmanager.activities.newContact.NewContactActivity
+import com.example.contactmanager.utils.Constance
+import com.example.contactmanager.utils.SendData
 import kotlin.getValue
 
 @AndroidEntryPoint
@@ -49,6 +53,20 @@ class ContactsFragment : Fragment(), OnClickHandler {
         return binding.root
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (PermissionManager.hasPermissions(requireActivity())) {
+            viewModel.loadAllContacts()
+        }
+    }
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        if (!hidden && PermissionManager.hasPermissions(requireActivity())) {
+            viewModel.loadAllContacts()
+        }
+    }
+
     private val accountLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
@@ -57,33 +75,9 @@ class ContactsFragment : Fragment(), OnClickHandler {
 
                 if (selectedAccount == "All Accounts") {
                     viewModel.loadAllContacts()
-
-                    viewModel.allContactList.observe(requireActivity()) { allContacts ->
-                        allContactsAdapter.addAll(allContacts)
-                    }
                 } else {
                     selectedAccount?.let {
                         viewModel.getContactsByAccountWithHeaders(it)
-                        viewModel.googleAccountList.observe(requireActivity()) { allContacts ->
-                            Log.e("TAG", ": $selectedAccount   ${allContacts.size}")
-                            allContacts.forEach {
-                                when (it) {
-
-                                    is ContactListItem.Header -> {
-                                        Log.e("TAG", ": Title  ${it.title}")
-                                    }
-
-                                    is ContactListItem.Contact -> {
-                                        Log.e(
-                                            "TAG",
-                                            ": Contact  ${it.data.displayName}  ${it.data.number}",
-                                        )
-
-                                    }
-                                }
-                            }
-                            allContactsAdapter.addAll(allContacts)
-                        }
                     }
                 }
             }
@@ -98,33 +92,53 @@ class ContactsFragment : Fragment(), OnClickHandler {
         binding.inHeader.cvMore.isVisible = true
         binding.inHeader.cvAdd.isVisible = true
 
-        allContactsAdapter = AllContactsAdapter(onClick = { item: ContactListItem, i: Int ->
-
-            when (item) {
-                is ContactListItem.Header -> {
+        allContactsAdapter = AllContactsAdapter(onClick = { contactModel, clickAction ->
+            when (clickAction) {
+                Constance.ACTION_CALL -> {
+                    Common.actionCall(contactModel.number, requireActivity())
 
                 }
 
-                is ContactListItem.Contact -> {
-                    Toast.makeText(requireActivity(), item.data.number, Toast.LENGTH_SHORT)
-                        .show()
+                Constance.ACTION_SEND_MESSAGE -> {
+                    contactModel.number?.let {
+                        Common.showMessageAppChooser(requireActivity(), it)
+                    }
+                }
+
+                Constance.ACTION_VIDEO_CALL -> {
+                    contactModel.number?.let {
+                        Common.showVideoAppChooser(requireActivity(), it)
+                    }
+                }
+
+                Constance.ACTION_INFO -> {
+                    val intent = Intent(requireActivity(), ContactsDetailsActivity::class.java)
+                    intent.putExtra(Constance.DATA_FETCH, contactModel.contactId)
+                    requireActivity().startActivity(intent)
+                }
+
+                Constance.ACTION_ADD_TO_CONTACT -> {
+                    val isContactSaved = contactModel.contactId.isNullOrEmpty()
+                    val intent = Intent(requireActivity(), NewContactActivity::class.java)
+                    intent.putExtra("Number", contactModel.number)
+                    intent.putExtra(Constance.IS_CONTACT_SAVED, !isContactSaved)
+                    requireActivity().startActivity(intent)
+                }
+
+                Constance.ACTION_ADD_TAG -> {
+
                 }
             }
-
         })
         binding.rvAllContacts.adapter = allContactsAdapter
         binding.rvAllContacts.layoutManager = LinearLayoutManager(requireActivity())
 
-        if (PermissionManager.hasPermissions(requireActivity())) {
-            viewModel.loadAllContacts()
-        }
-
-        viewModel.allContactList.observe(requireActivity()) { allContacts ->
+        viewModel.allContactList.observe(viewLifecycleOwner) { allContacts ->
             allContactsAdapter.addAll(allContacts)
             binding.tvNoData.isVisible = allContacts.isEmpty()
         }
 
-        viewModel.googleAccountList.observe(requireActivity()) { allContacts ->
+        viewModel.googleAccountList.observe(viewLifecycleOwner) { allContacts ->
             allContactsAdapter.addAll(allContacts)
             binding.tvNoData.isVisible = allContacts.isEmpty()
         }
@@ -213,7 +227,8 @@ class ContactsFragment : Fragment(), OnClickHandler {
             }
 
             binding.inHeader.cvAdd.id -> {
-
+                val intent = Intent(requireActivity(), NewContactActivity::class.java)
+                startActivity(intent)
             }
         }
     }

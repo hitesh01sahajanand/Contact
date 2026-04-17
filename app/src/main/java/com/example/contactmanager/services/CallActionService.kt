@@ -5,10 +5,11 @@ import android.content.Intent
 import android.os.IBinder
 import android.telecom.VideoProfile
 import com.example.contactmanager.ApplicationClass
+import com.example.contactmanager.utils.NewCallManager
 
 class CallActionService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val call = (applicationContext as ApplicationClass).appCall ?: return START_NOT_STICKY
+        val call = NewCallManager.getPrimaryCall() ?: return START_NOT_STICKY
 
         when (intent?.action) {
             "ANSWER" -> {

@@ -8,6 +8,7 @@ import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
@@ -64,12 +65,15 @@ class AllAccountsActivity : AppCompatActivity(), OnClickHandler {
         viewModel.googleAccount.observe(this) { list ->
 
             val accountList = mutableListOf<AccountModel>()
-            val nameBitmap = Common.generateAvatar("All Contacts")
+            val name = "All Contacts"
 
-            binding.inAccountDesign.tvIdName.text = "All Contacts"
-            binding.inAccountDesign.tvId.text = ""
-            Glide.with(binding.inAccountDesign.ivIdPhoto.context).load(nameBitmap)
-                .into(binding.inAccountDesign.ivIdPhoto)
+            binding.inAccountDesign.tvIdName.text = name
+            val color = Common.profileColors[1 % Common.profileColors.size]
+            binding.inAccountDesign.cvProfile.setCardBackgroundColor(
+                ContextCompat.getColor(binding.root.context, color)
+            )
+            val firstChar = name.firstOrNull()?.uppercase() ?: ""
+            binding.inAccountDesign.tvContactName.text = firstChar
 
             list.forEach {
                 val nameBitmap = Common.generateAvatar(it.first)

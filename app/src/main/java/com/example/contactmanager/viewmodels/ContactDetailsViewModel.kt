@@ -17,10 +17,21 @@ class ContactDetailsViewModel @Inject constructor(private val repository: Contac
     private val _contactHistory: MutableLiveData<List<CallLogEntry>> = MutableLiveData()
     val contactHistory: LiveData<List<CallLogEntry>> = _contactHistory
 
+    private val _contactData: MutableLiveData<CallLogEntry?> = MutableLiveData()
+    val contactData: LiveData<CallLogEntry?> = _contactData
+
+
     fun getNumberToHistory(number: String, offset: Int, limit: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             val data = repository.getCallHistoryForNumber(number, offset, limit)
             _contactHistory.postValue(data)
+        }
+    }
+
+    fun getUpdatedContact(contactId: String?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val data = repository.getUpdatedContact(contactId)
+            _contactData.postValue(data)
         }
     }
 

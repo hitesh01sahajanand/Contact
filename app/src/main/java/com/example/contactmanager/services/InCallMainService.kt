@@ -1,96 +1,167 @@
 package com.example.contactmanager.services
 
+import android.app.NotificationManager
 import android.content.Intent
+import android.os.Build
 import android.telecom.Call
 import android.telecom.InCallService
+import com.example.contactmanager.ApplicationClass
 import com.example.contactmanager.activities.call.CallActivity
-import com.example.contactmanager.utils.Common.powerManager
+import com.example.contactmanager.utils.CallNotificationManager
+import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.NewCallManager
 import com.example.contactmanager.utils.isOutgoing
 
 
-class InCallMainService : InCallService() {
-    private val context = this
+class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
+    private lateinit var callNotificationManager: CallNotificationManager
+
+    override fun onCreate() {
+        super.onCreate()
+        callNotificationManager = CallNotificationManager(this)
+        NewCallManager.inCallService = this
+        NewCallManager.addListener(this)
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return START_NOT_STICKY
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        NewCallManager.removeListener(this)
+    }
+
+    override fun onStateChanged() {
+        refreshNotification()
+    }
+
+    override fun onAudioStateChanged() {}
+    override fun onPrimaryCallChanged(call: Call) {
+        (applicationContext as ApplicationClass).appCall = call
+        refreshNotification()
+    }
+    override fun onMuteChanged(isMuted: Boolean) {
+        refreshNotification()
+    }
+
+    private fun refreshNotification() {
+        val call = NewCallManager.getPrimaryCall()
+        if (call == null) {
+            stopForeground(true)
+            callNotificationManager.cancelNotification()
+            return
+        }
+
+        val state = NewCallManager.getState()
+        val isIncomingRinging = state == Call.STATE_RINGING
+        val isVisible = NewCallManager.isCallActivityVisible
+        
+        // High priority only for incoming ringing calls that are not visible
+        val lowPriority = !(isIncomingRinging && !isVisible)
+        
+        val notification = callNotificationManager.setupNotification(lowPriority)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(
+                    CallNotificationManager.CALL_NOTIFICATION_ID,
+                    notification,
+                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
+                )
+            } else {
+                startForeground(CallNotificationManager.CALL_NOTIFICATION_ID, notification)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
     private val callListener = object : Call.Callback() {
         override fun onStateChanged(call: Call, state: Int) {
             super.onStateChanged(call, state)
             if (state == Call.STATE_DISCONNECTED || state == Call.STATE_DISCONNECTING) {
-//                callNotificationManager.cancelNotification()
+                stopForeground(true)
+                callNotificationManager.cancelNotification()
             } else {
-//                callNotificationManager.setupNotification()
+                refreshNotification()
             }
-
-            /*try {
-                if (baseConfig.flashForAlerts) MyCameraImpl.newInstance(context).stopSOS()
-            } catch (_: Exception) { }*/
         }
     }
 
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
-        NewCallManager.onCallAdded(call)
+        (applicationContext as ApplicationClass).appCall = call
         NewCallManager.inCallService = this
+        NewCallManager.onCallAdded(call)
         call.registerCallback(callListener)
 
+        val isOutgoing = call.isOutgoing()
+        val state = call.state
+        val isIncomingRinging = state == Call.STATE_RINGING
+
+        // High priority for incoming call, low for outgoing/ongoing
+        val lowPriority = !isIncomingRinging
+        val notification = callNotificationManager.setupNotification(lowPriority)
+        
         try {
-            val intent = CallActivity.getStartIntent(this)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(intent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(
+                    CallNotificationManager.CALL_NOTIFICATION_ID,
+                    notification,
+                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
+                )
+            } else {
+                startForeground(CallNotificationManager.CALL_NOTIFICATION_ID, notification)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
 
-        // Incoming/Outgoing (locked): high priority (FSI)
-        // Incoming (unlocked): if user opted in, low priority ➜ manual activity start, otherwise high priority (FSI)
-        // Outgoing (unlocked): low priority ➜ manual activity start
-        val isOutgoing = call.isOutgoing()
-        val isIncoming = !isOutgoing
-        val isDeviceLocked = !powerManager.isInteractive //|| keyguardManager.isDeviceLocked
-        val lowPriority = when {
-            isDeviceLocked -> false // High priority on locked screen
-//            isIncoming && !isDeviceLocked -> config.showIncomingCallsFullScreen
-            else -> true
-        }
-
-        /*if (
-            lowPriority
-            || !hasPermission(PERMISSION_POST_NOTIFICATIONS)
-            || !canUseFullScreenIntent()
-        ) {
+        // Try to start activity
+        if (isOutgoing || isIncomingRinging) {
             try {
-                val needSelectSIM = isOutgoing && call.details.accountHandle == null
-                startActivity(CallActivity.getStartIntent(this, needSelectSIM = needSelectSIM))
+                val intent = CallActivity.getStartIntent(this)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                startActivity(intent)
             } catch (e: Exception) {
-                // seems like startActivity can throw AndroidRuntimeException and
-                // ActivityNotFoundException, not yet sure when and why, lets show a notification
-//                callNotificationManager.setupNotification()
-                context.baseConfig.lastError = "CallService: $e"
+                e.printStackTrace()
             }
         }
-        callNotificationManager.setupNotification(lowPriority)*/
     }
 
     override fun onCallRemoved(call: Call) {
         super.onCallRemoved(call)
         call.unregisterCallback(callListener)
-//        callNotificationManager.cancelNotification()
-        val wasPrimaryCall = call == NewCallManager.getPrimaryCall()
-        NewCallManager.onCallRemoved(call)
-//        EventBus.getDefault().post(Events.RefreshCallLog)
-        if (NewCallManager.getPhoneState() == NewCallManager.NoCall) {
-            NewCallManager.inCallService = null
-//            callNotificationManager.cancelNotification()
-        } else {
-//            callNotificationManager.setupNotification()
-            if (wasPrimaryCall) {
-                startActivity(CallActivity.getStartIntent(this))
-            }
+
+        // Check for missed call
+        val disconnectCauseCode = call.details?.disconnectCause?.code
+        if (call.state == Call.STATE_RINGING || disconnectCauseCode == android.telecom.DisconnectCause.MISSED) {
+            val number = call.details?.handle?.schemeSpecificPart ?: "Unknown"
+            val name = call.details?.callerDisplayName
+
+            callNotificationManager.showMissedCallNotification(number, name)
         }
 
-        /* try {
-             if (baseConfig.flashForAlerts) MyCameraImpl.newInstance(this).stopSOS()
-         } catch (_: Exception) { }*/
+        val wasPrimaryCall = call == NewCallManager.getPrimaryCall()
+        if (wasPrimaryCall) {
+            (applicationContext as ApplicationClass).appCall = null
+        }
+        NewCallManager.onCallRemoved(call)
+        
+        if (NewCallManager.getPhoneState() == NewCallManager.NoCall) {
+            stopForeground(true)
+            callNotificationManager.cancelNotification()
+        } else {
+            refreshNotification()
+            if (wasPrimaryCall) {
+                try {
+                    val intent = CallActivity.getStartIntent(this)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
     }
 
     /*var call: Call? = null

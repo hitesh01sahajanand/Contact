@@ -25,6 +25,8 @@
     <color name="color_6">#F8C65A</color>
     <color name="color_block">#E92011</color>
     <color name="black_new_light">#808080</color>
+    <color name="block_bg_color">#fef4f3</color>
+    <color name="light_blue_color">#6DB1FF</color>
 
 
 </resources>

@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
@@ -18,14 +19,16 @@ import com.example.contactmanager.databinding.RecentsDesignBinding
 import com.example.contactmanager.models.CallHistoryListItems
 import com.example.contactmanager.models.CallLogEntry
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Constance
 
 class RecentAdapter(
-    private val onClickCall: (CallLogEntry) -> Unit
+    private val onClickCall: (CallLogEntry, String) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         private const val TYPE_HEADER = 0
         private const val TYPE_CONTACT = 1
+        private const val TYPE_LOADER = 2
     }
 
     private var expandedPosition = -1
@@ -37,6 +40,7 @@ class RecentAdapter(
         return when (filteredList[position]) {
             is CallHistoryListItems.Header -> TYPE_HEADER
             is CallHistoryListItems.Contact -> TYPE_CONTACT
+            is CallHistoryListItems.Loader -> TYPE_LOADER
         }
     }
 
@@ -51,6 +55,13 @@ class RecentAdapter(
                 HeaderViewHolder(binding)
             }
 
+            TYPE_LOADER -> {
+                val view = LayoutInflater.from(parent.context).inflate(
+                    R.layout.loader_design, parent, false
+                )
+                LoaderViewHolder(view)
+            }
+
             else -> {
                 val binding = RecentsDesignBinding.inflate(
                     LayoutInflater.from(parent.context), parent, false
@@ -62,6 +73,7 @@ class RecentAdapter(
 
     override fun getItemCount(): Int = filteredList.size
 
+
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
 
         when (val item = filteredList[position]) {
@@ -72,6 +84,10 @@ class RecentAdapter(
 
             is CallHistoryListItems.Contact -> {
                 (holder as ContactViewHolder).bind(item, position)
+            }
+
+            is CallHistoryListItems.Loader -> {
+                // No binding needed for loader
             }
         }
     }
@@ -85,6 +101,28 @@ class RecentAdapter(
         filteredList.addAll(list)
 
         notifyDataSetChanged()
+    }
+
+    fun addMoreData(list: List<CallHistoryListItems>) {
+        val startPosition = originalList.size
+        originalList.addAll(list)
+        filteredList.addAll(list)
+        notifyItemRangeInserted(startPosition, list.size)
+    }
+
+    fun showLoader() {
+        if (filteredList.lastOrNull() !is CallHistoryListItems.Loader) {
+            filteredList.add(CallHistoryListItems.Loader)
+            notifyItemInserted(filteredList.size - 1)
+        }
+    }
+
+    fun hideLoader() {
+        if (filteredList.lastOrNull() is CallHistoryListItems.Loader) {
+            val position = filteredList.size - 1
+            filteredList.removeAt(position)
+            notifyItemRemoved(position)
+        }
     }
 
     fun clearList() {
@@ -133,6 +171,10 @@ class RecentAdapter(
                             tempList.add(item)
                         }
                     }
+
+                    else -> {
+
+                    }
                 }
             }
 
@@ -164,13 +206,20 @@ class RecentAdapter(
             binding.llCollapseView.visibility = if (isExpanded) View.GONE else View.VISIBLE
             binding.llExpandedView.visibility = if (isExpanded) View.VISIBLE else View.GONE
 
+            val isSaved = !data.contactId.isNullOrEmpty()
+            binding.llNotSavedContact.isVisible = !isSaved
+            binding.ivCallInfo.isVisible = isSaved
+
             // 🔥 Check neighbors (ignore headers)
             val isNextExpanded = position + 1 == expandedPosition
             val isPrevExpanded = position - 1 == expandedPosition
 
-            val isFirst = position == 0 || filteredList[position - 1] is CallHistoryListItems.Header || isPrevExpanded
+            val isFirst =
+                position == 0 || filteredList[position - 1] is CallHistoryListItems.Header || isPrevExpanded
             val isLast = position == filteredList.size - 1 ||
-                    filteredList.getOrNull(position + 1) is CallHistoryListItems.Header || isNextExpanded
+                    filteredList.getOrNull(position + 1) is CallHistoryListItems.Header ||
+                    filteredList.getOrNull(position + 1) is CallHistoryListItems.Loader ||
+                    isNextExpanded
 
             val backgroundRes = when {
                 isExpanded -> R.drawable.bg_all_rounded
@@ -197,7 +246,6 @@ class RecentAdapter(
             binding.root.layoutParams = params
 
             binding.llMainView.setOnClickListener {
-
                 val previousPosition = expandedPosition
                 expandedPosition = if (isExpanded) -1 else position
 
@@ -228,6 +276,32 @@ class RecentAdapter(
 
 
             binding.run {
+
+                ivCall.setOnClickListener {
+                    onClickCall(data, Constance.ACTION_CALL)
+                }
+
+                ivMessage.setOnClickListener {
+                    onClickCall(data, Constance.ACTION_SEND_MESSAGE)
+                }
+
+                ivVideoCall.setOnClickListener {
+                    onClickCall(data, Constance.ACTION_VIDEO_CALL)
+                }
+
+                ivCallInfo.setOnClickListener {
+                    onClickCall(data, Constance.ACTION_INFO)
+                }
+
+                cvAddToContact.setOnClickListener {
+                    onClickCall(data, Constance.ACTION_ADD_TO_CONTACT)
+                }
+
+                cvAddTag.setOnClickListener {
+                    onClickCall(data, Constance.ACTION_ADD_TAG)
+                }
+
+
                 val name = if (data.callCount > 1) {
                     "${data.stringCallName ?: data.stringNumber} (${data.callCount})"
                 } else {
@@ -253,10 +327,6 @@ class RecentAdapter(
                         root.context
                     )
                 )
-
-                ivCall.setOnClickListener {
-                    onClickCall(item.data)
-                }
 
                 // 🖼️ Profile Logic
                 if (data.stringPhotoUri.isNullOrEmpty()) {
@@ -298,4 +368,7 @@ class RecentAdapter(
             }
         }
     }
+
+    // ⏳ LOADER VIEW HOLDER
+    class LoaderViewHolder(view: View) : RecyclerView.ViewHolder(view)
 }

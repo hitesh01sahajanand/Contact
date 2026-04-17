@@ -1,95 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
-    <data>
-
-    </data>
-
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:layout_width="@dimen/_35sdp"
+            android:layout_height="@dimen/_35sdp"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/pop_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:padding="@dimen/_8sdp"
+                android:src="@drawable/ic_user" />
+        </FrameLayout>
+
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <FrameLayout
-                android:layout_width="@dimen/_50sdp"
-                android:layout_height="@dimen/_50sdp">
-
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_user" />
-            </FrameLayout>
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="1"
+            android:gravity="start"
+            android:orientation="vertical">
 
 
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                android:id="@+id/pop_name"
+                style="@style/TextStyle.Medium"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="10dp"
-                android:layout_weight="1"
-                android:gravity="start"
-                android:orientation="vertical">
+                android:layout_marginTop="0dp"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:scrollHorizontally="true"
+                android:singleLine="true"
+                android:text="Unkown Number"
+                android:textAlignment="center"
+                android:textColor="@color/black"
+                android:textSize="18sp" />
 
-
-                <TextView
-                    android:id="@+id/pop_name"
-                    style="@style/TextStyle.Medium"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="0dp"
-                    android:ellipsize="marquee"
-                    android:marqueeRepeatLimit="marquee_forever"
-                    android:scrollHorizontally="true"
-                    android:singleLine="true"
-                    android:text="Unkown Number"
-                    android:textAlignment="center"
-                    android:textColor="@color/black"
-                    android:textSize="18sp" />
-
-                <TextView
-                    android:id="@+id/pop_number"
-                    style="@style/TextStyle.Medium"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="1dp"
-                    android:singleLine="true"
-                    android:text="+91 1234 456 456"
-                    android:textColor="#787878"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <FrameLayout
-                android:id="@+id/pop_decline"
-                android:layout_width="48dp"
-                android:layout_height="48dp">
-
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_call_reject" />
-            </FrameLayout>
-
-            <FrameLayout
-                android:id="@+id/pop_accept"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="@dimen/_8sdp"
-                android:visibility="visible">
-
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_call_accept" />
-            </FrameLayout>
+            <TextView
+                android:id="@+id/pop_number"
+                style="@style/TextStyle.Medium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:singleLine="true"
+                android:text="+91 1234 456 456"
+                android:textColor="#787878"
+                android:textSize="12sp" />
         </LinearLayout>
 
-    </FrameLayout>
-</layout>
+        <FrameLayout
+            android:id="@+id/pop_decline"
+            android:layout_width="@dimen/_35sdp"
+            android:layout_height="@dimen/_35sdp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_call_reject" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/pop_accept"
+            android:layout_width="@dimen/_35sdp"
+            android:layout_height="@dimen/_35sdp"
+            android:layout_marginStart="@dimen/_8sdp"
+            android:visibility="visible">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_call_accept" />
+        </FrameLayout>
+    </LinearLayout>
+
+</FrameLayout>

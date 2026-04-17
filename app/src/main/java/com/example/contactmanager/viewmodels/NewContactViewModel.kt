@@ -20,6 +20,9 @@ class NewContactViewModel @Inject constructor(
     private var _googleAccount: MutableLiveData<List<Pair<String, String>>> = MutableLiveData()
     val googleAccount: LiveData<List<Pair<String, String>>> = _googleAccount
 
+    private var _contactEmail: MutableLiveData<String> = MutableLiveData()
+    val contactEmail: LiveData<String> = _contactEmail
+
     private var _savedContactMassage: MutableLiveData<String> = MutableLiveData()
     val savedContactMassage: LiveData<String> = _savedContactMassage
 
@@ -30,22 +33,31 @@ class NewContactViewModel @Inject constructor(
         }
     }
 
-    fun saveContact(
-        firstName: String,
-        lastName: String,
-        phoneList: List<Pair<String, String>>,
-        emailList: List<Pair<String, String>>,
+    fun fetchContactEmail(contactId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val email = repository.getContactEmail(contactId)
+            _contactEmail.postValue(email ?: "")
+        }
+    }
+
+    fun saveOrUpdateContact(
+        name: String,
+        number: String,
+        email: String?,
         selectedImageUri: Uri?,
         accountModel: AccountModel,
+        isContactSaved: Boolean,
+        contactId: String? = null
     ) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.saveContact(
-                firstName,
-                lastName,
-                phoneList,
-                emailList,
-                selectedImageUri,
-                accountModel,
+            repository.saveOrUpdateContact(
+                name = name,
+                number = number,
+                email = email,
+                selectedImageUri = selectedImageUri,
+                accountModel = accountModel,
+                isContactSaved = isContactSaved,
+                contactId = contactId,
                 onCallBack = { msg ->
                     _savedContactMassage.postValue(msg)
                 }

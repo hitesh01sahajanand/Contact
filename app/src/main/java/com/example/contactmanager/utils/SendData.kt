@@ -8,8 +8,4 @@ import com.example.contactmanager.models.CallLogEntry
 object SendData {
     var contactDetails: CallLogEntry? = null
 
-    var allRecentCallHistory: MutableLiveData<ArrayList<CallHistoryListItems>> = MutableLiveData()
-
-    var isFirstTime = false
-
 }

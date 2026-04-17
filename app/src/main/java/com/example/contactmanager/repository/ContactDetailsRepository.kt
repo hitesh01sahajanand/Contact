@@ -1,8 +1,12 @@
 package com.example.contactmanager.repository
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.database.Cursor
 import android.provider.CallLog
+import android.provider.ContactsContract
+import androidx.core.content.ContextCompat
 import com.example.contactmanager.models.CallLogEntry
 import com.example.contactmanager.utils.Common
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -164,6 +168,85 @@ class ContactDetailsRepository @Inject constructor(@param:ApplicationContext pri
         }
 
         return list
+    }
+
+
+    fun getUpdatedContact(contactId: String?): CallLogEntry? {
+
+        if (contactId.isNullOrEmpty()) return null
+
+        // 👉 Permission check (VERY IMPORTANT)
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.READ_CONTACTS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return null
+        }
+
+        return try {
+
+            val resolver = context.contentResolver
+
+            var name: String? = null
+            var photoUri: String? = null
+            var number: String? = null
+
+            // 👉 Get basic contact info
+            resolver.query(
+                ContactsContract.Contacts.CONTENT_URI,
+                arrayOf(
+                    ContactsContract.Contacts._ID,
+                    ContactsContract.Contacts.DISPLAY_NAME,
+                    ContactsContract.Contacts.PHOTO_URI
+                ),
+                "${ContactsContract.Contacts._ID}=?",
+                arrayOf(contactId),
+                null
+            )?.use { cursor ->
+
+                if (cursor.moveToFirst()) {
+
+                    name = cursor.getString(
+                        cursor.getColumnIndexOrThrow(ContactsContract.Contacts.DISPLAY_NAME)
+                    )
+
+                    photoUri = cursor.getString(
+                        cursor.getColumnIndexOrThrow(ContactsContract.Contacts.PHOTO_URI)
+                    )
+                }
+            }
+
+            // 👉 Get phone number
+            resolver.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER),
+                "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID}=?",
+                arrayOf(contactId),
+                null
+            )?.use { cursor ->
+
+                if (cursor.moveToFirst()) {
+                    number = cursor.getString(
+                        cursor.getColumnIndexOrThrow(
+                            ContactsContract.CommonDataKinds.Phone.NUMBER
+                        )
+                    )
+                }
+            }
+
+            // 👉 Return safely
+            CallLogEntry(
+                stringNumber = number,
+                stringCallName = name,
+                stringPhotoUri = photoUri,
+                contactId = contactId
+            )
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 
 }

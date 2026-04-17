@@ -33,6 +33,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/black_new_light"
+                    android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                     android:orientation="horizontal"
                     android:padding="@dimen/_10sdp"
                     android:visibility="gone"
@@ -51,12 +52,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
+                        android:layout_marginStart="@dimen/_10sdp"
                         android:gravity="center"
                         android:text="+91 89562 56234 - Hold"
-                        android:textColor="@color/white"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/cv_profile" />
+                        android:textColor="@color/white" />
 
                 </LinearLayout>
 
@@ -65,13 +64,13 @@
                     android:layout_width="@dimen/_100sdp"
                     android:layout_height="@dimen/_100sdp"
                     android:layout_gravity="center"
-                    android:layout_marginTop="?actionBarSize"
+                    android:layout_marginTop="@dimen/_20sdp"
                     app:cardBackgroundColor="@color/color_1"
                     app:cardCornerRadius="@dimen/_120sdp"
                     app:cardElevation="0dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent">
+                    app:layout_constraintTop_toBottomOf="@+id/ll_hold_number">
 
                     <ImageView
                         android:id="@+id/iv_user_space_holder"
@@ -138,27 +137,60 @@
                     android:padding="@dimen/_12sdp"
                     app:layout_constraintBottom_toTopOf="@+id/iv_reject_call"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/chronometer">
-
+                    app:layout_constraintStart_toStartOf="parent">
 
                     <LinearLayout
-                        android:id="@+id/ll_conference"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="@dimen/_20sdp"
-                        android:layout_marginBottom="@dimen/_10sdp"
-                        android:orientation="horizontal"
-                        android:visibility="visible">
-
-
-                    </LinearLayout>
-
-                    <LinearLayout
+                        android:id="@+id/ll_row_1"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
 
+                        <LinearLayout
+                            android:id="@+id/ll_swap"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
+                            android:orientation="vertical"
+                            android:visibility="gone">
+
+                            <androidx.cardview.widget.CardView
+                                android:id="@+id/cv_swap"
+                                android:layout_width="@dimen/_50sdp"
+                                android:layout_height="@dimen/_50sdp"
+                                android:duplicateParentState="true"
+                                android:foreground="?attr/selectableItemBackgroundBorderless"
+                                app:cardBackgroundColor="@color/bg_color"
+                                app:cardCornerRadius="@dimen/_50sdp"
+                                app:cardElevation="0dp">
+
+                                <ImageView
+                                    android:id="@+id/iv_swap"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:padding="@dimen/_15sdp"
+                                    android:src="@drawable/ic_swap_call"
+                                    app:tint="@color/black_color" />
+                            </androidx.cardview.widget.CardView>
+
+
+                            <TextView
+                                android:id="@+id/tv_swap"
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:layout_marginTop="@dimen/_10sdp"
+                                android:gravity="center"
+                                android:text="@string/swap"
+                                android:textColor="@color/black_color"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toBottomOf="@+id/tv_number_name" />
+
+                        </LinearLayout>
 
                         <LinearLayout
                             android:id="@+id/ll_hold"
@@ -174,6 +206,8 @@
                                 android:id="@+id/cv_hold"
                                 android:layout_width="@dimen/_50sdp"
                                 android:layout_height="@dimen/_50sdp"
+                                android:duplicateParentState="true"
+                                android:foreground="?attr/selectableItemBackgroundBorderless"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardCornerRadius="@dimen/_50sdp"
                                 app:cardElevation="0dp">
@@ -218,6 +252,8 @@
                                 android:id="@+id/cv_video_call"
                                 android:layout_width="@dimen/_50sdp"
                                 android:layout_height="@dimen/_50sdp"
+                                android:duplicateParentState="true"
+                                android:foreground="?attr/selectableItemBackgroundBorderless"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardCornerRadius="@dimen/_50sdp"
                                 app:cardElevation="0dp">
@@ -250,52 +286,6 @@
 
 
                         <LinearLayout
-                            android:id="@+id/ll_swap"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
-                            android:orientation="vertical"
-                            android:visibility="gone">
-
-                            <androidx.cardview.widget.CardView
-                                android:id="@+id/cv_swap"
-                                android:layout_width="@dimen/_50sdp"
-                                android:layout_height="@dimen/_50sdp"
-                                app:cardBackgroundColor="@color/bg_color"
-                                app:cardCornerRadius="@dimen/_50sdp"
-                                app:cardElevation="0dp">
-
-                                <ImageView
-                                    android:id="@+id/iv_swap"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:padding="@dimen/_15sdp"
-                                    android:src="@drawable/ic_swap_call"
-                                    app:tint="@color/black_color" />
-                            </androidx.cardview.widget.CardView>
-
-
-                            <TextView
-                                android:id="@+id/tv_swap"
-                                style="@style/TextStyle.Medium"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
-                                android:layout_marginTop="@dimen/_10sdp"
-                                android:gravity="center"
-                                android:text="@string/swap"
-                                android:textColor="@color/black_color"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toBottomOf="@+id/tv_number_name" />
-
-                        </LinearLayout>
-
-
-                        <LinearLayout
                             android:id="@+id/ll_manage"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -310,6 +300,8 @@
                                 android:id="@+id/cv_manage"
                                 android:layout_width="@dimen/_50sdp"
                                 android:layout_height="@dimen/_50sdp"
+                                android:duplicateParentState="true"
+                                android:foreground="?attr/selectableItemBackgroundBorderless"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardCornerRadius="@dimen/_50sdp"
                                 app:cardElevation="0dp">
@@ -355,6 +347,8 @@
                                 android:id="@+id/cv_merge"
                                 android:layout_width="@dimen/_50sdp"
                                 android:layout_height="@dimen/_50sdp"
+                                android:duplicateParentState="true"
+                                android:foreground="?attr/selectableItemBackgroundBorderless"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardCornerRadius="@dimen/_50sdp"
                                 app:cardElevation="0dp">
@@ -385,7 +379,6 @@
 
                         </LinearLayout>
 
-
                         <LinearLayout
                             android:id="@+id/ll_add_call"
                             android:layout_width="match_parent"
@@ -397,8 +390,11 @@
                             android:orientation="vertical">
 
                             <androidx.cardview.widget.CardView
+                                android:id="@+id/cv_add_call"
                                 android:layout_width="@dimen/_50sdp"
                                 android:layout_height="@dimen/_50sdp"
+                                android:duplicateParentState="true"
+                                android:foreground="?attr/selectableItemBackgroundBorderless"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardCornerRadius="@dimen/_50sdp"
                                 app:cardElevation="0dp">
@@ -431,6 +427,7 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        android:id="@+id/ll_row_2"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/_30sdp"
@@ -452,6 +449,8 @@
                                 android:id="@+id/cv_keypad"
                                 android:layout_width="@dimen/_50sdp"
                                 android:layout_height="@dimen/_50sdp"
+                                android:duplicateParentState="true"
+                                android:foreground="?attr/selectableItemBackgroundBorderless"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardCornerRadius="@dimen/_50sdp"
                                 app:cardElevation="0dp">
@@ -496,6 +495,8 @@
                                 android:id="@+id/cv_mute"
                                 android:layout_width="@dimen/_50sdp"
                                 android:layout_height="@dimen/_50sdp"
+                                android:duplicateParentState="true"
+                                android:foreground="?attr/selectableItemBackgroundBorderless"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardCornerRadius="@dimen/_50sdp"
                                 app:cardElevation="0dp">
@@ -541,6 +542,8 @@
                                 android:id="@+id/cv_speaker"
                                 android:layout_width="@dimen/_50sdp"
                                 android:layout_height="@dimen/_50sdp"
+                                android:duplicateParentState="true"
+                                android:foreground="?attr/selectableItemBackgroundBorderless"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardCornerRadius="@dimen/_50sdp"
                                 app:cardElevation="0dp">
@@ -587,6 +590,8 @@
                                 android:id="@+id/cv_more"
                                 android:layout_width="@dimen/_50sdp"
                                 android:layout_height="@dimen/_50sdp"
+                                android:duplicateParentState="true"
+                                android:foreground="?attr/selectableItemBackgroundBorderless"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardCornerRadius="@dimen/_50sdp"
                                 app:cardElevation="0dp">
@@ -624,13 +629,13 @@
                     android:id="@+id/iv_reject_call"
                     android:layout_width="@dimen/_60sdp"
                     android:layout_height="@dimen/_60sdp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
                     android:layout_marginBottom="@dimen/_10sdp"
                     android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                     android:src="@drawable/ic_call_reject"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/ll_all_buttons" />
+                    app:layout_constraintStart_toStartOf="parent" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
