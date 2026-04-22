@@ -4,6 +4,7 @@ import android.transition.ChangeBounds
 import android.transition.Fade
 import android.transition.TransitionManager
 import android.transition.TransitionSet
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,16 +15,19 @@ import com.bumptech.glide.Glide
 import com.example.contactmanager.R
 import com.example.contactmanager.databinding.AllContactDesignBinding
 import com.example.contactmanager.databinding.HeaderItemDesignBinding
-import com.example.contactmanager.models.CallHistoryListItems
 import com.example.contactmanager.models.ContactListItem
 import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
 
-class AllContactsAdapter(private val onClick: (ContactModel, String) -> Unit) :
+class AllContactsAdapter(
+    private val isAllContact: Boolean = false,
+    private val onClick: (ContactModel, String) -> Unit
+) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val contactList = ArrayList<ContactListItem>()
     private var filteredList: MutableList<ContactListItem> = mutableListOf()
+    private val selectedContacts = mutableSetOf<String>()
 
     companion object {
         const val TYPE_HEADER = 0
@@ -129,6 +133,19 @@ class AllContactsAdapter(private val onClick: (ContactModel, String) -> Unit) :
         return filteredList
     }
 
+    fun getVisibleFavoriteContacts(): List<String> {
+        return contactList
+            .filterIsInstance<ContactListItem.Contact>()
+            .filter { it.data.isFavourite == 1 }
+            .mapNotNull { it.data.contactId }
+    }
+
+    fun getAllContacts(): List<ContactModel> {
+        return contactList
+            .filterIsInstance<ContactListItem.Contact>()
+            .map { it.data }
+    }
+
     class HeaderViewHolder(private val binding: HeaderItemDesignBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
@@ -146,9 +163,8 @@ class AllContactsAdapter(private val onClick: (ContactModel, String) -> Unit) :
 
             val context = binding.root.context
             val isExpanded = position == expandedPosition
-
             binding.llCollapseView.visibility = View.VISIBLE
-            binding.llExpandedView.visibility = if (isExpanded) View.VISIBLE else View.GONE
+
 
             // 🔥 Check neighbors (ignore headers)
             val isNextExpanded = position + 1 == expandedPosition
@@ -170,7 +186,8 @@ class AllContactsAdapter(private val onClick: (ContactModel, String) -> Unit) :
             binding.llMainView.setBackgroundResource(backgroundRes)
 
             val params = binding.root.layoutParams as RecyclerView.LayoutParams
-            val vertical = context.resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._10sdp)
+            val vertical =
+                context.resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._10sdp)
 
             if (isExpanded) {
                 binding.viewSep.isVisible = false
@@ -183,53 +200,92 @@ class AllContactsAdapter(private val onClick: (ContactModel, String) -> Unit) :
 
             binding.root.layoutParams = params
 
-            binding.llMainView.setOnClickListener {
+            if (!isAllContact) {
 
-                val previousPosition = expandedPosition
-                expandedPosition = if (isExpanded) -1 else position
+                binding.llExpandedView.visibility = if (isExpanded) View.VISIBLE else View.GONE
 
-                val transition = TransitionSet()
-                    .addTransition(Fade())
-                    .addTransition(ChangeBounds())
-                    .setDuration(250)
+                binding.llMainView.setOnClickListener {
 
-                TransitionManager.beginDelayedTransition(binding.llMainView, transition)
+                    val previousPosition = expandedPosition
+                    expandedPosition = if (isExpanded) -1 else position
 
-                // Notify all affected items
-                val itemsToNotify = mutableSetOf<Int>()
-                if (previousPosition != -1) {
-                    itemsToNotify.add(previousPosition)
-                    itemsToNotify.add(previousPosition - 1)
-                    itemsToNotify.add(previousPosition + 1)
-                }
-                itemsToNotify.add(position)
-                itemsToNotify.add(position - 1)
-                itemsToNotify.add(position + 1)
+                    val transition = TransitionSet()
+                        .addTransition(Fade())
+                        .addTransition(ChangeBounds())
+                        .setDuration(250)
 
-                itemsToNotify.forEach { pos ->
-                    if (pos in 0 until itemCount) {
-                        notifyItemChanged(pos)
+                    TransitionManager.beginDelayedTransition(binding.llMainView, transition)
+
+                    // Notify all affected items
+                    val itemsToNotify = mutableSetOf<Int>()
+                    if (previousPosition != -1) {
+                        itemsToNotify.add(previousPosition)
+                        itemsToNotify.add(previousPosition - 1)
+                        itemsToNotify.add(previousPosition + 1)
                     }
+                    itemsToNotify.add(position)
+                    itemsToNotify.add(position - 1)
+                    itemsToNotify.add(position + 1)
+
+                    itemsToNotify.forEach { pos ->
+                        if (pos in 0 until itemCount) {
+                            notifyItemChanged(pos)
+                        }
+                    }
+                }
+                binding.ivFav.visibility = View.GONE
+
+            } else {
+                binding.llCollapseView.visibility = View.VISIBLE
+                binding.llExpandedView.visibility = View.GONE
+
+                binding.ivFav.visibility = View.VISIBLE
+                val isFav = data.isFavourite == 1
+
+                binding.ivFav.setImageResource(
+                    if (isFav) R.drawable.ic_fav else R.drawable.ic_un_fav
+                )
+
+                binding.llCollapseView.setOnClickListener {
+                    val contactId = data.contactId ?: return@setOnClickListener
+
+                    // Toggle in filtered list (UI)
+                    data.isFavourite = if (data.isFavourite == 1) 0 else 1
+
+                    // 🔥 ALSO update in master list
+                    contactList.forEach {
+                        if (it is ContactListItem.Contact && it.data.contactId == contactId) {
+                            it.data.isFavourite = data.isFavourite
+                        }
+                    }
+
+                    notifyItemChanged(position)
                 }
             }
 
+
+
             binding.run {
 
-                ivCall.setOnClickListener {
-                    onClick(data, Constance.ACTION_CALL)
+                if (!isAllContact) {
+                    ivCall.setOnClickListener {
+                        onClick(data, Constance.ACTION_CALL)
+                    }
+
+                    ivMessage.setOnClickListener {
+                        onClick(data, Constance.ACTION_SEND_MESSAGE)
+                    }
+
+                    ivVideoCall.setOnClickListener {
+                        onClick(data, Constance.ACTION_VIDEO_CALL)
+                    }
+
+                    ivCallInfo.setOnClickListener {
+                        onClick(data, Constance.ACTION_INFO)
+                    }
                 }
 
-                ivMessage.setOnClickListener {
-                    onClick(data, Constance.ACTION_SEND_MESSAGE)
-                }
 
-                ivVideoCall.setOnClickListener {
-                    onClick(data, Constance.ACTION_VIDEO_CALL)
-                }
-
-                ivCallInfo.setOnClickListener {
-                    onClick(data, Constance.ACTION_INFO)
-                }
 
 
                 tvCollapseName.text = data.displayName

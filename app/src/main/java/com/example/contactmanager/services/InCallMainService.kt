@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.telecom.Call
 import android.telecom.InCallService
+import android.util.Log
 import com.example.contactmanager.ApplicationClass
 import com.example.contactmanager.activities.call.CallActivity
 import com.example.contactmanager.utils.CallNotificationManager
@@ -12,8 +13,19 @@ import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.NewCallManager
 import com.example.contactmanager.utils.isOutgoing
 
+import com.example.contactmanager.repository.BlockRepository
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
+    
+    @Inject
+    lateinit var blockRepository: BlockRepository
+    
     private lateinit var callNotificationManager: CallNotificationManager
 
     override fun onCreate() {
@@ -90,41 +102,64 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
 
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
-        (applicationContext as ApplicationClass).appCall = call
-        NewCallManager.inCallService = this
-        NewCallManager.onCallAdded(call)
-        call.registerCallback(callListener)
 
-        val isOutgoing = call.isOutgoing()
-        val state = call.state
-        val isIncomingRinging = state == Call.STATE_RINGING
-
-        // High priority for incoming call, low for outgoing/ongoing
-        val lowPriority = !isIncomingRinging
-        val notification = callNotificationManager.setupNotification(lowPriority)
+        val number = call.details?.handle?.schemeSpecificPart ?: ""
+        val isIncoming = call.state == Call.STATE_RINGING
         
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(
-                    CallNotificationManager.CALL_NOTIFICATION_ID,
-                    notification,
-                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
-                )
-            } else {
-                startForeground(CallNotificationManager.CALL_NOTIFICATION_ID, notification)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        Log.d("InCallMainService", "onCallAdded: number=$number, isIncoming=$isIncoming")
 
-        // Try to start activity
-        if (isOutgoing || isIncomingRinging) {
+        CoroutineScope(Dispatchers.Main).launch {
+            if (isIncoming && number.isNotEmpty()) {
+                val blocked = blockRepository.isBlocked(number)
+                Log.d("InCallMainService", "Checking block for $number: $blocked")
+                if (blocked) {
+                    Log.d("InCallMainService", "Disconnecting blocked call from $number")
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        call.disconnect()
+                    } else {
+                        call.reject(false, null)
+                    }
+                    return@launch
+                }
+            }
+
+            // Proceed with normal logic only if NOT blocked
+            (applicationContext as ApplicationClass).appCall = call
+            NewCallManager.inCallService = this@InCallMainService
+            NewCallManager.onCallAdded(call)
+            call.registerCallback(callListener)
+
+            val isOutgoing = call.isOutgoing()
+            val state = call.state
+            val isIncomingRinging = state == Call.STATE_RINGING
+
+            // High priority for incoming call, low for outgoing/ongoing
+            val lowPriority = !isIncomingRinging
+            val notification = callNotificationManager.setupNotification(lowPriority)
+            
             try {
-                val intent = CallActivity.getStartIntent(this)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                startActivity(intent)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    startForeground(
+                        CallNotificationManager.CALL_NOTIFICATION_ID,
+                        notification,
+                        android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
+                    )
+                } else {
+                    startForeground(CallNotificationManager.CALL_NOTIFICATION_ID, notification)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
+            }
+
+            // Try to start activity
+            if (isOutgoing || isIncomingRinging) {
+                try {
+                    val intent = CallActivity.getStartIntent(this@InCallMainService)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
     }

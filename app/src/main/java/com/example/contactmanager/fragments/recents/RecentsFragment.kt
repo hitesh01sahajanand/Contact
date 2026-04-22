@@ -1,53 +1,38 @@
 package com.example.contactmanager.fragments.recents
 
-import android.Manifest
-import android.app.Dialog
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Color
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.CallLog
-import android.telecom.TelecomManager
-import android.telephony.PhoneNumberUtils
-import android.telephony.SubscriptionManager
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.contactmanager.R
+import com.example.contactmanager.activities.call.CallActivity
+import com.example.contactmanager.activities.details.ContactsDetailsActivity
+import com.example.contactmanager.activities.newContact.NewContactActivity
 import com.example.contactmanager.activities.settings.SettingsActivity
 import com.example.contactmanager.adapters.RecentAdapter
 import com.example.contactmanager.databinding.FilterBottomSheetDialogBinding
 import com.example.contactmanager.databinding.FragmentRecentsBinding
 import com.example.contactmanager.models.CallHistoryListItems
-import com.example.contactmanager.models.CallLogEntry
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager
 import com.example.contactmanager.viewmodels.RecentViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import androidx.core.net.toUri
-import androidx.recyclerview.widget.RecyclerView
-import com.example.contactmanager.activities.call.CallActivity
-import com.example.contactmanager.activities.details.ContactsDetailsActivity
-import com.example.contactmanager.activities.newContact.NewContactActivity
-import com.example.contactmanager.utils.Constance
-import com.example.contactmanager.utils.NewCallManager
-import com.example.contactmanager.utils.SendData
 
 @AndroidEntryPoint
 class RecentsFragment : Fragment(), OnClickHandler {
@@ -123,7 +108,41 @@ class RecentsFragment : Fragment(), OnClickHandler {
                 }
 
                 Constance.ACTION_ADD_TAG -> {
+                    val isSaved = !callLogModel.contactId.isNullOrEmpty()
+                    // If not saved in contacts, stringCallName might be the tag
+                    val initialTag = if (!isSaved) callLogModel.stringCallName else null
 
+                    Common.saveTag(requireActivity(), initialTag, onItemClick = { tag ->
+                        callLogModel.stringNumber?.let { number ->
+                            viewModel.saveTag(number, tag)
+                        }
+                    })
+                }
+
+                Constance.ACTION_BLOCK_CONTACT -> {
+                    if (callLogModel.isBlocked) {
+                        Common.alertDialog(
+                            context = requireActivity(),
+                            title = "Unblock Contact?",
+                            description = "You will be able to receive calls from this contact.",
+                            btnOkay = "Unblock",
+                            onItemClick = {
+                                callLogModel.stringNumber?.let {
+                                    viewModel.unblockNumber(it)
+                                }
+                            })
+                    } else {
+                        Common.alertDialog(
+                            context = requireActivity(),
+                            title = "Block Contact?",
+                            description = "You will no longer be able to receive calls from this contact.",
+                            btnOkay = "Block",
+                            onItemClick = {
+                                callLogModel.stringNumber?.let {
+                                    viewModel.blockNumber(it)
+                                }
+                            })
+                    }
                 }
             }
 
@@ -222,11 +241,12 @@ class RecentsFragment : Fragment(), OnClickHandler {
     }
 
     private fun updateAdapterList() {
-        val displayList = if (selectedTypeFilter.isEmpty() || selectedTypeFilter == getString(R.string.all_calls)) {
-            ArrayList(allList)
-        } else {
-            filterCallLogs(allList, selectedTypeFilter)
-        }
+        val displayList =
+            if (selectedTypeFilter.isEmpty() || selectedTypeFilter == getString(R.string.all_calls)) {
+                ArrayList(allList)
+            } else {
+                filterCallLogs(allList, selectedTypeFilter)
+            }
 
         adapter.submitList(displayList)
 
@@ -276,7 +296,9 @@ class RecentsFragment : Fragment(), OnClickHandler {
                         }
                         result.add(item)
                     }
-                } else -> {
+                }
+
+                else -> {
 
                 }
             }

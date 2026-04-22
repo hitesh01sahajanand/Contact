@@ -13,7 +13,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.contactmanager.models.CallHistoryListItems
 import com.example.contactmanager.models.CallLogEntry
+import com.example.contactmanager.repository.BlockRepository
 import com.example.contactmanager.repository.RecentRepository
+import com.example.contactmanager.repository.TagRepository
 import com.example.contactmanager.utils.Common
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -25,10 +27,13 @@ import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
 import androidx.core.graphics.toColorInt
+import kotlinx.coroutines.flow.first
 
 @HiltViewModel
 class RecentViewModel @Inject constructor(
     private val repository: RecentRepository,
+    private val tagRepository: TagRepository,
+    private val blockRepository: BlockRepository,
     @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -125,6 +130,28 @@ class RecentViewModel @Inject constructor(
         }
     }
 
+    fun saveTag(phoneNumber: String, tagName: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            tagRepository.saveTag(phoneNumber, tagName)
+            // Reload history to show the tag
+            loadAllRecentsHistory(0, currentOffset.coerceAtLeast(1000))
+        }
+    }
+
+    fun blockNumber(phoneNumber: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            blockRepository.blockNumber(phoneNumber)
+            loadAllRecentsHistory(0, currentOffset.coerceAtLeast(1000))
+        }
+    }
+
+    fun unblockNumber(phoneNumber: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            blockRepository.unblockNumber(phoneNumber)
+            loadAllRecentsHistory(0, currentOffset.coerceAtLeast(1000))
+        }
+    }
+
     private suspend fun processRawCallLogs(
         list: ArrayList<CallLogEntry>
     ): ArrayList<CallHistoryListItems> = withContext(Dispatchers.Default) {
@@ -154,6 +181,14 @@ class RecentViewModel @Inject constructor(
         val cal1 = Calendar.getInstance()
         val cal2 = Calendar.getInstance()
 
+        // Pre-fetch tags and blocked numbers once
+        val allTags = tagRepository.getAllTags().first()
+        val allBlocked = blockRepository.getAllBlockedNumbers().first()
+
+        // Create lookup maps for performance
+        val tagMap = allTags.associate { Common.cleanNumber(it.phoneNumber) to it.tagName }
+        val blockedNumbersSet = allBlocked.map { Common.cleanNumber(it.phoneNumber) }.toSet()
+
         for (entry in list) {
             val entryNum = entry.stringNumber
             if (entryNum.isNullOrEmpty()) continue
@@ -164,6 +199,18 @@ class RecentViewModel @Inject constructor(
 
             val entryDate = entry.dateData
             val entryTime = entryDate?.time ?: 0L
+
+            // Lookup tag and blocked status from memory cache instead of DB
+            if (entry.stringCallName.isNullOrEmpty()) {
+                val tag = tagMap[cleaned]
+                if (!tag.isNullOrEmpty()) {
+                    entry.stringCallName = tag
+                }
+            }
+            
+            // Check if blocked in custom DB
+            entry.isBlocked = blockedNumbersSet.contains(cleaned) || 
+                             allBlocked.any { b -> PhoneNumberUtils.compare(b.phoneNumber, entryNum) }
 
             val currentCategory = when {
                 entryTime >= todayStart -> todayStr

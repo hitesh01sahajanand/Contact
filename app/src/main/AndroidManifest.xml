@@ -164,7 +164,7 @@
             android:name=".services.SimpleCallScreeningService"
             android:exported="true"
             android:foregroundServiceType="phoneCall"
-            android:permission="android.permission.BIND_SCREENING_SERVICE">
+            android:permission="android.permission.BIND_CALL_SCREENING_SERVICE">
             <intent-filter>
                 <action android:name="android.telecom.CallScreeningService" />
             </intent-filter>

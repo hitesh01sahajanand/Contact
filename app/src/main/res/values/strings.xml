@@ -83,6 +83,20 @@
     <string name="share">Share</string>
     <string name="choose_your_preferred_app">Choose your preferred app</string>
     <string name="conference_participants">Conference Participants</string>
+    <string name="search_contact">Search Contact...</string>
+    <string name="block_contacts">Block Contacts</string>
+    <string name="speed_dial">Speed Dial</string>
+    <string name="quick_response">Quick Response</string>
+    <string name="sound_vibration"><![CDATA[Sound & Vibration]]></string>
+    <string name="merge_duplicate_contacts">Merge duplicate contacts</string>
+    <string name="sim_preference">SIM Preference</string>
+    <string name="dial_pad_sound">Dial Pad Sound</string>
+    <string name="show_flash_on_call">Show Flash on Call</string>
+    <string name="use_swipe_to_action">Use Swipe to action</string>
+    <string name="change_ringtone">Change Ringtone</string>
+    <string name="about">About</string>
+    <string name="rate_us">Rate Us</string>
+    <string name="privacy_policy">Privacy Policy</string>
 
 
 </resources>

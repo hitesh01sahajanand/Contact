@@ -53,7 +53,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    implementation(libs.eventbus)
 
     //lifeCycleScopes
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0")
@@ -74,8 +73,10 @@ dependencies {
 
     implementation("com.googlecode.libphonenumber:libphonenumber:8.13.38")
 
-
-//    implementation("io.github.jeremyliao:live-event-bus:1.8.0")
-
+    //Room Database
+    val roomVersion = "2.8.4"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
 
 }

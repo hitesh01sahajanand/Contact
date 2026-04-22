@@ -11,27 +11,39 @@ import android.telecom.Call
 import android.telecom.CallScreeningService
 import android.util.Log
 
+import com.example.contactmanager.repository.BlockRepository
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@AndroidEntryPoint
 class SimpleCallScreeningService : CallScreeningService() {
-   /* companion object {
-        var callerIdPopupmain: CallerIdPopup? = null
 
-        fun getCallerIdPopup(): CallerIdPopup? = callerIdPopupmain
-
-         fun setCallerIdPopup(popup: CallerIdPopup?) {
-             callerIdPopupmain = popup
-         }
-    }*/
+    @Inject
+    lateinit var blockRepository: BlockRepository
 
     override fun onScreenCall(details: Call.Details) {
 
-        val uri = details.handle?.toString() ?: ""
-
+        val uri = details.handle?.schemeSpecificPart ?: ""
+        
         val builder = CallResponse.Builder()
 
-        startCallerScreen(uri, "", "0")
-
-        // Allow call
-        respondToCall(details, builder.build())
+        CoroutineScope(Dispatchers.IO).launch {
+            val isBlocked = blockRepository.isBlocked(uri)
+            
+            if (isBlocked) {
+                builder.setDisallowCall(true)
+                builder.setRejectCall(true)
+                builder.setSkipCallLog(false)
+                builder.setSkipNotification(true)
+            } else {
+                startCallerScreen(uri, "", "0")
+            }
+            
+            respondToCall(details, builder.build())
+        }
     }
 
     private fun startCallerScreen(str: String, str2: String, str3: String) {

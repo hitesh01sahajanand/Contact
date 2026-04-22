@@ -242,54 +242,57 @@ class RecentRepository @Inject constructor(@param:ApplicationContext private val
             val nameIdx = cursor.getColumnIndex("name")
             val photoIdx = cursor.getColumnIndex("photo_uri")
 
+            val entriesToProcess = mutableListOf<Triple<Long, String, Int>>()
+            if (cursor.moveToPosition(offset)) {
+                var count = 0
+                do {
+                    if (count >= limit) break
+                    val id = if (idIdx != -1) cursor.getLong(idIdx) else 0L
+                    val number = if (numberIdx != -1) cursor.getString(numberIdx) else ""
+                    entriesToProcess.add(Triple(id, number, cursor.position))
+                    count++
+                } while (cursor.moveToNext())
+            }
+
+            if (entriesToProcess.isEmpty()) return list
+
+            val uniqueNumbers = entriesToProcess.map { it.second }.filter { it.isNotEmpty() }.toSet()
             val contactCache = HashMap<String, ContactCacheData>()
 
-            try {
-                contentResolver.query(
-                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                    arrayOf(
-                        ContactsContract.CommonDataKinds.Phone.NUMBER,
-                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                        ContactsContract.CommonDataKinds.Phone.PHOTO_URI,
-                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
-                        ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER
-                    ),
-                    null,
-                    null,
-                    null
-                )?.use { contactsCursor ->
+            if (uniqueNumbers.isNotEmpty()) {
+                try {
+                    // Optimized: query only the unique numbers found in this page
+                    val selection = uniqueNumbers.joinToString(",") { "'$it'" }
+                    contentResolver.query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        arrayOf(
+                            ContactsContract.CommonDataKinds.Phone.NUMBER,
+                            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                            ContactsContract.CommonDataKinds.Phone.PHOTO_URI,
+                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
+                            ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER
+                        ),
+                        "${ContactsContract.CommonDataKinds.Phone.NUMBER} IN ($selection) OR ${ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER} IN ($selection)",
+                        null,
+                        null
+                    )?.use { contactsCursor ->
+                        val numIdx = contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                        val nameIdx2 = contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                        val photoIdx2 = contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.PHOTO_URI)
+                        val idIdx2 = contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
+                        val normIdx = contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER)
 
-                    val numIdx =
-                        contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                    val nameIdx2 =
-                        contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-                    val photoIdx2 =
-                        contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.PHOTO_URI)
-                    val idIdx2 =
-                        contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
-                    val normIdx =
-                        contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER)
-
-                    while (contactsCursor.moveToNext()) {
-                        val data = ContactCacheData().apply {
-                            name = contactsCursor.getString(nameIdx2)
-                            photoUri = contactsCursor.getString(photoIdx2)
-                            contactId = contactsCursor.getString(idIdx2)
-                        }
-
-                        val number = contactsCursor.getString(numIdx)
-                        val normalized = contactsCursor.getString(normIdx)
-
-                        number?.replace(Regex("[^0-9+]"), "")?.let {
-                            contactCache[it] = data
-                        }
-
-                        normalized?.let {
-                            contactCache[it] = data
+                        while (contactsCursor.moveToNext()) {
+                            val data = ContactCacheData().apply {
+                                name = contactsCursor.getString(nameIdx2)
+                                photoUri = contactsCursor.getString(photoIdx2)
+                                contactId = contactsCursor.getString(idIdx2)
+                            }
+                            contactsCursor.getString(numIdx)?.let { contactCache[Common.cleanNumber(it)] = data }
+                            contactsCursor.getString(normIdx)?.let { contactCache[it] = data }
                         }
                     }
-                }
-            } catch (_: Exception) {
+                } catch (_: Exception) { }
             }
 
             val blockedNumbers = HashSet<String>()
@@ -299,98 +302,67 @@ class RecentRepository @Inject constructor(@param:ApplicationContext private val
                 contentResolver.query(
                     BlockedNumberContract.BlockedNumbers.CONTENT_URI,
                     arrayOf(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER),
-                    null,
-                    null,
-                    null
+                    null, null, null
                 )?.use { blockedCursor ->
-
-                    val idx = blockedCursor.getColumnIndex(
-                        BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER
-                    )
-
+                    val idx = blockedCursor.getColumnIndex(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER)
                     while (blockedCursor.moveToNext()) {
                         val bNum = blockedCursor.getString(idx) ?: continue
                         val clean = bNum.replace(Regex("[^0-9]"), "")
-
                         blockedNumbers.add(clean)
-
-                        val suffix = when {
-                            clean.length >= 7 -> clean.takeLast(7)
-                            clean.isNotEmpty() -> clean
-                            else -> null
-                        }
-
-                        suffix?.let { blockedSuffixes.add(it) }
+                        val suffix = if (clean.length >= 7) clean.takeLast(7) else clean
+                        if (suffix.isNotEmpty()) blockedSuffixes.add(suffix)
                     }
                 }
-            } catch (_: Exception) {
-            }
+            } catch (_: Exception) { }
 
-            // Pagination
-            if (cursor.moveToPosition(offset)) {
-                var processed = 0
+            for (item in entriesToProcess) {
+                cursor.moveToPosition(item.third)
+                try {
+                    val number = item.second
+                    val type = if (typeIdx != -1) cursor.getString(typeIdx) else "3"
+                    val dateStr = if (dateIdx != -1) cursor.getString(dateIdx) else System.currentTimeMillis().toString()
+                    val duration = if (durationIdx != -1) cursor.getString(durationIdx) else "0"
 
-                do {
-                    if (processed >= limit) break
-                    processed++
+                    val normNum = Common.cleanNumber(number)
+                    val cacheData = contactCache[normNum] ?: ContactCacheData()
 
-                    try {
-                        val number = if (numberIdx != -1) cursor.getString(numberIdx) else ""
-                        val type = if (typeIdx != -1) cursor.getString(typeIdx) else "3"
-                        val dateStr =
-                            if (dateIdx != -1) cursor.getString(dateIdx) else System.currentTimeMillis()
-                                .toString()
-                        val duration = if (durationIdx != -1) cursor.getString(durationIdx) else "0"
+                    val date = Date(dateStr.toLong())
+                    val rawType = type.toInt()
+                    val callType = Common.getCallType(rawType)
+                    val id = item.first
 
-                        val normNum = Common.cleanNumber(number)
-                        var cacheData = contactCache[normNum]
-
-                        if (cacheData == null) {
-                            cacheData = ContactCacheData()
-                        }
-
-                        val date = Date(dateStr.toLong())
-                        val rawType = type.toInt()
-                        val callType = Common.getCallType(rawType)
-                        val id = if (idIdx != -1) cursor.getLong(idIdx) else 0L
-
-                        var isBlocked = false
-
-                        if (normNum.isNotEmpty()) {
-                            val suffix = if (normNum.length >= 7) normNum.takeLast(7) else normNum
-
-                            if (blockedSuffixes.contains(suffix)) {
-                                for (b in blockedNumbers) {
-                                    if (Common.compareNumbers(normNum, b)) {
-                                        isBlocked = true
-                                        break
-                                    }
+                    var isBlocked = false
+                    if (normNum.isNotEmpty()) {
+                        val suffix = if (normNum.length >= 7) normNum.takeLast(7) else normNum
+                        if (blockedSuffixes.contains(suffix)) {
+                            for (b in blockedNumbers) {
+                                if (Common.compareNumbers(normNum, b)) {
+                                    isBlocked = true
+                                    break
                                 }
                             }
                         }
-
-                        list.add(
-                            CallLogEntry(
-                                stringNumber = number,
-                                stringType = callType,
-                                dateData = date,
-                                stringDuration = duration,
-                                stringCallName = cacheData.name,
-                                stringDateCategory = dateStr,
-                                stringPhotoUri = cacheData.photoUri,
-                                contactId = cacheData.contactId,
-                                isBlocked = isBlocked,
-                                intType = rawType
-                            ).apply {
-                                resetCallIds(id)
-                            }
-                        )
-
-                    } catch (e: Exception) {
-                        e.printStackTrace()
                     }
 
-                } while (cursor.moveToNext())
+                    list.add(
+                        CallLogEntry(
+                            stringNumber = number,
+                            stringType = callType,
+                            dateData = date,
+                            stringDuration = duration,
+                            stringCallName = cacheData.name,
+                            stringDateCategory = dateStr,
+                            stringPhotoUri = cacheData.photoUri,
+                            contactId = cacheData.contactId,
+                            isBlocked = isBlocked,
+                            intType = rawType
+                        ).apply {
+                            resetCallIds(id)
+                        }
+                    )
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
 
         } catch (_: SecurityException) {

@@ -13,141 +13,6 @@ import javax.inject.Inject
 
 class FavoriteRepository @Inject constructor(@param:ApplicationContext private val context: Context) {
 
-   /* fun getContacts(): List<ContactModel> {
-        val contactList = mutableListOf<ContactModel>()
-        val uniqueNumbers = mutableSetOf<String>()
-
-        try {
-
-            val resolver = context.contentResolver
-            val cursor = resolver.query(
-                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                null,
-                null,
-                null,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC"
-            )
-
-            cursor?.use {
-                while (it.moveToNext()) {
-
-                    val contactId = it.getString(
-                        it.getColumnIndexOrThrow(
-                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID
-                        )
-                    )
-
-                    val name = it.getString(
-                        it.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-                    )
-
-                    var number = it.getString(
-                        it.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                    )
-
-                    number = number.replace("\\s".toRegex(), "")
-                        .replace("+91", "")
-                        .replace("-", "")
-
-                    if (uniqueNumbers.contains(number)) continue
-                    uniqueNumbers.add(number)
-
-                    val isFavorite = it.getInt(
-                        it.getColumnIndexOrThrow(ContactsContract.Contacts.STARRED)
-                    ) == 1
-
-
-                    val (isRecent, isMissed, lastCallDateTime) = getCallStatus(number)
-
-                    val photoUri = it.getString(
-                        it.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.PHOTO_URI)
-                    )
-
-                    val nameTemp = if (name.isNullOrEmpty()) number else name
-                    val imageAvatar = Common.generateAvatar(nameTemp)
-
-                    contactList.add(
-                        ContactModel(
-                            _id = contactId,
-                            name = name,
-                            number = number,
-                            isFavorite = isFavorite,
-                            isRecent = isRecent,
-                            isMissed = isMissed,
-                            lastCallDateTime = lastCallDateTime,
-                            photoUri = photoUri,
-                            avatar = imageAvatar
-                        )
-                    )
-                }
-            }
-
-        } catch (e: Exception) {
-
-            Log.e("TAG", "getContacts: ${e.message}")
-        }
-
-        return contactList
-    }*/
-
-    fun getCallStatus(phoneNumber: String): Triple<Boolean, Boolean, Long?> {
-        var isRecent = false
-        var isMissed = false
-        var lastCallTime: Long? = null
-
-        try {
-
-            val cursor = context.contentResolver.query(
-                CallLog.Calls.CONTENT_URI,
-                null,
-                null,
-                null,
-                "${CallLog.Calls.DATE} DESC"
-            )
-
-            cursor?.use {
-                while (it.moveToNext()) {
-
-                    var dbNumber = it.getString(
-                        it.getColumnIndexOrThrow(CallLog.Calls.NUMBER)
-                    )
-
-
-                    dbNumber = dbNumber.replace("\\s".toRegex(), "")
-                        .replace("+91", "")
-                        .replace("-", "")
-
-                    if (dbNumber == phoneNumber) {
-
-                        val callDate = it.getLong(
-                            it.getColumnIndexOrThrow(CallLog.Calls.DATE)
-                        )
-
-                        if (lastCallTime == null) {
-                            lastCallTime = callDate
-                        }
-
-                        isRecent = true
-
-                        val type = it.getInt(
-                            it.getColumnIndexOrThrow(CallLog.Calls.TYPE)
-                        )
-
-                        if (type == CallLog.Calls.MISSED_TYPE) {
-                            isMissed = true
-                        }
-                    }
-                }
-            }
-
-        } catch (e: Exception) {
-            Log.e("TAG", "getCallStatus: ${e.message}")
-        }
-
-        return Triple(isRecent, isMissed, lastCallTime)
-    }
-
-
     fun addToFavoriteUnFavorite(contactId: String?, makeFavorite: Boolean) {
         val id = contactId?.toLongOrNull() ?: return
 
@@ -165,6 +30,39 @@ class FavoriteRepository @Inject constructor(@param:ApplicationContext private v
 
         } catch (e: Exception) {
             Log.e("TAG", "addToFavoriteUnFavorite: ${e.message}")
+        }
+    }
+
+    fun updateFavoriteStatusBatch(contacts: List<ContactModel>) {
+        val operations = ArrayList<android.content.ContentProviderOperation>()
+
+        for (contact in contacts) {
+            val contactIdLong = contact.contactId?.toLongOrNull() ?: continue
+            val uri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactIdLong)
+
+            operations.add(
+                android.content.ContentProviderOperation.newUpdate(uri)
+                    .withValue(ContactsContract.Contacts.STARRED, if (contact.isFavourite == 1) 1 else 0)
+                    .build()
+            )
+
+            // To avoid TransactionTooLargeException, apply in chunks if necessary
+            if (operations.size >= 100) {
+                try {
+                    context.contentResolver.applyBatch(ContactsContract.AUTHORITY, operations)
+                    operations.clear()
+                } catch (e: Exception) {
+                    Log.e("TAG", "updateFavoriteStatusBatch error: ${e.message}")
+                }
+            }
+        }
+
+        if (operations.isNotEmpty()) {
+            try {
+                context.contentResolver.applyBatch(ContactsContract.AUTHORITY, operations)
+            } catch (e: Exception) {
+                Log.e("TAG", "updateFavoriteStatusBatch error: ${e.message}")
+            }
         }
     }
 

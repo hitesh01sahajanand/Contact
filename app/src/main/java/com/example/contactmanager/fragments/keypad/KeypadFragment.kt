@@ -16,7 +16,6 @@ import android.provider.Settings
 import android.telecom.TelecomManager
 import android.telephony.SubscriptionManager
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,29 +23,26 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.contactmanager.databinding.FragmentKeypadBinding
-import com.example.contactmanager.utils.OnClickHandler
-import com.example.contactmanager.utils.PermissionManager
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.newContact.NewContactActivity
-import com.example.contactmanager.adapters.AllContactsAdapter.ContactViewHolder
-import com.example.contactmanager.adapters.AllContactsAdapter.HeaderViewHolder
 import com.example.contactmanager.adapters.SuggestionAdapter
-import com.example.contactmanager.models.CallLogEntry
+import com.example.contactmanager.databinding.FragmentKeypadBinding
 import com.example.contactmanager.models.ContactListItem
 import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.NewCallManager
+import com.example.contactmanager.utils.OnClickHandler
+import com.example.contactmanager.utils.PermissionManager
 import com.example.contactmanager.utils.PermissionManager.isDefaultDialer
 import com.example.contactmanager.viewmodels.ContactViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import kotlin.getValue
 
 @AndroidEntryPoint
 class KeypadFragment : Fragment(), OnClickHandler {

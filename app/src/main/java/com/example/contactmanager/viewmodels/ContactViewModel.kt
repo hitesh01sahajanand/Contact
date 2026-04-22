@@ -20,7 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ContactViewModel @Inject constructor(
     private val repository: ContactRepository,
-    @ApplicationContext private val context: Context
+    @param: ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val handler = Handler(Looper.getMainLooper())

@@ -48,10 +48,12 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.contactmanager.adapters.AppsAdapter
+import com.example.contactmanager.databinding.AlertDialogDesignBinding
 import com.example.contactmanager.databinding.RemindMeDialogDesignBinding
 import com.example.contactmanager.receivers.ReminderReceiver
 import com.example.contactmanager.databinding.VideoCallDialogBinding
 import com.example.contactmanager.databinding.ItemVideoCallBinding
+import com.example.contactmanager.databinding.SaveTagDesignBinding
 import com.google.android.material.bottomsheet.BottomSheetDialog
 
 object Common {
@@ -99,6 +101,20 @@ object Common {
                 SimpleDateFormat("dd MMM yyyy hh:mm a", Locale.ENGLISH).format(Date(timestamp))
             }
         }
+    }
+
+    fun formatHeaderDate(date: Date?): String {
+        /*val sdf = SimpleDateFormat("EEEE, dd MMMM", Locale.getDefault())
+        return sdf.format(Date(timestamp))*/
+        if (date == null) return ""
+
+        val sdf = SimpleDateFormat("EEEE, dd MMMM", Locale.getDefault())
+        return sdf.format(date)
+    }
+
+    fun formatTime(timestamp: Long): String {
+        val sdf = SimpleDateFormat("hh:mm a", Locale.getDefault())
+        return sdf.format(Date(timestamp))
     }
 
     fun formatDuration(seconds: Long): String {
@@ -250,6 +266,7 @@ object Common {
             1 -> context.getDrawable(R.drawable.ic_incoming_call)
             2 -> context.getDrawable(R.drawable.ic_outgoing_call)
             3 -> context.getDrawable(R.drawable.ic_miss_call)
+
             else -> context.getDrawable(R.drawable.ic_all_call)
         }
     }
@@ -693,7 +710,11 @@ object Common {
                                     "vnd.android.cursor.item/vnd.com.whatsapp.video.call"
                                 )
                             } ?: run {
-                                Toast.makeText(activity, "WhatsApp video call not available for this contact", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    activity,
+                                    "WhatsApp video call not available for this contact",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         }
 
@@ -711,7 +732,11 @@ object Common {
                                     "vnd.android.cursor.item/vnd.com.whatsapp.w4b.video.call"
                                 )
                             } ?: run {
-                                Toast.makeText(activity, "WhatsApp Business video call not available for this contact", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    activity,
+                                    "WhatsApp Business video call not available for this contact",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         }
 
@@ -840,14 +865,15 @@ object Common {
         view.loutVideoCall.isVisible = false
         view.rvApps.isVisible = true
 
-        val  appsAdapter = AppsAdapter(pm, onClick =  { app ->
+        val appsAdapter = AppsAdapter(pm, onClick = { app ->
             val pkg = app.activityInfo.packageName
 
             dialog.dismiss()
             val isWhatsApp = pkg == Constance.WHATSAPP || pkg == Constance.WHATSAPP_BUSSINESS
             if (isWhatsApp) {
-                val mime = if (pkg == Constance.WHATSAPP) "vnd.android.cursor.item/vnd.com.whatsapp.profile"
-                else "vnd.android.cursor.item/vnd.com.whatsapp.w4b.profile"
+                val mime =
+                    if (pkg == Constance.WHATSAPP) "vnd.android.cursor.item/vnd.com.whatsapp.profile"
+                    else "vnd.android.cursor.item/vnd.com.whatsapp.w4b.profile"
                 val waId = getVideoCallID(activity, number, mime)
                 waId?.let {
                     launchContactIntent(activity, it, pkg, mime)
@@ -857,16 +883,79 @@ object Common {
             }
         })
         view.rvApps.adapter = appsAdapter
-        view.rvApps.layoutManager = GridLayoutManager(activity, 4 )
+        view.rvApps.layoutManager = GridLayoutManager(activity, 4)
 
         // Filter duplicates by package name
         val uniqueInfos = finalResolveInfos.distinctBy { it.activityInfo.packageName }
         appsAdapter.addAll(uniqueInfos)
 
-        Log.e("TAG", "showMessageAppChooser: ${uniqueInfos.size}", )
+        Log.e("TAG", "showMessageAppChooser: ${uniqueInfos.size}")
 
         dialog.show()
     }
+
+    fun saveTag(context: Activity, initialTag: String? = null, onItemClick: (String) -> Unit) {
+        val dialog = BottomSheetDialog(context, R.style.TransparentDialog)
+        val view = SaveTagDesignBinding.inflate(context.layoutInflater, null, false)
+        dialog.setContentView(view.root)
+
+        if (!initialTag.isNullOrEmpty()) {
+            view.edtTag.setText(initialTag)
+            view.edtTag.setSelection(initialTag.length)
+        }
+
+        view.tvSave.setOnClickListener {
+            val tag = view.edtTag.text.toString()
+            onItemClick(tag)
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+
+    fun alertDialog(
+        context: Context,
+        title: String,
+        description: String,
+        btnOkay: String,
+        onItemClick: (String) -> Unit
+    ) {
+
+        val dialog = Dialog(context)
+        val alertBinding = AlertDialogDesignBinding.inflate(LayoutInflater.from(context))
+
+        dialog.setContentView(alertBinding.root)
+
+        // Optional: transparent background (important)
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+
+        val margin = (10 * context.resources.displayMetrics.density).toInt()
+
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+
+        dialog.window?.setLayout(
+            screenWidth - (margin * 3),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        alertBinding.tvTitle.text = title
+        alertBinding.tvDescription.text = description
+        alertBinding.tvOkay.text = btnOkay
+
+        alertBinding.tvOkay.setOnClickListener {
+            onItemClick("")
+            dialog.dismiss()
+        }
+
+        alertBinding.tvCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
 
     private fun launchGenericMessage(activity: Activity, pkg: String, number: String) {
         try {

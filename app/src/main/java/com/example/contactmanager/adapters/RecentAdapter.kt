@@ -301,6 +301,10 @@ class RecentAdapter(
                     onClickCall(data, Constance.ACTION_ADD_TAG)
                 }
 
+                llBlockContact.setOnClickListener {
+                    onClickCall(data, Constance.ACTION_BLOCK_CONTACT)
+                }
+
 
                 val name = if (data.callCount > 1) {
                     "${data.stringCallName ?: data.stringNumber} (${data.callCount})"
@@ -315,18 +319,28 @@ class RecentAdapter(
 
                 tvCollapseTime.text = Common.extractTimeFromDate(data.dateData.toString())
                 tvExpandedTime.text = Common.extractTimeFromDate(data.dateData.toString())
-                ivExpandedCallType.setImageDrawable(
-                    Common.getCallImageType(
-                        data.intType,
-                        root.context
+                if (data.isBlocked) {
+                    ivExpandedCallType.setImageDrawable(context.getDrawable(R.drawable.ic_block))
+                    ivCollapseCallType.setImageDrawable(context.getDrawable(R.drawable.ic_block))
+                } else {
+                    ivExpandedCallType.setImageDrawable(
+                        Common.getCallImageType(
+                            data.intType,
+                            root.context
+                        )
                     )
-                )
-                ivCollapseCallType.setImageDrawable(
-                    Common.getCallImageType(
-                        data.intType,
-                        root.context
+
+                    ivCollapseCallType.setImageDrawable(
+                        Common.getCallImageType(
+                            data.intType,
+                            root.context
+                        )
                     )
-                )
+                }
+
+
+                tvBlockText.text =
+                    if (data.isBlocked) "Unblock" else root.context.getString(R.string.block_contacts)
 
                 // 🖼️ Profile Logic
                 if (data.stringPhotoUri.isNullOrEmpty()) {

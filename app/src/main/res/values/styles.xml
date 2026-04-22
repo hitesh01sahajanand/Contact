@@ -4,6 +4,7 @@
     <style name="TextStyle" />
 
     //22
+
     <style name="TextStyle.Small" parent="TextStyle">
         <item name="android:fontFamily">@font/fig_tree_medium</item>
         <item name="android:textSize">@dimen/_11sdp</item>
@@ -21,18 +22,26 @@
         <item name="android:textSize">@dimen/_14sdp</item>
     </style>
 
+    //28
+    <style name="TextStyle.MediumSemiBold" parent="TextStyle">
+        <item name="android:fontFamily">@font/fig_tree_semi_bold</item>
+        <item name="android:textSize">@dimen/_14sdp</item>
+    </style>
+
     <style name="TextStyle.MediumLarge" parent="TextStyle">
         <item name="android:fontFamily">@font/fig_tree_semi_bold</item>
         <item name="android:textSize">@dimen/_18sdp</item>
     </style>
 
     //44
+
     <style name="TextStyle.Large" parent="TextStyle">
         <item name="android:fontFamily">@font/fig_tree_semi_bold</item>
         <item name="android:textSize">@dimen/_20sdp</item>
     </style>
 
     //50
+
     <style name="TextStyle.ExtraLarge" parent="TextStyle">
         <item name="android:fontFamily">@font/fig_tree_semi_bold</item>
         <item name="android:textSize">@dimen/_22sdp</item>

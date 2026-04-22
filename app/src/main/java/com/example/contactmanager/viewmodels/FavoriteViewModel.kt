@@ -4,7 +4,8 @@ import android.content.Context
 import android.database.ContentObserver
 import android.os.Handler
 import android.os.Looper
-import android.provider.CallLog
+import android.provider.ContactsContract
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -37,7 +38,7 @@ class FavoriteViewModel @Inject constructor(
 
     init {
         context.contentResolver.registerContentObserver(
-            CallLog.Calls.CONTENT_URI,
+            ContactsContract.Contacts.CONTENT_URI,
             true,
             observer
         )
@@ -60,6 +61,15 @@ class FavoriteViewModel @Inject constructor(
     fun addToFavoriteUnFavorite(contactId: String, makeFavorite: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.addToFavoriteUnFavorite(contactId, makeFavorite)
+        }
+    }
+
+    fun updateFavoriteStatus(contacts: List<ContactModel>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                repository.updateFavoriteStatusBatch(contacts)
+                getAllFavoriteContact()
+            }
         }
     }
 

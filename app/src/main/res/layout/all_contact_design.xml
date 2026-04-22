@@ -81,6 +81,15 @@
                     android:text="dgkdgkdgkdmgk"
                     android:textColor="@color/black" />
 
+                <ImageView
+                    android:id="@+id/iv_fav"
+                    android:layout_width="@dimen/_18sdp"
+                    android:layout_height="@dimen/_18sdp"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_un_fav"
+                    android:visibility="gone" />
+
+
             </LinearLayout>
 
             <LinearLayout
