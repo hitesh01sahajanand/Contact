@@ -6,11 +6,14 @@ import android.os.Build
 import android.telecom.Call
 import android.telecom.InCallService
 import android.util.Log
+import android.provider.Settings
 import com.example.contactmanager.ApplicationClass
 import com.example.contactmanager.activities.call.CallActivity
 import com.example.contactmanager.utils.CallNotificationManager
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.NewCallManager
+import com.example.contactmanager.utils.SharedPreferenceManager
 import com.example.contactmanager.utils.isOutgoing
 
 import com.example.contactmanager.repository.BlockRepository
@@ -157,6 +160,20 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
                     val intent = CallActivity.getStartIntent(this@InCallMainService)
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                     startActivity(intent)
+
+                    // Show Popup if enabled
+                    if (isIncomingRinging && SharedPreferenceManager.getBoolean(this@InCallMainService, Constance.CONFIRM_DIALOG)) {
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || Settings.canDrawOverlays(this@InCallMainService)) {
+                            val contact = Common.getContactByNumber(this@InCallMainService, number)
+                            val name = contact?.displayName ?: number
+                            val imageUrl = contact?.userThumbnail ?: ""
+                            val time = Common.formatTime(System.currentTimeMillis())
+
+                            Common.showDialerPopUp(this@InCallMainService, name, number, time, imageUrl) {
+                                // Callback
+                            }
+                        }
+                    }
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }

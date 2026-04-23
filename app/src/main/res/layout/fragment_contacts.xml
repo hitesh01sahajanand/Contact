@@ -75,8 +75,8 @@
             android:orientation="horizontal">
 
             <ImageView
-                android:layout_width="@dimen/_40sdp"
-                android:layout_height="@dimen/_40sdp"
+                android:layout_width="@dimen/_34sdp"
+                android:layout_height="@dimen/_34sdp"
                 android:src="@drawable/ic_group" />
 
             <TextView
@@ -110,18 +110,18 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_all_contacts"
                 android:layout_width="match_parent"
-                android:layout_marginHorizontal="@dimen/_10sdp"
                 android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/_10sdp"
                 android:layout_marginTop="@dimen/_10sdp" />
 
             <LinearLayout
                 android:id="@+id/indexBar"
                 android:layout_width="24dp"
-                android:visibility="gone"
                 android:layout_height="match_parent"
                 android:layout_alignParentEnd="true"
                 android:gravity="center"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:visibility="gone">
 
             </LinearLayout>
 

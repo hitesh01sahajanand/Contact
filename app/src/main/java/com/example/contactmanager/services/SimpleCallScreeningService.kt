@@ -12,6 +12,10 @@ import android.telecom.CallScreeningService
 import android.util.Log
 
 import com.example.contactmanager.repository.BlockRepository
+import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.showDialerPopUp
+import com.example.contactmanager.utils.Constance
+import com.example.contactmanager.utils.SharedPreferenceManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,31 +31,31 @@ class SimpleCallScreeningService : CallScreeningService() {
     override fun onScreenCall(details: Call.Details) {
 
         val uri = details.handle?.schemeSpecificPart ?: ""
-        
+
         val builder = CallResponse.Builder()
 
         CoroutineScope(Dispatchers.IO).launch {
             val isBlocked = blockRepository.isBlocked(uri)
-            
+
             if (isBlocked) {
                 builder.setDisallowCall(true)
                 builder.setRejectCall(true)
                 builder.setSkipCallLog(false)
                 builder.setSkipNotification(true)
             } else {
-                startCallerScreen(uri, "", "0")
+                startCallerScreen(uri)
             }
-            
+
             respondToCall(details, builder.build())
         }
     }
 
-    private fun startCallerScreen(str: String, str2: String, str3: String) {
+    private fun startCallerScreen(str: String) {
         try {
             val looper = Looper.myLooper() ?: return
 
             Handler(looper).postDelayed({
-                showCallerPopup(str, str2, str3)
+                showCallerPopup(str)
             }, 1000L)
 
         } catch (e: Exception) {
@@ -59,7 +63,7 @@ class SimpleCallScreeningService : CallScreeningService() {
         }
     }
 
-    private fun showCallerPopup(str: String, str2: String, str3: String) {
+    private fun showCallerPopup(str: String) {
 
         // Overlay permission check
         if (Build.VERSION.SDK_INT >= 26 &&
@@ -68,7 +72,7 @@ class SimpleCallScreeningService : CallScreeningService() {
 
         // Call Screening role check (Android 10+)
         if (Build.VERSION.SDK_INT >= 29) {
-            val roleManager = getSystemService(Context.ROLE_SERVICE) as? RoleManager
+            val roleManager = getSystemService(ROLE_SERVICE) as? RoleManager
             if (roleManager == null ||
                 !roleManager.isRoleHeld(RoleManager.ROLE_CALL_SCREENING)
             ) {
@@ -76,17 +80,18 @@ class SimpleCallScreeningService : CallScreeningService() {
             }
         }
 
-        // User setting check
-        /* val pref = PreferenceShareCalls(this)
-         if (!pref.getBooleanPreference("show_call_confirmation", false)) {
-             return
-         }
+        if (!SharedPreferenceManager.getBoolean(context = this, Constance.CONFIRM_DIALOG)) {
+            return
+        }
 
-         val number = str.replace("tel:", "").replace("%2B", "+")
+        val number = str.replace("tel:", "").replace("%2B", "+")
+        val contact = Common.getContactByNumber(this, number)
+        val name = contact?.displayName ?: "Unknown Number"
+        val imageUrl = contact?.userThumbnail ?: ""
+        val time = Common.formatTime(System.currentTimeMillis())
 
-         setCallerIdPopup(
-             CallerIdPopup(this, number, str2, str3)
-         )*/
+        showDialerPopUp(this, name, number, time, imageUrl) {
+        }
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {

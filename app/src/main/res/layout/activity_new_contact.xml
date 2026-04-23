@@ -88,6 +88,7 @@
                         <ImageView
                             android:layout_width="@dimen/_14sdp"
                             android:layout_height="@dimen/_14sdp"
+                            android:tint="@color/black_color"
                             android:layout_gravity="center_vertical"
                             android:src="@drawable/ic_down_arrow" />
 
@@ -146,6 +147,7 @@
                         <ImageView
                             android:layout_width="@dimen/_20sdp"
                             android:layout_height="@dimen/_20sdp"
+                            android:tint="@color/black_color"
                             android:layout_marginStart="@dimen/_10sdp"
                             android:src="@drawable/ic_profile" />
 
@@ -185,6 +187,7 @@
                             android:layout_width="@dimen/_20sdp"
                             android:layout_height="@dimen/_20sdp"
                             android:layout_marginStart="@dimen/_10sdp"
+                            android:tint="@color/black_color"
                             android:src="@drawable/ic_edit_call" />
 
                         <EditText
@@ -223,6 +226,7 @@
                             android:layout_width="@dimen/_20sdp"
                             android:layout_height="@dimen/_20sdp"
                             android:layout_marginStart="@dimen/_10sdp"
+                            android:tint="@color/black_color"
                             android:src="@drawable/ic_email" />
 
                         <EditText

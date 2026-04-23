@@ -2,6 +2,8 @@ package com.example.contactmanager.utils
 
 object Constance {
 
+    const val CONFIRM_DIALOG = "confirm_dialog"
+    const val APP_THEME = "app_theme"
     const val DB_NAME = "contact_manager_db"
     const val PREF_NAME = "my_app_prefs"
     const val IS_LOG_IN = "isLogIn"

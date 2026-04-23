@@ -2,6 +2,7 @@ package com.example.contactmanager.utils
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.app.Activity
 import android.app.AlarmManager
 import android.app.Dialog
@@ -29,15 +30,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.core.graphics.createBitmap
 import androidx.core.view.isVisible
+import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.R
 import com.example.contactmanager.databinding.PopUpMenuDesignBinding
 import com.example.contactmanager.databinding.SendMessageDialogDesignBinding
@@ -47,8 +51,11 @@ import java.util.Calendar
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.recyclerview.widget.GridLayoutManager
+import com.bumptech.glide.Glide
 import com.example.contactmanager.adapters.AppsAdapter
 import com.example.contactmanager.databinding.AlertDialogDesignBinding
+import com.example.contactmanager.databinding.AppThemeDialogBinding
+import com.example.contactmanager.databinding.DialerPopUpDesignBinding
 import com.example.contactmanager.databinding.RemindMeDialogDesignBinding
 import com.example.contactmanager.receivers.ReminderReceiver
 import com.example.contactmanager.databinding.VideoCallDialogBinding
@@ -133,22 +140,28 @@ object Common {
     }
 
     fun generateAvatar(input: String): Bitmap {
-
         val text = input.trim()
+
+        fun Char.isValidChar(): Boolean {
+            return this != '+'
+        }
 
         val initials = when {
 
-            text.isNotEmpty() && text.all { it.isDigit() } -> {
+            // 🔥 UPDATED: digits case (ignore '+')
+            text.any { it.isDigit() } && text.filter { it.isDigit() }.isNotEmpty() -> {
+                val digitsOnly = text.filter { it.isDigit() }
+
                 when {
-                    text.length >= 2 -> text.substring(0, 2)
-                    text.length == 1 -> text + "0"
+                    digitsOnly.length >= 2 -> digitsOnly.substring(0, 2)
+                    digitsOnly.length == 1 -> digitsOnly + "0"
                     else -> "00"
                 }
             }
 
             !text.contains(" ") -> {
-                text.firstOrNull { it.isLetter() }?.uppercase()
-                    ?: text.firstOrNull()?.toString()
+                text.firstOrNull { it.isLetter() && it.isValidChar() }?.uppercase()
+                    ?: text.firstOrNull { it.isValidChar() }?.toString()
                     ?: ""
             }
 
@@ -159,14 +172,14 @@ object Common {
                 val firstPart = parts.getOrNull(0) ?: ""
                 val secondPart = parts.getOrNull(1) ?: ""
 
-                val firstChar = firstPart.firstOrNull()
+                val firstChar = firstPart.firstOrNull { it.isValidChar() }
                     ?.toString()
                     ?.uppercase()
                     ?: ""
 
-                val secondChar = secondPart.firstOrNull() { it.isLetter() }
+                val secondChar = secondPart.firstOrNull { it.isLetter() && it.isValidChar() }
                     ?.uppercase()
-                    ?: secondPart.firstOrNull()
+                    ?: secondPart.firstOrNull { it.isValidChar() }
                         ?.toString()
                         ?.uppercase()
                     ?: ""
@@ -419,6 +432,126 @@ object Common {
         }
 
         dialog.show()
+    }
+
+    fun showDialerPopUp(
+        context: Context,
+        contactName: String,
+        contactNumber: String,
+        callCurrentTime: String,
+        imageUrl: String,
+        onItemClick: (String) -> Unit
+    ) {
+
+        val dialog = Dialog(context)
+        val bindingDialerPopUp =
+            DialerPopUpDesignBinding.inflate(LayoutInflater.from(context))
+
+        dialog.setContentView(bindingDialerPopUp.root)
+        dialog.setCancelable(false)
+
+        // Optional: transparent background (important)
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+
+        if (context !is Activity) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                dialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
+            } else {
+                @Suppress("DEPRECATION")
+                dialog.window?.setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT)
+            }
+        }
+
+        val margin = (10 * context.resources.displayMetrics.density).toInt()
+
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+
+        dialog.window?.setLayout(
+            screenWidth - (margin * 3),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        bindingDialerPopUp.contactName.text = contactName
+        bindingDialerPopUp.contactNumber.text = contactNumber
+        bindingDialerPopUp.callCurrentTime.text = callCurrentTime
+
+        if (imageUrl.isNotEmpty()) {
+            Glide.with(context).load(imageUrl).into(bindingDialerPopUp.profileImage)
+        } else {
+            bindingDialerPopUp.profileImage.setImageBitmap(generateAvatar(contactName.ifEmpty { contactNumber }))
+        }
+
+        bindingDialerPopUp.actionClose.setOnClickListener {
+            onItemClick("")
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    fun showAppThemeBottomSheet(
+        context: Context,
+        onItemClick: (String) -> Unit
+    ) {
+        val dialog = BottomSheetDialog(context)
+        val bindingAppTheme =
+            AppThemeDialogBinding.inflate(LayoutInflater.from(context))
+
+        dialog.setContentView(bindingAppTheme.root)
+        dialog.setCancelable(false)
+
+        bindingAppTheme.ivClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        bindingAppTheme.llLightMode.setOnClickListener {
+            onItemClick(bindingAppTheme.tvLightMode.text.toString())
+            dialog.dismiss()
+        }
+
+        bindingAppTheme.llDarkMode.setOnClickListener {
+            onItemClick(bindingAppTheme.tvDarkMode.text.toString())
+            dialog.dismiss()
+        }
+
+        bindingAppTheme.llDefaultMode.setOnClickListener {
+            onItemClick(bindingAppTheme.tvDefaultMode.text.toString())
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    fun getContactByNumber(context: Context, number: String): ContactModel? {
+        val resolver = context.contentResolver
+        val uri = Uri.withAppendedPath(
+            ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
+            Uri.encode(number)
+        )
+        val projection = arrayOf(
+            ContactsContract.PhoneLookup.DISPLAY_NAME,
+            ContactsContract.PhoneLookup.PHOTO_URI,
+            ContactsContract.PhoneLookup._ID
+        )
+
+        resolver.query(uri, projection, null, null, null)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val name =
+                    cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup.DISPLAY_NAME))
+                val photoUri =
+                    cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup.PHOTO_URI))
+                val id =
+                    cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup._ID))
+                return ContactModel().apply {
+                    this.displayName = name
+                    this.userThumbnail = photoUri
+                    this.contactId = id
+                    this.number = number
+                }
+            }
+        }
+        return null
     }
 
 

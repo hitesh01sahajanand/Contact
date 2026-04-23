@@ -34,6 +34,7 @@ import com.example.contactmanager.viewmodels.ContactViewModel
 import com.example.contactmanager.viewmodels.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import com.example.contactmanager.activities.newContact.NewContactActivity
+import com.example.contactmanager.activities.settings.SettingsActivity
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.SendData
 import kotlin.getValue
@@ -221,7 +222,11 @@ class ContactsFragment : Fragment(), OnClickHandler {
                         Toast.makeText(requireActivity(), syncContact, Toast.LENGTH_SHORT).show()
                     },
                     option2Click = {
-                        Toast.makeText(requireActivity(), settings, Toast.LENGTH_SHORT).show()
+                        requireActivity().startActivity(
+                            Intent(
+                                requireActivity(), SettingsActivity::class.java
+                            )
+                        )
                     }
                 )
             }

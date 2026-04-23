@@ -3,7 +3,10 @@
     <style name="Base.Theme.ContanctManager" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <item name="colorPrimary">@color/main_color</item>
-        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="android:windowBackground">@color/bg_color</item>
+        <item name="android:statusBarColor">@color/bg_color</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
     <style name="Theme.ContanctManager" parent="Base.Theme.ContanctManager" />

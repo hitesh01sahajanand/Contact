@@ -137,8 +137,6 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                         binding.ivFavorite.setImageResource(
                             if (newFavorite) R.drawable.ic_selected_star else R.drawable.ic_favorite
                         )
-                        Toast.makeText(this, "", Toast.LENGTH_SHORT).show()
-
                         favoriteViewModel.addToFavoriteUnFavorite(id, newFavorite)
                     }
                 }

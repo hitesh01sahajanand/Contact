@@ -3,6 +3,8 @@ package com.example.contactmanager
 import android.app.Application
 import android.telecom.Call
 import com.example.contactmanager.services.InCallMainService
+import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.ThemeManager
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
@@ -14,6 +16,7 @@ class ApplicationClass : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        ThemeManager.applyAppTheme(this)
 //        registerDialerAccount()
     }
 

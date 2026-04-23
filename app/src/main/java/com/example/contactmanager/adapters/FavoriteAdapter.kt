@@ -1,6 +1,11 @@
 package com.example.contactmanager.adapters
 
+import android.transition.ChangeBounds
+import android.transition.Fade
+import android.transition.TransitionManager
+import android.transition.TransitionSet
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -9,11 +14,13 @@ import com.bumptech.glide.Glide
 import com.example.contactmanager.databinding.FavoriteDesignBinding
 import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Constance
 
-class FavoriteAdapter :
+class FavoriteAdapter(private val onClick: (ContactModel, String) -> Unit) :
     RecyclerView.Adapter<FavoriteAdapter.FavoriteDataHolder>() {
     private val contactList = ArrayList<ContactModel>()
     private var filteredList: MutableList<ContactModel> = mutableListOf()
+    private var expandedPosition = -1
     override fun onCreateViewHolder(
         parent: ViewGroup, p1: Int
     ): FavoriteDataHolder {
@@ -35,22 +42,12 @@ class FavoriteAdapter :
     }
 
     fun addAll(newList: List<ContactModel>) {
-        /* contactList.clear()
-         contactList.addAll(newList)
-         notifyDataSetChanged()*/
         contactList.clear()
         filteredList.clear()
         contactList.addAll(newList)
         filteredList.addAll(newList)
+        expandedPosition = -1
         notifyDataSetChanged()
-    }
-
-    fun remove(item: ContactModel) {
-        val position = filteredList.indexOf(item)
-        if (position != -1) {
-            filteredList.removeAt(position)
-            notifyItemRemoved(position)
-        }
     }
 
     fun filter(query: String) {
@@ -67,27 +64,80 @@ class FavoriteAdapter :
         notifyDataSetChanged()
     }
 
-    class FavoriteDataHolder(private val binding: FavoriteDesignBinding) :
+    inner class FavoriteDataHolder(private val binding: FavoriteDesignBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun setData(
             itemData: ContactModel, position: Int
         ) {
+            val isExpanded = position == expandedPosition
+
             binding.run {
+                llCollapseView.visibility = View.VISIBLE
+                llExpandedView.visibility = if (isExpanded) View.VISIBLE else View.GONE
+
+                llMainView.setOnClickListener {
+                    val previousPosition = expandedPosition
+                    expandedPosition = if (isExpanded) -1 else position
+
+                    val transition = TransitionSet()
+                        .addTransition(Fade())
+                        .addTransition(ChangeBounds())
+                        .setDuration(250)
+
+                    TransitionManager.beginDelayedTransition(llMainView, transition)
+
+                    // Notify all affected items
+                    val itemsToNotify = mutableSetOf<Int>()
+                    if (previousPosition != -1) {
+                        itemsToNotify.add(previousPosition)
+                        itemsToNotify.add(previousPosition - 1)
+                        itemsToNotify.add(previousPosition + 1)
+                    }
+                    itemsToNotify.add(position)
+                    itemsToNotify.add(position - 1)
+                    itemsToNotify.add(position + 1)
+
+                    itemsToNotify.forEach { pos ->
+                        if (pos in 0 until itemCount) {
+                            notifyItemChanged(pos)
+                        }
+                    }
+                }
+
+
+                ivCall.setOnClickListener {
+                    onClick(itemData, Constance.ACTION_CALL)
+                }
+
+                ivMessage.setOnClickListener {
+                    onClick(itemData, Constance.ACTION_SEND_MESSAGE)
+                }
+
+                ivVideoCall.setOnClickListener {
+                    onClick(itemData, Constance.ACTION_VIDEO_CALL)
+                }
+
+                ivCallInfo.setOnClickListener {
+                    onClick(itemData, Constance.ACTION_INFO)
+                }
+
+
                 tvName.text = itemData.displayName
+                tvExpandedContactNumber.text = "Mobile +${itemData.number}"
 
                 if (itemData.userThumbnail.isNullOrEmpty()) {
-                    binding.tvContactName.isVisible = true
-                    binding.ivContactPhoto.isVisible = false
+                    tvContactName.isVisible = true
+                    ivContactPhoto.isVisible = false
                     val color = Common.profileColors[position % Common.profileColors.size]
-                    binding.cvProfile.setCardBackgroundColor(
-                        ContextCompat.getColor(binding.root.context, color)
+                    cvProfile.setCardBackgroundColor(
+                        ContextCompat.getColor(root.context, color)
                     )
                     val firstChar = itemData.displayName?.firstOrNull()?.uppercase() ?: ""
                     tvContactName.text = firstChar
 
                 } else {
-                    binding.tvContactName.isVisible = false
-                    binding.ivContactPhoto.isVisible = true
+                    tvContactName.isVisible = false
+                    ivContactPhoto.isVisible = true
                     Glide.with(ivContactPhoto.context).load(itemData.userThumbnail)
                         .into(ivContactPhoto)
                 }

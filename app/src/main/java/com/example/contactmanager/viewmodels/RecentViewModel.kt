@@ -22,6 +22,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -54,6 +56,20 @@ class RecentViewModel @Inject constructor(
             true,
             observer
         )
+        observeBlockedNumbers()
+    }
+
+    private fun observeBlockedNumbers() {
+        viewModelScope.launch {
+            blockRepository.getAllBlockedNumbers().collect {
+                entriesMutex.withLock {
+                    if (allRawEntries.isNotEmpty()) {
+                        val processedData = processRawCallLogs(allRawEntries)
+                        _allRecentCallHistory.postValue(processedData)
+                    }
+                }
+            }
+        }
     }
 
     override fun onCleared() {
@@ -64,6 +80,7 @@ class RecentViewModel @Inject constructor(
     private var currentOffset = 0
     private var isLastPage = false
     private var isLoading = false
+    private val entriesMutex = Mutex()
     private val allRawEntries = ArrayList<CallLogEntry>()
 
     private var _allRecentCallHistory = MutableLiveData<ArrayList<CallHistoryListItems>>()
@@ -106,13 +123,16 @@ class RecentViewModel @Inject constructor(
                 return@launch
             }
 
-            if (offset == 0) {
-                allRawEntries.clear()
-            }
-            allRawEntries.addAll(rawData)
-            currentOffset += rawData.size
+            val processedData = entriesMutex.withLock {
+                if (offset == 0) {
+                    allRawEntries.clear()
+                }
+                allRawEntries.addAll(rawData)
+                currentOffset += rawData.size
 
-            val processedData = processRawCallLogs(allRawEntries)
+                processRawCallLogs(allRawEntries)
+            }
+            
             _allRecentCallHistory.postValue(processedData)
             
             isLoading = false
@@ -141,22 +161,24 @@ class RecentViewModel @Inject constructor(
     fun blockNumber(phoneNumber: String) {
         viewModelScope.launch(Dispatchers.IO) {
             blockRepository.blockNumber(phoneNumber)
-            loadAllRecentsHistory(0, currentOffset.coerceAtLeast(1000))
         }
     }
 
     fun unblockNumber(phoneNumber: String) {
         viewModelScope.launch(Dispatchers.IO) {
             blockRepository.unblockNumber(phoneNumber)
-            loadAllRecentsHistory(0, currentOffset.coerceAtLeast(1000))
         }
     }
 
     private suspend fun processRawCallLogs(
-        list: ArrayList<CallLogEntry>
+        rawList: List<CallLogEntry>
     ): ArrayList<CallHistoryListItems> = withContext(Dispatchers.Default) {
 
-        if (list.isEmpty()) return@withContext ArrayList()
+        if (rawList.isEmpty()) return@withContext ArrayList()
+
+        // Create deep copies to avoid side effects on the source list and thread safety issues.
+        // This ensures that allRawEntries remains "raw" and we don't have race conditions on shared objects.
+        val list = rawList.map { it.copy(callIds = it.callIds.toMutableList()) }
 
         val processedList = ArrayList<CallHistoryListItems>()
         var lastEntry: CallLogEntry? = null

@@ -1,12 +1,11 @@
 package com.example.contactmanager.activities.home
 
-import android.app.ComponentCaller
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.content.res.Configuration
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -209,18 +208,12 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
         })
     }
 
-    override fun onActivityResult(
-        requestCode: Int,
-        resultCode: Int,
-        data: Intent?,
-        caller: ComponentCaller
-    ) {
-        super.onActivityResult(requestCode, resultCode, data, caller)
-
-        Log.e("TAG", "onActivityResult: $requestCode")
-        if (requestCode == 100) {
-
-        }
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        val intent = Intent(this, HomeActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivity(intent)
+        finishAffinity()
     }
 
 }

@@ -7,5 +7,7 @@ import androidx.room.PrimaryKey
 data class BlockModel(
     @PrimaryKey
     val phoneNumber: String,
+    val name: String? = null,
+    val photoUri: String? = null,
     val blockedAt: Long = System.currentTimeMillis()
 )

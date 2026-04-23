@@ -64,7 +64,8 @@
                     android:layout_width="@dimen/_20sdp"
                     android:layout_height="@dimen/_20sdp"
                     android:layout_marginEnd="@dimen/_10sdp"
-                    android:src="@drawable/ic_all_call" />
+                    android:src="@drawable/ic_all_call"
+                    android:tint="@color/black_color" />
 
                 <TextView
                     style="@style/TextStyle.Medium"

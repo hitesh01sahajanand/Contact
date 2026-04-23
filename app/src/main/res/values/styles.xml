@@ -19,7 +19,7 @@
     //28
     <style name="TextStyle.Medium" parent="TextStyle">
         <item name="android:fontFamily">@font/fig_tree_medium</item>
-        <item name="android:textSize">@dimen/_14sdp</item>
+        <item name="android:textSize">@dimen/_13sdp</item>
     </style>
 
     //28

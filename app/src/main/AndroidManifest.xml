@@ -5,18 +5,20 @@
     <uses-feature
         android:name="android.hardware.telephony"
         android:required="false" />
-    <queries>
-        <package android:name="com.whatsapp"/>
-        <package android:name="com.google.android.apps.tachyon"/>
-    </queries>
 
+    <queries>
+        <package android:name="com.whatsapp" />
+        <package android:name="com.google.android.apps.tachyon" />
+    </queries>
     <queries>
         <intent>
             <action android:name="android.intent.action.SENDTO" />
+
             <data android:scheme="sms" />
         </intent>
         <intent>
             <action android:name="android.intent.action.VIEW" />
+
             <data android:scheme="sms" />
         </intent>
     </queries>
@@ -35,9 +37,8 @@
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.CAMERA" />
-
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
 
@@ -52,43 +53,46 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ContanctManager">
         <activity
-            android:name=".activities.settings.SettingsActivity"
-            android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"
+            android:name=".activities.blockNumbers.BlockNumbersActivity"
             android:exported="false" />
+        <activity
+            android:name=".activities.settings.SettingsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".activities.newContact.NewContactActivity"
+            android:exported="false"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"
-            android:exported="false" />
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".activities.allAccounts.AllAccountsActivity"
+            android:exported="false"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"
-            android:exported="false" />
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".activities.history.HistoryActivity"
+            android:exported="false"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"
-            android:exported="false" />
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".activities.details.ContactsDetailsActivity"
+            android:exported="false"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"
-            android:exported="false" />
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".activities.allContacts.AllContactsActivity"
+            android:exported="false"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"
-            android:exported="false" />
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".activities.call.CallActivity"
-            android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"
             android:exported="true"
             android:launchMode="singleTop"
+            android:screenOrientation="portrait"
             android:showOnLockScreen="true"
-            android:turnScreenOn="true">
+            android:turnScreenOn="true"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.DIAL" />
                 <action android:name="android.intent.action.CALL" />
@@ -98,19 +102,19 @@
         </activity>
         <activity
             android:name=".activities.language.LanguageActivity"
+            android:exported="false"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"
-            android:exported="false" />
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".activities.permissions.PermissionActivity"
+            android:exported="false"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"
-            android:exported="false" />
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".activities.splash.SplashActivity"
+            android:exported="true"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"
-            android:exported="true">
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -119,9 +123,10 @@
         </activity>
         <activity
             android:name=".activities.home.HomeActivity"
+            android:exported="true"
+            android:configChanges="uiMode"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"
-            android:exported="true">
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.intent.action.DIAL" />
@@ -137,7 +142,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-
 
         <service
             android:name=".services.InCallMainService"
@@ -155,11 +159,9 @@
                 android:name="android.telecom.IN_CALL_SERVICE_RINGING"
                 android:value="true" />
         </service>
-
         <service
             android:name=".services.CallActionService"
             android:exported="false" />
-
         <service
             android:name=".services.SimpleCallScreeningService"
             android:exported="true"
@@ -173,11 +175,9 @@
         <receiver
             android:name=".receivers.ReminderReceiver"
             android:exported="false" />
-
         <receiver
             android:name=".receivers.CallActionReceiver"
             android:exported="false" />
-
     </application>
 
 </manifest>

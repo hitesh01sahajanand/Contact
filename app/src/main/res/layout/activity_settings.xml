@@ -28,8 +28,8 @@
 
             <ImageView
                 android:id="@+id/iv_back"
-                android:layout_width="@dimen/_34sdp"
-                android:layout_height="@dimen/_34sdp"
+                android:layout_width="@dimen/_35sdp"
+                android:layout_height="@dimen/_35sdp"
                 android:contentDescription="@string/setting"
                 android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                 android:src="@drawable/ic_back"
@@ -74,26 +74,27 @@
                     android:textColor="@color/black_color" />
 
                 <LinearLayout
-                    android:id="@+id/ll_caller_id_disable"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/_10sdp"
                     android:background="@drawable/all_rounded_corner_bg"
-                    android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                     android:orientation="vertical"
                     android:padding="@dimen/_8sdp"
                     android:visibility="visible">
 
                     <LinearLayout
+                        android:id="@+id/ll_caller_id_disable"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
                         android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
+                        android:orientation="horizontal"
+                        android:visibility="visible">
 
                         <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:contentDescription="@string/caller_id_disables"
                             android:src="@drawable/ic_caller_id" />
 
@@ -114,6 +115,43 @@
                             android:rotation="180"
                             android:src="@drawable/ic_back_arrow" />
 
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/ll_show_confirmation_dialog"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
+                            android:src="@drawable/ic_call_information" />
+
+                        <TextView
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginHorizontal="@dimen/_10sdp"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:text="@string/show_a_call_confirmation"
+                            android:textColor="@color/black_color" />
+
+                        <Switch
+                            android:id="@+id/switch_confirm_dialog"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:scaleX="0.9"
+                            android:thumb="@drawable/thumb_selector"
+                            android:track="@drawable/track_selector"
+                            tools:ignore="UseSwitchCompatOrMaterialXml" />
 
                     </LinearLayout>
 
@@ -144,11 +182,12 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
                         android:gravity="center_vertical"
+                        android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:src="@drawable/ic_app_theme" />
 
                         <TextView
@@ -183,7 +222,8 @@
                                 android:layout_width="@dimen/_16sdp"
                                 android:layout_height="@dimen/_16sdp"
                                 android:rotation="180"
-                                android:src="@drawable/ic_back_arrow" />
+                                android:src="@drawable/ic_back_arrow"
+                                android:tint="@color/black_color" />
 
                         </LinearLayout>
 
@@ -201,8 +241,8 @@
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:contentDescription="@string/caller_id_disables"
                             android:src="@drawable/ic_language" />
 
@@ -264,7 +304,7 @@
                     android:layout_marginTop="@dimen/_10sdp"
                     android:background="@drawable/all_rounded_corner_bg"
                     android:orientation="vertical"
-                    android:padding="@dimen/_8sdp"
+                    android:padding="@dimen/_10sdp"
                     android:visibility="visible">
 
                     <LinearLayout
@@ -277,8 +317,8 @@
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:src="@drawable/ic_block_number" />
 
                         <TextView
@@ -301,7 +341,7 @@
                     </LinearLayout>
 
                     <LinearLayout
-                        android:id="@+id/ll_show_confirmation_dialog"
+                        android:id="@+id/ll_speed_dial"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
@@ -311,63 +351,8 @@
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
-                            android:src="@drawable/ic_call_information" />
-
-                        <TextView
-                            style="@style/TextStyle.Regular"
-                            android:layout_width="0dp"
-                            android:layout_height="match_parent"
-                            android:layout_gravity="center_vertical"
-                            android:layout_marginHorizontal="@dimen/_10sdp"
-                            android:layout_weight="1"
-                            android:gravity="center_vertical"
-                            android:text="@string/show_a_call_confirmation"
-                            android:textColor="@color/black_color" />
-
-                        <ImageView
-                            android:layout_width="@dimen/_16sdp"
-                            android:layout_height="@dimen/_16sdp"
-                            android:rotation="180"
-                            android:src="@drawable/ic_back_arrow" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-
-                <TextView
-                    style="@style/TextStyle.Regular"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginTop="@dimen/_16sdp"
-                    android:gravity="start"
-                    android:text="Main Screen"
-                    android:textColor="@color/black_color" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_10sdp"
-                    android:background="@drawable/all_rounded_corner_bg"
-                    android:orientation="vertical"
-                    android:padding="@dimen/_10sdp"
-                    android:visibility="visible">
-
-                    <LinearLayout
-                        android:id="@+id/ll_speed_dial"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:gravity="center_vertical"
-                        android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:src="@drawable/ic_speed_dialer" />
 
                         <TextView
@@ -385,8 +370,8 @@
                             android:layout_width="@dimen/_16sdp"
                             android:layout_height="@dimen/_16sdp"
                             android:rotation="180"
-                            android:src="@drawable/ic_back_arrow" />
-
+                            android:src="@drawable/ic_back_arrow"
+                            app:tint="@color/black_color" />
 
                     </LinearLayout>
 
@@ -401,8 +386,8 @@
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:contentDescription="@string/caller_id_disables"
                             android:src="@drawable/ic_quick_response" />
 
@@ -421,7 +406,8 @@
                             android:layout_width="@dimen/_16sdp"
                             android:layout_height="@dimen/_16sdp"
                             android:rotation="180"
-                            android:src="@drawable/ic_back_arrow" />
+                            android:src="@drawable/ic_back_arrow"
+                            app:tint="@color/black_color" />
 
                     </LinearLayout>
 
@@ -435,8 +421,8 @@
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:contentDescription="@string/caller_id_disables"
                             android:src="@drawable/ic_vibration" />
 
@@ -455,7 +441,8 @@
                             android:layout_width="@dimen/_16sdp"
                             android:layout_height="@dimen/_16sdp"
                             android:rotation="180"
-                            android:src="@drawable/ic_back_arrow" />
+                            android:src="@drawable/ic_back_arrow"
+                            app:tint="@color/black_color" />
 
                     </LinearLayout>
 
@@ -470,8 +457,8 @@
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:contentDescription="@string/caller_id_disables"
                             android:src="@drawable/ic_merge_duplicate" />
 
@@ -490,7 +477,8 @@
                             android:layout_width="@dimen/_16sdp"
                             android:layout_height="@dimen/_16sdp"
                             android:rotation="180"
-                            android:src="@drawable/ic_back_arrow" />
+                            android:src="@drawable/ic_back_arrow"
+                            app:tint="@color/black_color" />
 
                     </LinearLayout>
 
@@ -505,8 +493,8 @@
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:contentDescription="@string/caller_id_disables"
                             android:src="@drawable/ic_sim_pref" />
 
@@ -525,7 +513,8 @@
                             android:layout_width="@dimen/_16sdp"
                             android:layout_height="@dimen/_16sdp"
                             android:rotation="180"
-                            android:src="@drawable/ic_back_arrow" />
+                            android:src="@drawable/ic_back_arrow"
+                            android:tint="@color/black_color" />
 
                     </LinearLayout>
 
@@ -536,12 +525,12 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginTop="@dimen/_16sdp"
                         android:gravity="center_vertical"
-                        android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        tools:ignore="UseSwitchCompatOrMaterialXml">
 
                         <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:src="@drawable/ic_dial_pad_sound" />
 
                         <TextView
@@ -572,12 +561,11 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginTop="@dimen/_16sdp"
                         android:gravity="center_vertical"
-                        android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:contentDescription="@string/caller_id_disables"
                             android:src="@drawable/ic_flash" />
 
@@ -598,7 +586,8 @@
                             android:layout_gravity="center"
                             android:scaleX="0.9"
                             android:thumb="@drawable/thumb_selector"
-                            android:track="@drawable/track_selector" />
+                            android:track="@drawable/track_selector"
+                            tools:ignore="UseSwitchCompatOrMaterialXml" />
 
                     </LinearLayout>
 
@@ -609,12 +598,11 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginTop="@dimen/_16sdp"
                         android:gravity="center_vertical"
-                        android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:contentDescription="@string/caller_id_disables"
                             android:src="@drawable/ic_swape_action" />
 
@@ -635,7 +623,8 @@
                             android:layout_gravity="center"
                             android:scaleX="0.9"
                             android:thumb="@drawable/thumb_selector"
-                            android:track="@drawable/track_selector" />
+                            android:track="@drawable/track_selector"
+                            tools:ignore="UseSwitchCompatOrMaterialXml" />
 
                     </LinearLayout>
 
@@ -650,8 +639,8 @@
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:contentDescription="@string/caller_id_disables"
                             android:src="@drawable/ic_change_ring" />
 
@@ -670,7 +659,8 @@
                             android:layout_width="@dimen/_16sdp"
                             android:layout_height="@dimen/_16sdp"
                             android:rotation="180"
-                            android:src="@drawable/ic_back_arrow" />
+                            android:src="@drawable/ic_back_arrow"
+                            app:tint="@color/black_color" />
 
 
                     </LinearLayout>
@@ -708,8 +698,8 @@
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:contentDescription="@string/caller_id_disables"
                             android:src="@drawable/ic_share_" />
 
@@ -728,7 +718,8 @@
                             android:layout_width="@dimen/_16sdp"
                             android:layout_height="@dimen/_16sdp"
                             android:rotation="180"
-                            android:src="@drawable/ic_back_arrow" />
+                            android:src="@drawable/ic_back_arrow"
+                            app:tint="@color/black_color" />
 
 
                     </LinearLayout>
@@ -744,8 +735,8 @@
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:contentDescription="@string/caller_id_disables"
                             android:src="@drawable/ic_rate" />
 
@@ -764,7 +755,8 @@
                             android:layout_width="@dimen/_16sdp"
                             android:layout_height="@dimen/_16sdp"
                             android:rotation="180"
-                            android:src="@drawable/ic_back_arrow" />
+                            android:src="@drawable/ic_back_arrow"
+                            app:tint="@color/black_color" />
 
                     </LinearLayout>
 
@@ -779,8 +771,8 @@
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="@dimen/_32sdp"
-                            android:layout_height="@dimen/_32sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:contentDescription="@string/caller_id_disables"
                             android:src="@drawable/ic_privacy_policy" />
 
@@ -799,7 +791,8 @@
                             android:layout_width="@dimen/_16sdp"
                             android:layout_height="@dimen/_16sdp"
                             android:rotation="180"
-                            android:src="@drawable/ic_back_arrow" />
+                            android:src="@drawable/ic_back_arrow"
+                            app:tint="@color/black_color" />
 
                     </LinearLayout>
 

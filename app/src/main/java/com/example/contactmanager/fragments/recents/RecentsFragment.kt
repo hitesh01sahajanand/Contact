@@ -214,12 +214,10 @@ class RecentsFragment : Fragment(), OnClickHandler {
                     clearHistory,
                     settings,
                     option1Click = {
-                        Toast.makeText(requireActivity(), "Call Activity", Toast.LENGTH_SHORT)
-                            .show()
 
-                        val intent = Intent(requireContext(), CallActivity::class.java)
+                        /*val intent = Intent(requireContext(), CallActivity::class.java)
                         intent.putExtra("isNew", true)
-                        requireActivity().startActivity(intent)
+                        requireActivity().startActivity(intent)*/
                     },
                     option2Click = {
                         requireActivity().startActivity(

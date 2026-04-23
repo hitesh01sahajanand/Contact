@@ -239,7 +239,8 @@
                         android:layout_marginHorizontal="@dimen/_5sdp"
                         android:adjustViewBounds="true"
                         android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                        android:src="@drawable/ic_key_delete" />
+                        android:src="@drawable/ic_key_delete"
+                        android:tint="@color/black_color" />
                 </LinearLayout>
 
                 <View

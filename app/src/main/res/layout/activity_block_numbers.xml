@@ -8,67 +8,56 @@
         <variable
             name="OnClickHandler"
             type="com.example.contactmanager.utils.OnClickHandler" />
+
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        tools:context=".fragments.favorites.FavoritesFragment">
+        tools:context=".activities.blockNumbers.BlockNumbersActivity">
 
-        <include
-            android:id="@+id/in_header"
-            layout="@layout/header_design"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cv_search"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_header"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="?actionBarSize"
+            android:layout_gravity="center_vertical"
             android:layout_marginHorizontal="@dimen/_10sdp"
-            android:layout_marginTop="@dimen/_3sdp"
-            app:cardBackgroundColor="@color/white"
-            app:cardCornerRadius="@dimen/_10sdp"
-            app:cardElevation="0dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/in_header">
+            app:layout_constraintTop_toTopOf="parent">
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <ImageView
+                android:id="@+id/iv_back"
+                android:layout_width="@dimen/_35sdp"
+                android:layout_height="@dimen/_35sdp"
+                android:contentDescription="@string/setting"
+                android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
+                android:src="@drawable/ic_back"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                style="@style/TextStyle.Medium"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingHorizontal="@dimen/_12sdp">
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="@string/block_numbers"
+                android:textColor="@color/black"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-                <ImageView
-                    android:layout_width="@dimen/_18sdp"
-                    android:layout_height="@dimen/_18sdp"
-                    android:layout_gravity="center"
-                    android:layout_marginEnd="@dimen/_10sdp"
-                    android:src="@drawable/ic_search" />
-
-                <EditText
-                    android:id="@+id/edt_search"
-                    style="@style/TextStyle.Medium"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@null"
-                    android:hint="Search Contact..."
-                    android:imeOptions="actionSearch"
-                    android:paddingVertical="@dimen/_12sdp"
-                    android:singleLine="true"
-                    android:textColor="@color/black_color"
-                    android:textColorHint="@color/grey_color" />
-
-            </LinearLayout>
-
-
-        </androidx.cardview.widget.CardView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <LinearLayout
-            android:id="@+id/ll_favorite_space_holder"
+            android:id="@+id/ll_block_space_holder"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
@@ -83,16 +72,25 @@
             <ImageView
                 android:layout_width="@dimen/_120sdp"
                 android:layout_height="@dimen/_120sdp"
-                android:src="@drawable/ic_favorite_space_holder" />
+                android:src="@drawable/ic_block_space_holder" />
 
             <TextView
-                style="@style/TextStyle.Medium"
+                style="@style/TextStyle.MediumSemiBold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:gravity="center"
-                android:text="@string/tap_the_button"
+                android:text="@string/no_blocked_contacts"
                 android:textColor="@color/black_color" />
+
+            <TextView
+                style="@style/TextStyle.Regular"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="You don’t have any blocked contacts yet"
+                android:textColor="@color/grey_color" />
 
         </LinearLayout>
 
@@ -103,20 +101,24 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/cv_search">
+            app:layout_constraintTop_toBottomOf="@+id/cl_header">
 
             <androidx.cardview.widget.CardView
-                android:id="@+id/cv_favorite"
+                android:id="@+id/cv_block_numbers"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="@dimen/_10sdp"
                 android:layout_marginTop="@dimen/_10sdp"
                 android:visibility="visible"
                 app:cardCornerRadius="@dimen/_10sdp"
-                app:cardElevation="0dp">
+                app:cardElevation="0dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/cv_search">
 
                 <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rv_favorite"
+                    android:id="@+id/rv_block_numbers"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:visibility="visible" />

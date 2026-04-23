@@ -295,26 +295,6 @@ class RecentRepository @Inject constructor(@param:ApplicationContext private val
                 } catch (_: Exception) { }
             }
 
-            val blockedNumbers = HashSet<String>()
-            val blockedSuffixes = HashSet<String>()
-
-            try {
-                contentResolver.query(
-                    BlockedNumberContract.BlockedNumbers.CONTENT_URI,
-                    arrayOf(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER),
-                    null, null, null
-                )?.use { blockedCursor ->
-                    val idx = blockedCursor.getColumnIndex(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER)
-                    while (blockedCursor.moveToNext()) {
-                        val bNum = blockedCursor.getString(idx) ?: continue
-                        val clean = bNum.replace(Regex("[^0-9]"), "")
-                        blockedNumbers.add(clean)
-                        val suffix = if (clean.length >= 7) clean.takeLast(7) else clean
-                        if (suffix.isNotEmpty()) blockedSuffixes.add(suffix)
-                    }
-                }
-            } catch (_: Exception) { }
-
             for (item in entriesToProcess) {
                 cursor.moveToPosition(item.third)
                 try {
@@ -331,19 +311,6 @@ class RecentRepository @Inject constructor(@param:ApplicationContext private val
                     val callType = Common.getCallType(rawType)
                     val id = item.first
 
-                    var isBlocked = false
-                    if (normNum.isNotEmpty()) {
-                        val suffix = if (normNum.length >= 7) normNum.takeLast(7) else normNum
-                        if (blockedSuffixes.contains(suffix)) {
-                            for (b in blockedNumbers) {
-                                if (Common.compareNumbers(normNum, b)) {
-                                    isBlocked = true
-                                    break
-                                }
-                            }
-                        }
-                    }
-
                     list.add(
                         CallLogEntry(
                             stringNumber = number,
@@ -354,7 +321,7 @@ class RecentRepository @Inject constructor(@param:ApplicationContext private val
                             stringDateCategory = dateStr,
                             stringPhotoUri = cacheData.photoUri,
                             contactId = cacheData.contactId,
-                            isBlocked = isBlocked,
+                            isBlocked = false, // Will be set in ViewModel
                             intType = rawType
                         ).apply {
                             resetCallIds(id)

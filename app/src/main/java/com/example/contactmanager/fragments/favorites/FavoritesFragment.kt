@@ -14,9 +14,11 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.allContacts.AllContactsActivity
+import com.example.contactmanager.activities.details.ContactsDetailsActivity
 import com.example.contactmanager.adapters.FavoriteAdapter
 import com.example.contactmanager.databinding.FragmentFavoritesBinding
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager
 import com.example.contactmanager.viewmodels.FavoriteViewModel
@@ -30,8 +32,7 @@ class FavoritesFragment : Fragment(), OnClickHandler {
 
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         binding = FragmentFavoritesBinding.inflate(inflater, container, false)
         initView()
@@ -69,15 +70,32 @@ class FavoritesFragment : Fragment(), OnClickHandler {
             }
         }
 
-        favoriteAdapter = FavoriteAdapter(/*onDeleteClick = { dataModel ->
-            if (dataModel.isFavourite == 0) {
-                viewModel.addToFavoriteUnFavorite(dataModel.contactId.toString(), true)
-            } else {
-                viewModel.addToFavoriteUnFavorite(dataModel.contactId.toString(), false)
+        favoriteAdapter = FavoriteAdapter(onClick = { contactModel, clickAction ->
+            when (clickAction) {
+                Constance.ACTION_CALL -> {
+                    Common.actionCall(contactModel.number, requireActivity())
+
+                }
+
+                Constance.ACTION_SEND_MESSAGE -> {
+                    contactModel.number?.let {
+                        Common.showMessageAppChooser(requireActivity(), it)
+                    }
+                }
+
+                Constance.ACTION_VIDEO_CALL -> {
+                    contactModel.number?.let {
+                        Common.showVideoAppChooser(requireActivity(), it)
+                    }
+                }
+
+                Constance.ACTION_INFO -> {
+                    val intent = Intent(requireActivity(), ContactsDetailsActivity::class.java)
+                    intent.putExtra(Constance.DATA_FETCH, contactModel.contactId)
+                    requireActivity().startActivity(intent)
+                }
             }
-            favoriteAdapter.remove(dataModel)
-        }*/
-        )
+        })
 
         binding.rvFavorite.adapter = favoriteAdapter
         binding.rvFavorite.layoutManager = LinearLayoutManager(requireActivity())
@@ -105,8 +123,7 @@ class FavoritesFragment : Fragment(), OnClickHandler {
             binding.inHeader.cvAdd.id -> {
                 requireActivity().startActivity(
                     Intent(
-                        requireActivity(),
-                        AllContactsActivity::class.java
+                        requireActivity(), AllContactsActivity::class.java
                     )
                 )
             }

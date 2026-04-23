@@ -29,8 +29,8 @@
 
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cv_collapse_profile"
-                    android:layout_width="@dimen/_35sdp"
-                    android:layout_height="@dimen/_35sdp"
+                    android:layout_width="@dimen/_34sdp"
+                    android:layout_height="@dimen/_34sdp"
                     android:layout_gravity="end"
                     app:cardCornerRadius="@dimen/_40sdp"
                     app:cardElevation="0dp"
