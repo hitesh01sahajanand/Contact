@@ -19,6 +19,7 @@
             android:layout_height="@dimen/_34sdp"
             app:cardBackgroundColor="@color/color_1"
             app:cardCornerRadius="@dimen/_40sdp"
+            android:visibility="gone"
             app:cardElevation="0dp">
 
             <TextView

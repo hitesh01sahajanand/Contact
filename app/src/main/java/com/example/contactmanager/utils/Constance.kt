@@ -3,6 +3,7 @@ package com.example.contactmanager.utils
 object Constance {
 
     const val CONFIRM_DIALOG = "confirm_dialog"
+    const val MERGE_DUPLICATE_CONTACT = "merge_duplicate_contact"
     const val APP_THEME = "app_theme"
     const val DB_NAME = "contact_manager_db"
     const val PREF_NAME = "my_app_prefs"
@@ -19,6 +20,7 @@ object Constance {
     const val ACTION_INFO = "action_info"
     const val ACTION_ADD_TO_CONTACT = "action_add_to_contact"
     const val ACTION_ADD_TAG = "action_add_tag"
+    const val ACTION_DELETE = "action_delete"
     const val ACTION_FAVORITE = "action_favorite"
     const val ACTION_BLOCK_CONTACT = "action_block_contact"
     const val CONTACT_ID = "contactId"

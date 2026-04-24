@@ -2,7 +2,6 @@ package com.example.contactmanager.utils
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.res.Configuration
 import android.app.Activity
 import android.app.AlarmManager
 import android.app.Dialog
@@ -34,7 +33,6 @@ import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -51,17 +49,24 @@ import java.util.Calendar
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.example.contactmanager.adapters.AllAccountAdapter
 import com.example.contactmanager.adapters.AppsAdapter
+import com.example.contactmanager.adapters.QuickResponseAdapter
 import com.example.contactmanager.databinding.AlertDialogDesignBinding
 import com.example.contactmanager.databinding.AppThemeDialogBinding
+import com.example.contactmanager.databinding.ContactPopUpDesignBinding
 import com.example.contactmanager.databinding.DialerPopUpDesignBinding
+import com.example.contactmanager.databinding.EditQuickMessageBinding
 import com.example.contactmanager.databinding.RemindMeDialogDesignBinding
 import com.example.contactmanager.receivers.ReminderReceiver
 import com.example.contactmanager.databinding.VideoCallDialogBinding
 import com.example.contactmanager.databinding.ItemVideoCallBinding
 import com.example.contactmanager.databinding.SaveTagDesignBinding
+import com.example.contactmanager.models.AccountModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.example.contactmanager.models.QuickResponseModel
 
 object Common {
 
@@ -382,8 +387,54 @@ object Common {
         }
     }
 
-    fun showMessageDialog(
+
+    fun contactPopUpMenu(
         context: Context,
+        anchorView: View,
+        accountsList: List<AccountModel>,
+        onItemClick: (String) -> Unit
+    ) {
+        val popUpBinding = ContactPopUpDesignBinding.inflate(
+            LayoutInflater.from(context),
+            null,
+            false
+        )
+
+        val popupWindow = PopupWindow(
+            popUpBinding.root,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            true
+        )
+
+        popupWindow.elevation = 10f
+        popupWindow.isOutsideTouchable = true
+        popupWindow.isFocusable = true
+
+        popUpBinding.root.measure(
+            View.MeasureSpec.UNSPECIFIED,
+            View.MeasureSpec.UNSPECIFIED
+        )
+
+        val popupWidth = popUpBinding.root.measuredWidth
+        val margin = (2 * context.resources.displayMetrics.density).toInt()
+        val xOffset = anchorView.width - popupWidth - margin
+
+        popupWindow.showAsDropDown(anchorView, 0, 20)
+
+        val adapter = AllAccountAdapter(onClick = { model ->
+            onItemClick(model.email)
+            popupWindow.dismiss()
+        })
+
+        popUpBinding.rvAccounts.adapter = adapter
+        popUpBinding.rvAccounts.layoutManager = LinearLayoutManager(context)
+        adapter.addAll(accountsList)
+    }
+
+    fun showQuickMessageDialog(
+        context: Context,
+        messages: List<QuickResponseModel>,
         onItemClick: (String) -> Unit
     ) {
 
@@ -406,21 +457,15 @@ object Common {
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
 
-
-        bindingSendMessage.tvTextMe.setOnClickListener {
-            onItemClick(bindingSendMessage.tvTextMe.text.toString())
-            dialog.dismiss()
-        }
-
-        bindingSendMessage.tvCallBack.setOnClickListener {
-            onItemClick(bindingSendMessage.tvCallBack.text.toString())
-            dialog.dismiss()
-        }
-
-        bindingSendMessage.tvCallLater.setOnClickListener {
-            onItemClick(bindingSendMessage.tvCallLater.text.toString())
-            dialog.dismiss()
-        }
+        val adapter = QuickResponseAdapter(onItemClick = { model, action ->
+            if (action == Constance.DATA_FETCH) {
+                onItemClick(model.message)
+                dialog.dismiss()
+            }
+        })
+        bindingSendMessage.rvQuickResponse.adapter = adapter
+        bindingSendMessage.rvQuickResponse.layoutManager = LinearLayoutManager(context)
+        adapter.updateData(messages)
 
         bindingSendMessage.cvAddMessage.setOnClickListener {
             bindingSendMessage.llSendMessage.isVisible = !bindingSendMessage.llSendMessage.isVisible
@@ -430,6 +475,44 @@ object Common {
             onItemClick(bindingSendMessage.edtSendMassage.text.toString())
             dialog.dismiss()
         }
+
+        dialog.show()
+    }
+
+    fun editQuickMessageDialog(
+        context: Context,
+        onItemClick: (String) -> Unit
+    ) {
+
+        val dialog = Dialog(context)
+        val bindingSendMessage = EditQuickMessageBinding.inflate(LayoutInflater.from(context))
+
+        dialog.setContentView(bindingSendMessage.root)
+        dialog.setCancelable(false)
+
+        // Optional: transparent background (important)
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+
+        val margin = (10 * context.resources.displayMetrics.density).toInt()
+
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+
+        dialog.window?.setLayout(
+            screenWidth - (margin * 3),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+
+        bindingSendMessage.ivClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        bindingSendMessage.cvOkay.setOnClickListener {
+            onItemClick(bindingSendMessage.edtMessage.text.toString())
+            dialog.dismiss()
+        }
+
 
         dialog.show()
     }

@@ -10,7 +10,7 @@ import com.example.contactmanager.databinding.SuggestionDesignBinding
 import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
 
-class SuggestionAdapter(private val onClick: (String) -> Unit) :
+class SuggestionAdapter(private val onClick: (ContactModel) -> Unit) :
     RecyclerView.Adapter<SuggestionAdapter.SuggestionHolder>() {
     var contactList: ArrayList<ContactModel> = ArrayList()
     private var filteredList: MutableList<ContactModel> = mutableListOf()
@@ -29,7 +29,7 @@ class SuggestionAdapter(private val onClick: (String) -> Unit) :
         holder.setData(itemData, p1)
         holder.itemView.setOnClickListener {
             itemData.number?.let {
-                onClick(it)
+                onClick(itemData)
             }
         }
     }

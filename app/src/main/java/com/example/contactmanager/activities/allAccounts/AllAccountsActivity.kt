@@ -68,12 +68,12 @@ class AllAccountsActivity : AppCompatActivity(), OnClickHandler {
             val name = "All Contacts"
 
             binding.inAccountDesign.tvIdName.text = name
-            val color = Common.profileColors[1 % Common.profileColors.size]
+            /*val color = Common.profileColors[1 % Common.profileColors.size]
             binding.inAccountDesign.cvProfile.setCardBackgroundColor(
                 ContextCompat.getColor(binding.root.context, color)
             )
             val firstChar = name.firstOrNull()?.uppercase() ?: ""
-            binding.inAccountDesign.tvContactName.text = firstChar
+            binding.inAccountDesign.tvContactName.text = firstChar*/
 
             list.forEach {
                 val nameBitmap = Common.generateAvatar(it.first)

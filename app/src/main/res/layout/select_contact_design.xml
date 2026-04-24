@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <LinearLayout
+        android:id="@+id/ll_collapse_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="@dimen/_10sdp">
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cv_collapse_profile"
+            android:layout_width="@dimen/_34sdp"
+            android:layout_height="@dimen/_34sdp"
+            android:layout_gravity="end"
+            app:cardCornerRadius="@dimen/_40sdp"
+            app:cardElevation="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:id="@+id/iv_collapse_contact_photo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_launcher_background"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/iv_collapse_user"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:padding="@dimen/_12sdp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_user"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tv_collapse_contact_name"
+                style="@style/TextStyle.Medium"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text=""
+                android:textColor="@color/white" />
+
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:id="@+id/tv_collapse_name"
+            style="@style/TextStyle.Medium"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="center_vertical"
+            android:singleLine="true"
+            android:text="dgkdgkdgkdmgk"
+            android:textColor="@color/black" />
+
+        <ImageView
+            android:id="@+id/iv_fav"
+            android:layout_width="@dimen/_18sdp"
+            android:layout_height="@dimen/_18sdp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/ic_un_fav"
+            android:visibility="gone" />
+
+    </LinearLayout>
+</layout>

@@ -104,6 +104,27 @@
     <string name="no_blocked_contacts">No Blocked Contacts</string>
     <string name="unblock">Unblock</string>
     <string name="themes">Themes</string>
+    <string name="speed_dial_numbers">Speed Dial Numbers</string>
+    <string name="assign_speed_dial_numbers">Assign speed dial numbers</string>
+    <string name="add_speed_dial_number">Add Speed Dial Number</string>
+    <string name="_1">1.</string>
+    <string name="_2">2.</string>
+    <string name="_3">3.</string>
+    <string name="_4">4.</string>
+    <string name="_5">5.</string>
+    <string name="_6">6.</string>
+    <string name="_7">7.</string>
+    <string name="_8">8.</string>
+    <string name="_9">9.</string>
+    <string name="select_contact">Select Contact</string>
+    <string name="add_quick_response">Add Quick Response</string>
+    <string name="enter_your_massage">Enter your massage</string>
+    <string name="ok">Ok</string>
+    <string name="can_t_talk_right_now">Can’t talk right now.</string>
+    <string name="i_ll_call_you_later">I’ll call you later</string>
+    <string name="i_m_on_my_way">I’m on my way</string>
+    <string name="can_t_talk_now_call_me_later">Can’t talk now. Call me later.</string>
+    <string name="all">All</string>
 
 
 </resources>

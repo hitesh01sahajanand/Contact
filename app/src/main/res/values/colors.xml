@@ -28,6 +28,7 @@
     <color name="black_new_light">#808080</color>
     <color name="block_bg_color">#fef4f3</color>
     <color name="light_blue_color">#6DB1FF</color>
+    <color name="light_blue">#e1ecfb</color>
 
 
 </resources>

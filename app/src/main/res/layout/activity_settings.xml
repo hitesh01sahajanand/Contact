@@ -418,6 +418,7 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginTop="@dimen/_16sdp"
                         android:gravity="center_vertical"
+                        android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
                         android:orientation="horizontal">
 
                         <ImageView
@@ -446,41 +447,6 @@
 
                     </LinearLayout>
 
-                    <LinearLayout
-                        android:id="@+id/ll_merge_duplicate"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginTop="@dimen/_16sdp"
-                        android:gravity="center_vertical"
-                        android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="@dimen/_34sdp"
-                            android:layout_height="@dimen/_34sdp"
-                            android:contentDescription="@string/caller_id_disables"
-                            android:src="@drawable/ic_merge_duplicate" />
-
-                        <TextView
-                            style="@style/TextStyle.Regular"
-                            android:layout_width="0dp"
-                            android:layout_height="match_parent"
-                            android:layout_gravity="center_vertical"
-                            android:layout_marginHorizontal="@dimen/_10sdp"
-                            android:layout_weight="1"
-                            android:gravity="center_vertical"
-                            android:text="@string/merge_duplicate_contacts"
-                            android:textColor="@color/black_color" />
-
-                        <ImageView
-                            android:layout_width="@dimen/_16sdp"
-                            android:layout_height="@dimen/_16sdp"
-                            android:rotation="180"
-                            android:src="@drawable/ic_back_arrow"
-                            app:tint="@color/black_color" />
-
-                    </LinearLayout>
 
                     <LinearLayout
                         android:id="@+id/ll_sim_pref"
@@ -515,6 +481,43 @@
                             android:rotation="180"
                             android:src="@drawable/ic_back_arrow"
                             android:tint="@color/black_color" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/ll_merge_duplicate"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginTop="@dimen/_16sdp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
+                            android:contentDescription="@string/caller_id_disables"
+                            android:src="@drawable/ic_merge_duplicate" />
+
+                        <TextView
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginHorizontal="@dimen/_10sdp"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:text="@string/merge_duplicate_contacts"
+                            android:textColor="@color/black_color" />
+
+                        <Switch
+                            android:id="@+id/switch_merge_duplicate_contact"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:scaleX="0.9"
+                            android:thumb="@drawable/thumb_selector"
+                            android:track="@drawable/track_selector" />
 
                     </LinearLayout>
 

@@ -50,8 +50,15 @@ class ContactViewModel @Inject constructor(
     private var _allContactList = MutableLiveData<List<ContactListItem>>()
     val allContactList: LiveData<List<ContactListItem>> = _allContactList
 
-    private var _googleAccountList: MutableLiveData<List<ContactListItem>> = MutableLiveData()
-    val googleAccountList: LiveData<List<ContactListItem>> = _googleAccountList
+    var currentSelectedAccount: String = "All Accounts"
+
+    fun loadContacts() {
+        when (currentSelectedAccount) {
+            "All Accounts" -> loadAllContacts()
+            "Device Only" -> getContactsByDevice()
+            else -> getContactsByAccountWithHeaders(currentSelectedAccount)
+        }
+    }
 
     fun loadAllContacts() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -63,7 +70,14 @@ class ContactViewModel @Inject constructor(
     fun getContactsByAccountWithHeaders(accountName: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val data = repository.getContactsByGoogleAccount(accountName)
-            _googleAccountList.postValue(data)
+            _allContactList.postValue(data)
+        }
+    }
+
+    fun getContactsByDevice() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val data = repository.getContactsByDevice()
+            _allContactList.postValue(data)
         }
     }
 

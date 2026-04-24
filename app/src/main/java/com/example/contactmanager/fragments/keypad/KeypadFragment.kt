@@ -41,13 +41,17 @@ import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager
 import com.example.contactmanager.utils.PermissionManager.isDefaultDialer
 import com.example.contactmanager.viewmodels.ContactViewModel
+import com.example.contactmanager.viewmodels.SpeedDialViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class KeypadFragment : Fragment(), OnClickHandler {
     private lateinit var binding: FragmentKeypadBinding
     private val viewModel: ContactViewModel by viewModels()
+    private val speedDialViewModel: SpeedDialViewModel by viewModels()
     private var contactList: ArrayList<ContactModel> = ArrayList()
 
     private lateinit var adapter: SuggestionAdapter
@@ -180,8 +184,8 @@ class KeypadFragment : Fragment(), OnClickHandler {
 
         allPermissionGranted()
 
-        adapter = SuggestionAdapter(onClick = { number ->
-            binding.edtDisplayNumber.setText(number)
+        adapter = SuggestionAdapter(onClick = { model ->
+            binding.edtDisplayNumber.setText(model.number)
         })
 
         binding.rvSuggestions.adapter = adapter
@@ -262,6 +266,25 @@ class KeypadFragment : Fragment(), OnClickHandler {
         buttons.forEach { view ->
             view.setOnClickListener {
                 appendDigit(view.id)
+            }
+            val digitStr = keyMap[view.id]
+            if (digitStr != null && digitStr.matches(Regex("[1-9]"))) {
+                view.setOnLongClickListener {
+                    val slot = digitStr.toInt()
+                    handleSpeedDial(slot)
+                    true
+                }
+            }
+        }
+    }
+
+    private fun handleSpeedDial(slot: Int) {
+        lifecycleScope.launch {
+            val speedDial = speedDialViewModel.getSpeedDialBySlot(slot)
+            if (speedDial != null && speedDial.contactNumber.isNotEmpty()) {
+                actionCall(speedDial.contactNumber, requireActivity())
+            } else {
+                Toast.makeText(requireContext(), "No speed dial set for $slot", Toast.LENGTH_SHORT).show()
             }
         }
     }

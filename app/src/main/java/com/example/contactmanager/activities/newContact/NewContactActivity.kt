@@ -58,6 +58,7 @@ import java.io.FileOutputStream
 import kotlin.getValue
 import kotlin.text.get
 import androidx.core.net.toUri
+import androidx.core.view.isVisible
 
 @AndroidEntryPoint
 class NewContactActivity : AppCompatActivity(), OnClickHandler {
@@ -132,6 +133,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             if (newDisplayList.isNotEmpty()) {
                 val itemData = newDisplayList[0]
                 binding.inAccountDesign.tvIdName.text = itemData.name
+                binding.inAccountDesign.cvProfile.isVisible = true
                 val color = Common.profileColors[1 % Common.profileColors.size]
                 binding.inAccountDesign.cvProfile.setCardBackgroundColor(
                     ContextCompat.getColor(binding.root.context, color)

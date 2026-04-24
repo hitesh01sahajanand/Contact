@@ -45,12 +45,12 @@ class AllAccountAdapter(private val onClick: (AccountModel) -> Unit) :
         RecyclerView.ViewHolder(binding.root) {
         fun setData(itemData: AccountModel) {
             binding.tvIdName.text = itemData.name
-            val color = Common.profileColors[position % Common.profileColors.size]
+            /*val color = Common.profileColors[position % Common.profileColors.size]
             binding.cvProfile.setCardBackgroundColor(
                 ContextCompat.getColor(binding.root.context, color)
             )
             val firstChar = itemData.name.firstOrNull()?.uppercase() ?: ""
-            binding.tvContactName.text = firstChar
+            binding.tvContactName.text = firstChar*/
         }
     }
 }

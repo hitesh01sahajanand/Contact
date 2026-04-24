@@ -86,8 +86,10 @@ class FavoriteAdapter(private val onClick: (ContactModel, String) -> Unit) :
 
                     TransitionManager.beginDelayedTransition(llMainView, transition)
 
+                    notifyItemChanged(position)
                     // Notify all affected items
-                    val itemsToNotify = mutableSetOf<Int>()
+
+                   /* val itemsToNotify = mutableSetOf<Int>()
                     if (previousPosition != -1) {
                         itemsToNotify.add(previousPosition)
                         itemsToNotify.add(previousPosition - 1)
@@ -99,9 +101,9 @@ class FavoriteAdapter(private val onClick: (ContactModel, String) -> Unit) :
 
                     itemsToNotify.forEach { pos ->
                         if (pos in 0 until itemCount) {
-                            notifyItemChanged(pos)
+
                         }
-                    }
+                    }*/
                 }
 
 

@@ -53,6 +53,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ContanctManager">
         <activity
+            android:name=".activities.quickResponse.QuickResponseActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.speedDialSelect.SpeedDialSelectActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.speedDial.SpeedDialActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.blockNumbers.BlockNumbersActivity"
             android:exported="false" />
         <activity
@@ -123,8 +132,8 @@
         </activity>
         <activity
             android:name=".activities.home.HomeActivity"
-            android:exported="true"
             android:configChanges="uiMode"
+            android:exported="true"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>

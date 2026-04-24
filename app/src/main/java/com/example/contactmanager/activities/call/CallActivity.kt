@@ -5,12 +5,10 @@ import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
-import android.provider.ContactsContract
 import android.telecom.Call
 import android.telecom.CallAudioState
 import android.util.Log
@@ -31,24 +29,30 @@ import com.example.contactmanager.activities.home.HomeActivity
 import com.example.contactmanager.adapters.ConferenceParticipantsAdapter
 import com.example.contactmanager.databinding.ActivityCallBinding
 import com.example.contactmanager.databinding.ConferenceManagerBottomSheetBinding
-import com.example.contactmanager.databinding.ItemVideoCallBinding
-import com.example.contactmanager.databinding.VideoCallDialogBinding
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.NewCallManager
 import com.example.contactmanager.utils.OnClickHandler
-import com.example.contactmanager.utils.getStateCompat
 import com.example.contactmanager.utils.isConference
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.activity.viewModels
+import androidx.lifecycle.lifecycleScope
+import com.example.contactmanager.viewmodels.QuickResponseViewModel
+import com.example.contactmanager.models.QuickResponseModel
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 
+@AndroidEntryPoint
 class CallActivity : AppCompatActivity(), OnClickHandler {
     private lateinit var binding: ActivityCallBinding
     private var mProximityWakeLock: WakeLock? = null
     private var isMoreExpanded = false
+    private val quickResponseViewModel: QuickResponseViewModel by viewModels()
+    private var quickMessages = emptyList<QuickResponseModel>()
 
     companion object {
         fun getStartIntent(context: Context): Intent {
@@ -63,6 +67,14 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_call)
+        
+        lifecycleScope.launch {
+            quickResponseViewModel.initializeDefaultMessages()
+            quickResponseViewModel.messages.collectLatest {
+                quickMessages = it
+            }
+        }
+        
         initView()
     }
 
@@ -285,9 +297,11 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
             }
 
             binding.inIncomingLayout.llMessage.id -> {
-                Common.showMessageDialog(this, onItemClick = { messages ->
-                    sendSMSMessage(messages)
-                    NewCallManager.reject()
+                Common.showQuickMessageDialog(this, quickMessages, onItemClick = { messages ->
+                    if (messages.isNotBlank()) {
+                        sendSMSMessage(messages)
+                        NewCallManager.reject()
+                    }
                 })
             }
 

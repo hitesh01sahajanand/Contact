@@ -27,7 +27,6 @@ class AllContactsAdapter(
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val contactList = ArrayList<ContactListItem>()
     private var filteredList: MutableList<ContactListItem> = mutableListOf()
-    private val selectedContacts = mutableSetOf<String>()
 
     companion object {
         const val TYPE_HEADER = 0
@@ -35,6 +34,15 @@ class AllContactsAdapter(
     }
 
     private var expandedPosition = -1
+    private var isMergeDuplicate: Boolean = false
+    private var currentQuery: String = ""
+
+    fun setMergeDuplicate(merge: Boolean) {
+        if (isMergeDuplicate != merge) {
+            isMergeDuplicate = merge
+            applyFilter()
+        }
+    }
 
     override fun getItemViewType(position: Int): Int {
         return when (filteredList[position]) {
@@ -78,54 +86,59 @@ class AllContactsAdapter(
 
     fun addAll(newList: List<ContactListItem>) {
         contactList.clear()
-        filteredList.clear()
         contactList.addAll(newList)
-        filteredList.addAll(newList)
-        notifyDataSetChanged()
+        applyFilter()
     }
 
     fun clearList() {
         contactList.clear()
         filteredList.clear()
+        notifyDataSetChanged()
     }
 
     fun filter(query: String) {
+        currentQuery = query
+        applyFilter()
+    }
 
-        val searchText = query.trim()
+    private fun applyFilter() {
+        val searchText = currentQuery.trim()
         val tempList = mutableListOf<ContactListItem>()
 
-        if (searchText.isEmpty()) {
-            filteredList = contactList.toMutableList()
-        } else {
+        var lastHeader: ContactListItem.Header? = null
+        val seenNames = mutableSetOf<String>()
 
-            var lastHeader: ContactListItem.Header? = null
+        contactList.forEach { item ->
+            when (item) {
+                is ContactListItem.Header -> {
+                    lastHeader = item
+                }
+                is ContactListItem.Contact -> {
+                    val displayName = item.data.displayName ?: ""
+                    
+                    val matchQuery = searchText.isEmpty() ||
+                            displayName.contains(searchText, true) ||
+                            item.data.number?.contains(searchText, true) == true
 
-            contactList.forEach {
+                    if (matchQuery) {
+                        val isDuplicate = if (isMergeDuplicate && displayName.isNotEmpty()) {
+                            !seenNames.add(displayName.lowercase())
+                        } else {
+                            false
+                        }
 
-                when (it) {
-
-                    is ContactListItem.Header -> {
-                        lastHeader = it
-                    }
-
-                    is ContactListItem.Contact -> {
-
-                        val match = it.data.displayName?.contains(searchText, true) == true ||
-                                it.data.number?.contains(searchText, true) == true
-
-                        if (match) {
+                        if (!isDuplicate) {
                             if (lastHeader != null && !tempList.contains(lastHeader)) {
                                 tempList.add(lastHeader)
                             }
-                            tempList.add(it)
+                            tempList.add(item)
                         }
                     }
                 }
             }
-
-            filteredList = tempList
         }
 
+        filteredList = tempList
         notifyDataSetChanged()
     }
 

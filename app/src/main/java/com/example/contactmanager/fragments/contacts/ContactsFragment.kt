@@ -4,10 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,25 +16,24 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.contactmanager.R
-import com.example.contactmanager.activities.allAccounts.AllAccountsActivity
 import com.example.contactmanager.activities.details.ContactsDetailsActivity
-import com.example.contactmanager.adapters.AllContactsAdapter
-import com.example.contactmanager.databinding.FragmentContactsBinding
-import com.example.contactmanager.models.ContactListItem
-import com.example.contactmanager.utils.Common
-import com.example.contactmanager.utils.OnClickHandler
-import com.example.contactmanager.utils.PermissionManager
-import com.example.contactmanager.viewmodels.ContactViewModel
-import com.example.contactmanager.viewmodels.HomeViewModel
-import dagger.hilt.android.AndroidEntryPoint
 import com.example.contactmanager.activities.newContact.NewContactActivity
 import com.example.contactmanager.activities.settings.SettingsActivity
+import com.example.contactmanager.adapters.AllContactsAdapter
+import com.example.contactmanager.databinding.FragmentContactsBinding
+import com.example.contactmanager.models.AccountModel
+import com.example.contactmanager.models.ContactListItem
+import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
-import com.example.contactmanager.utils.SendData
-import kotlin.getValue
+import com.example.contactmanager.utils.OnClickHandler
+import com.example.contactmanager.utils.PermissionManager
+import com.example.contactmanager.utils.SharedPreferenceManager
+import com.example.contactmanager.viewmodels.ContactViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class ContactsFragment : Fragment(), OnClickHandler {
@@ -57,14 +53,26 @@ class ContactsFragment : Fragment(), OnClickHandler {
     override fun onResume() {
         super.onResume()
         if (PermissionManager.hasPermissions(requireActivity())) {
-            viewModel.loadAllContacts()
+            val isMerge = SharedPreferenceManager.getBoolean(
+                requireActivity(),
+                Constance.MERGE_DUPLICATE_CONTACT,
+                false
+            )
+            allContactsAdapter.setMergeDuplicate(isMerge)
+            viewModel.loadContacts()
         }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
         if (!hidden && PermissionManager.hasPermissions(requireActivity())) {
-            viewModel.loadAllContacts()
+            val isMerge = SharedPreferenceManager.getBoolean(
+                requireActivity(),
+                Constance.MERGE_DUPLICATE_CONTACT,
+                false
+            )
+            allContactsAdapter.setMergeDuplicate(isMerge)
+            viewModel.loadContacts()
         }
     }
 
@@ -74,12 +82,9 @@ class ContactsFragment : Fragment(), OnClickHandler {
                 val data = result.data
                 val selectedAccount = data?.getStringExtra("account_name")
 
-                if (selectedAccount == "All Accounts") {
-                    viewModel.loadAllContacts()
-                } else {
-                    selectedAccount?.let {
-                        viewModel.getContactsByAccountWithHeaders(it)
-                    }
+                if (selectedAccount != null) {
+                    viewModel.currentSelectedAccount = selectedAccount
+                    viewModel.loadContacts()
                 }
             }
         }
@@ -136,12 +141,7 @@ class ContactsFragment : Fragment(), OnClickHandler {
 
         viewModel.allContactList.observe(viewLifecycleOwner) { allContacts ->
             allContactsAdapter.addAll(allContacts)
-            binding.tvNoData.isVisible = allContacts.isEmpty()
-        }
-
-        viewModel.googleAccountList.observe(viewLifecycleOwner) { allContacts ->
-            allContactsAdapter.addAll(allContacts)
-            binding.tvNoData.isVisible = allContacts.isEmpty()
+            binding.tvNoData.isVisible = allContactsAdapter.itemCount == 0
         }
 
         val letters = ('A'..'Z') + "#"
@@ -234,6 +234,46 @@ class ContactsFragment : Fragment(), OnClickHandler {
             binding.inHeader.cvAdd.id -> {
                 val intent = Intent(requireActivity(), NewContactActivity::class.java)
                 startActivity(intent)
+            }
+
+            binding.cvAccounts.id -> {
+                val accountList = mutableListOf<AccountModel>()
+                accountList.add(AccountModel("All", "All Accounts"))
+                accountList.add(AccountModel("Device", "Device Only"))
+
+                val existingEmails = mutableSetOf<String>()
+                val cursor = requireActivity().contentResolver.query(
+                    android.provider.ContactsContract.RawContacts.CONTENT_URI,
+                    arrayOf(android.provider.ContactsContract.RawContacts.ACCOUNT_NAME),
+                    "${android.provider.ContactsContract.RawContacts.ACCOUNT_TYPE} = ?",
+                    arrayOf("com.google"),
+                    null
+                )
+                
+                cursor?.use {
+                    while (it.moveToNext()) {
+                        val email = it.getString(0)
+                        if (!email.isNullOrEmpty()) {
+                            existingEmails.add(email)
+                        }
+                    }
+                }
+                
+                for (email in existingEmails) {
+                    val name = email.substringBefore("@")
+                    accountList.add(AccountModel(name, email))
+                }
+
+                Common.contactPopUpMenu(requireActivity(), binding.cvAccounts, accountList) { email ->
+                    val selectedName = accountList.find { it.email == email }?.name ?: "All"
+                    val tvTitle = binding.cvAccounts.findViewById<TextView>(R.id.tv_title)
+                    tvTitle?.text = selectedName
+
+                    Log.e("TAG", "onClick: $selectedName", )
+
+                    viewModel.currentSelectedAccount = email
+                    viewModel.loadContacts()
+                }
             }
         }
     }

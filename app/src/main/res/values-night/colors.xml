@@ -17,4 +17,5 @@
 
     <color name="block_bg_color">#2C1A1A</color>
     <color name="black_new_light">#B0B0B0</color>
+    <color name="light_blue">#e1ecfb</color>
 </resources>

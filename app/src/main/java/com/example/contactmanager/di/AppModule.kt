@@ -39,4 +39,14 @@ class AppModule {
     fun provideBlockDao(database: AppDatabase): BlockDao {
         return database.blockDao()
     }
+
+    @Provides
+    fun provideSpeedDialDao(database: AppDatabase): com.example.contactmanager.database.SpeedDialDao {
+        return database.speedDialDao()
+    }
+
+    @Provides
+    fun provideQuickResponseDao(database: AppDatabase): com.example.contactmanager.database.QuickResponseDao {
+        return database.quickResponseDao()
+    }
 }

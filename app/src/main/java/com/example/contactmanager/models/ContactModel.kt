@@ -42,6 +42,7 @@ data class ContactModel(
     }
 
     var contactId: String? = null
+
         set(value) {
             field = value
             setColorIndexBasedOnId(value)

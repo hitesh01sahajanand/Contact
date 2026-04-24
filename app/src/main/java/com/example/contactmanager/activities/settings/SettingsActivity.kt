@@ -15,17 +15,19 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.contactmanager.activities.home.HomeActivity
 import androidx.databinding.DataBindingUtil
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.blockNumbers.BlockNumbersActivity
+import com.example.contactmanager.activities.home.HomeActivity
+import com.example.contactmanager.activities.quickResponse.QuickResponseActivity
+import com.example.contactmanager.activities.speedDial.SpeedDialActivity
 import com.example.contactmanager.databinding.ActivitySettingsBinding
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
-import com.example.contactmanager.utils.ThemeManager
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager.isDefaultDialer
 import com.example.contactmanager.utils.SharedPreferenceManager
+import com.example.contactmanager.utils.ThemeManager
 
 class SettingsActivity : AppCompatActivity(), OnClickHandler {
     private lateinit var binding: ActivitySettingsBinding
@@ -87,6 +89,17 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                 SharedPreferenceManager.putBoolean(this, Constance.CONFIRM_DIALOG, true)
             } else {
                 SharedPreferenceManager.putBoolean(this, Constance.CONFIRM_DIALOG, false)
+            }
+        }
+
+        val isMergeDuplicate = SharedPreferenceManager.getBoolean(this, Constance.MERGE_DUPLICATE_CONTACT, false)
+        binding.switchMergeDuplicateContact.isChecked = isMergeDuplicate
+
+        binding.switchMergeDuplicateContact.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                SharedPreferenceManager.putBoolean(this, Constance.MERGE_DUPLICATE_CONTACT, true)
+            } else {
+                SharedPreferenceManager.putBoolean(this, Constance.MERGE_DUPLICATE_CONTACT, false)
             }
         }
 
@@ -159,19 +172,20 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
 
 
             binding.llSpeedDial.id -> {
-
+                startActivity(Intent(this, SpeedDialActivity::class.java))
             }
 
             binding.llQuickResponse.id -> {
-
+                startActivity(Intent(this, QuickResponseActivity::class.java))
             }
 
             binding.llSoundVibration.id -> {
-
-            }
-
-            binding.llMergeDuplicate.id -> {
-
+                val intent = try {
+                    Intent(Settings.ACTION_SOUND_SETTINGS)
+                } catch (_: Exception) {
+                    Intent(Settings.ACTION_SETTINGS)
+                }
+                startActivity(intent)
             }
 
             binding.llSimPref.id -> {

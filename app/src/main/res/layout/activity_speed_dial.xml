@@ -1,0 +1,908 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="OnClickHandler"
+            type="com.example.contactmanager.utils.OnClickHandler" />
+
+    </data>
+
+    <LinearLayout
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/bg_color"
+        tools:context=".activities.speedDial.SpeedDialActivity">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="?actionBarSize"
+            android:layout_gravity="center_vertical"
+            android:layout_marginHorizontal="@dimen/_10sdp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/iv_back"
+                android:layout_width="@dimen/_35sdp"
+                android:layout_height="@dimen/_35sdp"
+                android:contentDescription="@string/setting"
+                android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
+                android:src="@drawable/ic_back"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                style="@style/TextStyle.Medium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="@string/speed_dial_numbers"
+                android:textColor="@color/black"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+        <TextView
+            style="@style/TextStyle.Regular"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginHorizontal="@dimen/_10sdp"
+            android:layout_marginTop="@dimen/_10sdp"
+            android:gravity="start"
+            android:text="@string/assign_speed_dial_numbers"
+            android:textColor="@color/grey_color" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_10sdp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/ll_1_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:background="@drawable/speed_dial_unselected_bg"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/TextStyle.Medium"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="@dimen/_10sdp"
+                        android:gravity="start"
+                        android:text="@string/_1"
+                        android:textColor="@color/black_color" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingVertical="@dimen/_2sdp">
+
+                        <LinearLayout
+                            android:id="@+id/ll_1_unselect"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="visible">
+
+                            <ImageView
+                                android:layout_width="@dimen/_15sdp"
+                                android:layout_height="@dimen/_15sdp"
+                                android:src="@drawable/ic_add" />
+
+                            <TextView
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginHorizontal="@dimen/_10sdp"
+                                android:gravity="start"
+                                android:text="@string/add_speed_dial_number"
+                                android:textColor="@color/black_color" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/ll_1_select"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:id="@+id/tv_1_name"
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginHorizontal="@dimen/_10sdp"
+                                android:layout_weight="1"
+                                android:gravity="start"
+                                android:text="@string/add_speed_dial_number"
+                                android:textColor="@color/black_color" />
+
+                            <ImageView
+                                android:id="@+id/iv_1_close"
+                                android:layout_width="@dimen/_20sdp"
+                                android:layout_height="@dimen/_20sdp"
+                                android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                                android:src="@drawable/ic_new_close" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/ll_2_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/speed_dial_unselected_bg"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/TextStyle.Medium"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="@dimen/_10sdp"
+                        android:gravity="start"
+                        android:text="@string/_2"
+                        android:textColor="@color/black_color" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingVertical="@dimen/_2sdp">
+
+                        <LinearLayout
+                            android:id="@+id/ll_2_unselect"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="visible">
+
+                            <ImageView
+                                android:layout_width="@dimen/_15sdp"
+                                android:layout_height="@dimen/_15sdp"
+                                android:src="@drawable/ic_add" />
+
+                            <TextView
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginHorizontal="@dimen/_10sdp"
+                                android:gravity="start"
+                                android:text="@string/add_speed_dial_number"
+                                android:textColor="@color/black_color" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/ll_2_select"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:id="@+id/tv_2_name"
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginEnd="@dimen/_10sdp"
+                                android:layout_weight="1"
+                                android:ellipsize="end"
+                                android:gravity="start"
+                                android:singleLine="true"
+                                android:textColor="@color/black_color" />
+
+                            <ImageView
+                                android:id="@+id/iv_2_close"
+                                android:layout_width="@dimen/_20sdp"
+                                android:layout_height="@dimen/_20sdp"
+                                android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                                android:src="@drawable/ic_new_close" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/ll_3_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/speed_dial_unselected_bg"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/TextStyle.Medium"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="@dimen/_10sdp"
+                        android:gravity="start"
+                        android:text="@string/_3"
+                        android:textColor="@color/black_color" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingVertical="@dimen/_2sdp">
+
+                        <LinearLayout
+                            android:id="@+id/ll_3_unselect"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="visible">
+
+                            <ImageView
+                                android:layout_width="@dimen/_15sdp"
+                                android:layout_height="@dimen/_15sdp"
+                                android:src="@drawable/ic_add" />
+
+                            <TextView
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginHorizontal="@dimen/_10sdp"
+                                android:gravity="start"
+                                android:text="@string/add_speed_dial_number"
+                                android:textColor="@color/black_color" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/ll_3_select"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:id="@+id/tv_3_name"
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginEnd="@dimen/_10sdp"
+                                android:layout_weight="1"
+                                android:ellipsize="end"
+                                android:gravity="start"
+                                android:singleLine="true"
+                                android:textColor="@color/black_color" />
+
+                            <ImageView
+                                android:id="@+id/iv_3_close"
+                                android:layout_width="@dimen/_20sdp"
+                                android:layout_height="@dimen/_20sdp"
+                                android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                                android:src="@drawable/ic_new_close" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/ll_4_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/speed_dial_unselected_bg"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/TextStyle.Medium"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="@dimen/_10sdp"
+                        android:gravity="start"
+                        android:text="@string/_4"
+                        android:textColor="@color/black_color" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingVertical="@dimen/_2sdp">
+
+                        <LinearLayout
+                            android:id="@+id/ll_4_unselect"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="visible">
+
+                            <ImageView
+                                android:layout_width="@dimen/_15sdp"
+                                android:layout_height="@dimen/_15sdp"
+                                android:src="@drawable/ic_add" />
+
+                            <TextView
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginHorizontal="@dimen/_10sdp"
+                                android:gravity="start"
+                                android:text="@string/add_speed_dial_number"
+                                android:textColor="@color/black_color" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/ll_4_select"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:id="@+id/tv_4_name"
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginEnd="@dimen/_10sdp"
+                                android:layout_weight="1"
+                                android:ellipsize="end"
+                                android:gravity="start"
+                                android:singleLine="true"
+                                android:textColor="@color/black_color" />
+
+                            <ImageView
+                                android:id="@+id/iv_4_close"
+                                android:layout_width="@dimen/_20sdp"
+                                android:layout_height="@dimen/_20sdp"
+                                android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                                android:src="@drawable/ic_new_close" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/ll_5_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/speed_dial_unselected_bg"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/TextStyle.Medium"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="@dimen/_10sdp"
+                        android:gravity="start"
+                        android:text="@string/_5"
+                        android:textColor="@color/black_color" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingVertical="@dimen/_2sdp">
+
+                        <LinearLayout
+                            android:id="@+id/ll_5_unselect"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="visible">
+
+                            <ImageView
+                                android:layout_width="@dimen/_15sdp"
+                                android:layout_height="@dimen/_15sdp"
+                                android:src="@drawable/ic_add" />
+
+                            <TextView
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginHorizontal="@dimen/_10sdp"
+                                android:gravity="start"
+                                android:text="@string/add_speed_dial_number"
+                                android:textColor="@color/black_color" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/ll_5_select"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:id="@+id/tv_5_name"
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginEnd="@dimen/_10sdp"
+                                android:layout_weight="1"
+                                android:ellipsize="end"
+                                android:gravity="start"
+                                android:singleLine="true"
+                                android:textColor="@color/black_color" />
+
+                            <ImageView
+                                android:id="@+id/iv_5_close"
+                                android:layout_width="@dimen/_20sdp"
+                                android:layout_height="@dimen/_20sdp"
+                                android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                                android:src="@drawable/ic_new_close" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/ll_6_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/speed_dial_unselected_bg"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/TextStyle.Medium"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="@dimen/_10sdp"
+                        android:gravity="start"
+                        android:text="@string/_6"
+                        android:textColor="@color/black_color" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingVertical="@dimen/_2sdp">
+
+                        <LinearLayout
+                            android:id="@+id/ll_6_unselect"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="visible">
+
+                            <ImageView
+                                android:layout_width="@dimen/_15sdp"
+                                android:layout_height="@dimen/_15sdp"
+                                android:src="@drawable/ic_add" />
+
+                            <TextView
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginHorizontal="@dimen/_10sdp"
+                                android:gravity="start"
+                                android:text="@string/add_speed_dial_number"
+                                android:textColor="@color/black_color" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/ll_6_select"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:id="@+id/tv_6_name"
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginEnd="@dimen/_10sdp"
+                                android:layout_weight="1"
+                                android:ellipsize="end"
+                                android:gravity="start"
+                                android:singleLine="true"
+                                android:textColor="@color/black_color" />
+
+                            <ImageView
+                                android:id="@+id/iv_6_close"
+                                android:layout_width="@dimen/_20sdp"
+                                android:layout_height="@dimen/_20sdp"
+                                android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                                android:src="@drawable/ic_new_close" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/ll_7_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/speed_dial_unselected_bg"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/TextStyle.Medium"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="@dimen/_10sdp"
+                        android:gravity="start"
+                        android:text="@string/_7"
+                        android:textColor="@color/black_color" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingVertical="@dimen/_2sdp">
+
+                        <LinearLayout
+                            android:id="@+id/ll_7_unselect"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="visible">
+
+                            <ImageView
+                                android:layout_width="@dimen/_15sdp"
+                                android:layout_height="@dimen/_15sdp"
+                                android:src="@drawable/ic_add" />
+
+                            <TextView
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginHorizontal="@dimen/_10sdp"
+                                android:gravity="start"
+                                android:text="@string/add_speed_dial_number"
+                                android:textColor="@color/black_color" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/ll_7_select"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:id="@+id/tv_7_name"
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginEnd="@dimen/_10sdp"
+                                android:layout_weight="1"
+                                android:ellipsize="end"
+                                android:gravity="start"
+                                android:singleLine="true"
+                                android:textColor="@color/black_color" />
+
+                            <ImageView
+                                android:id="@+id/iv_7_close"
+                                android:layout_width="@dimen/_20sdp"
+                                android:layout_height="@dimen/_20sdp"
+                                android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                                android:src="@drawable/ic_new_close" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/ll_8_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/speed_dial_unselected_bg"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/TextStyle.Medium"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="@dimen/_10sdp"
+                        android:gravity="start"
+                        android:text="@string/_8"
+                        android:textColor="@color/black_color" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingVertical="@dimen/_2sdp">
+
+                        <LinearLayout
+                            android:id="@+id/ll_8_unselect"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="visible">
+
+                            <ImageView
+                                android:layout_width="@dimen/_15sdp"
+                                android:layout_height="@dimen/_15sdp"
+                                android:src="@drawable/ic_add" />
+
+                            <TextView
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginHorizontal="@dimen/_10sdp"
+                                android:gravity="start"
+                                android:text="@string/add_speed_dial_number"
+                                android:textColor="@color/black_color" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/ll_8_select"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:id="@+id/tv_8_name"
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginEnd="@dimen/_10sdp"
+                                android:layout_weight="1"
+                                android:ellipsize="end"
+                                android:gravity="start"
+                                android:singleLine="true"
+                                android:textColor="@color/black_color" />
+
+                            <ImageView
+                                android:id="@+id/iv_8_close"
+                                android:layout_width="@dimen/_20sdp"
+                                android:layout_height="@dimen/_20sdp"
+                                android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                                android:src="@drawable/ic_new_close" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/ll_9_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/speed_dial_unselected_bg"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/TextStyle.Medium"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="@dimen/_10sdp"
+                        android:gravity="start"
+                        android:text="@string/_9"
+                        android:textColor="@color/black_color" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingVertical="@dimen/_2sdp">
+
+                        <LinearLayout
+                            android:id="@+id/ll_9_unselect"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="visible">
+
+                            <ImageView
+                                android:layout_width="@dimen/_15sdp"
+                                android:layout_height="@dimen/_15sdp"
+                                android:src="@drawable/ic_add" />
+
+                            <TextView
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginHorizontal="@dimen/_10sdp"
+                                android:gravity="start"
+                                android:text="@string/add_speed_dial_number"
+                                android:textColor="@color/black_color" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/ll_9_select"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_10sdp"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:id="@+id/tv_9_name"
+                                style="@style/TextStyle.Medium"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginEnd="@dimen/_10sdp"
+                                android:layout_weight="1"
+                                android:ellipsize="end"
+                                android:gravity="start"
+                                android:singleLine="true"
+                                android:textColor="@color/black_color" />
+
+                            <ImageView
+                                android:id="@+id/iv_9_close"
+                                android:layout_width="@dimen/_20sdp"
+                                android:layout_height="@dimen/_20sdp"
+                                android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                                android:src="@drawable/ic_new_close" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+
+                </LinearLayout>
+
+
+            </LinearLayout>
+
+        </ScrollView>
+
+    </LinearLayout>
+</layout>
