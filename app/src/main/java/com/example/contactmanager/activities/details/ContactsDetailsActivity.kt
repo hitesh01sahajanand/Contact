@@ -54,6 +54,11 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        viewModel.contactData.observe(this) {
+            contactDetail = it
+            initView()
+        }
     }
 
     override fun onResume() {
@@ -61,10 +66,6 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
         contactId = intent.getStringExtra(Constance.DATA_FETCH)
         contactId?.let { id ->
             viewModel.getUpdatedContact(id)
-            viewModel.contactData.observe(this) {
-                contactDetail = it
-                initView()
-            }
         }
     }
 
@@ -75,8 +76,13 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             val name = if (it.stringCallName.isNullOrEmpty()) it.stringNumber else it.stringCallName
             binding.tvName.text = name
             binding.tvNumber.text = it.stringNumber
-            it.stringPhotoUri?.let { url ->
-                Glide.with(this).load(url).into(binding.ivContactPhoto)
+            if (!it.stringPhotoUri.isNullOrEmpty()) {
+                Glide.with(this)
+                    .load(it.stringPhotoUri)
+                    .signature(com.bumptech.glide.signature.ObjectKey(System.currentTimeMillis().toString()))
+                    .into(binding.ivContactPhoto)
+            } else {
+                binding.ivContactPhoto.setImageBitmap(Common.generateAvatar(name ?: ""))
             }
 
             it.contactId?.let { id ->
@@ -93,6 +99,23 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             binding.llShare.isVisible = isSaved
             binding.llFavorite.isVisible = isSaved
 
+        }
+    }
+
+    private val editContactLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val newId = result.data?.getStringExtra(Constance.CONTACT_ID)
+            if (newId != null) {
+                // 🔥 Update both the local variable AND the intent
+                contactId = newId
+                intent.putExtra(Constance.DATA_FETCH, newId)
+                viewModel.getUpdatedContact(newId)
+            } else {
+                // Refresh current ID if it was just a simple update
+                contactId?.let { viewModel.getUpdatedContact(it) }
+            }
         }
     }
 
@@ -148,7 +171,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                     intent.putExtra("Number", it.stringNumber)
                     intent.putExtra(Constance.IS_CONTACT_SAVED, !it.contactId.isNullOrEmpty())
                     intent.putExtra(Constance.CONTACT_ID, it.contactId)
-                    startActivity(intent)
+                    editContactLauncher.launch(intent)
                 }
             }
 

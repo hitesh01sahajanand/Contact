@@ -30,6 +30,7 @@ class ContactDetailsViewModel @Inject constructor(private val repository: Contac
 
     fun getUpdatedContact(contactId: String?) {
         viewModelScope.launch(Dispatchers.IO) {
+            kotlinx.coroutines.delay(300) 
             val data = repository.getUpdatedContact(contactId)
             _contactData.postValue(data)
         }

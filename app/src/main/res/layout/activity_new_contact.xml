@@ -19,7 +19,7 @@
         android:orientation="vertical"
         tools:context=".activities.newContact.NewContactActivity">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/ll_header"
             android:layout_width="match_parent"
             android:layout_height="?actionBarSize"
@@ -36,9 +36,27 @@
                 android:layout_width="@dimen/_35sdp"
                 android:layout_height="@dimen/_35sdp"
                 android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                android:src="@drawable/ic_back" />
+                android:src="@drawable/ic_back"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_title"
+                style="@style/TextStyle.Medium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="@string/new_contact"
+                android:textColor="@color/black_color"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
 
         <androidx.core.widget.NestedScrollView
@@ -88,9 +106,9 @@
                         <ImageView
                             android:layout_width="@dimen/_14sdp"
                             android:layout_height="@dimen/_14sdp"
-                            android:tint="@color/black_color"
                             android:layout_gravity="center_vertical"
-                            android:src="@drawable/ic_down_arrow" />
+                            android:src="@drawable/ic_down_arrow"
+                            android:tint="@color/black_color" />
 
                     </LinearLayout>
 
@@ -147,9 +165,9 @@
                         <ImageView
                             android:layout_width="@dimen/_20sdp"
                             android:layout_height="@dimen/_20sdp"
-                            android:tint="@color/black_color"
                             android:layout_marginStart="@dimen/_10sdp"
-                            android:src="@drawable/ic_profile" />
+                            android:src="@drawable/ic_profile"
+                            app:tint="@color/black_color" />
 
                         <EditText
                             android:id="@+id/edt_first_name"
@@ -187,8 +205,8 @@
                             android:layout_width="@dimen/_20sdp"
                             android:layout_height="@dimen/_20sdp"
                             android:layout_marginStart="@dimen/_10sdp"
-                            android:tint="@color/black_color"
-                            android:src="@drawable/ic_edit_call" />
+                            android:src="@drawable/ic_edit_call"
+                            app:tint="@color/black_color" />
 
                         <EditText
                             android:id="@+id/edt_phone"
@@ -198,6 +216,7 @@
                             android:background="@null"
                             android:hint="@string/phone"
                             android:imeOptions="actionNext"
+                            android:inputType="phone"
                             android:padding="@dimen/_13sdp"
                             android:textColor="@color/black_color"
                             android:textColorHint="@color/grey_color" />
@@ -226,8 +245,8 @@
                             android:layout_width="@dimen/_20sdp"
                             android:layout_height="@dimen/_20sdp"
                             android:layout_marginStart="@dimen/_10sdp"
-                            android:tint="@color/black_color"
-                            android:src="@drawable/ic_email" />
+                            android:src="@drawable/ic_email"
+                            app:tint="@color/black_color" />
 
                         <EditText
                             android:id="@+id/edt_email"
@@ -236,6 +255,7 @@
                             android:layout_height="wrap_content"
                             android:background="@null"
                             android:hint="@string/email"
+                            android:inputType="textEmailAddress"
                             android:imeOptions="actionDone"
                             android:padding="@dimen/_13sdp"
                             android:textColor="@color/black_color"

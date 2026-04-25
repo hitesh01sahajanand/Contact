@@ -29,7 +29,7 @@ class ContactViewModel @Inject constructor(
             super.onChange(selfChange)
             handler.removeCallbacksAndMessages(null)
             handler.postDelayed({
-                loadAllContacts()
+                loadContacts()
             }, 1000)
         }
     }

@@ -59,6 +59,10 @@ import kotlin.getValue
 import kotlin.text.get
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
+import androidx.core.graphics.drawable.toDrawable
+import kotlin.math.abs
+import com.yalantis.ucrop.UCrop
+
 
 @AndroidEntryPoint
 class NewContactActivity : AppCompatActivity(), OnClickHandler {
@@ -69,6 +73,8 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
 
     var selectedImageUri: Uri? = null
     var accountModel: AccountModel? = null
+    var isContactSaved = false
+    var contactId: String? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,8 +96,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
     ) { bitmap ->
         bitmap?.let {
             val uri = bitmapToUri(it)
-            selectedImageUri = uri
-            binding.ivContactPhoto.setImageBitmap(it)
+            startCrop(uri)
         }
     }
 
@@ -99,19 +104,58 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) {
-            selectedImageUri = uri
-            binding.ivContactPhoto.setImageURI(uri)
+            startCrop(uri)
         } else {
             Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
         }
     }
 
+    private val cropImageLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val resultUri = UCrop.getOutput(result.data!!)
+            if (resultUri != null) {
+                selectedImageUri = resultUri
+                binding.ivContactPhoto.setImageURI(resultUri)
+            }
+        } else if (result.resultCode == UCrop.RESULT_ERROR) {
+            val cropError = UCrop.getError(result.data!!)
+            Log.e("TAG", "cropImageLauncher: $cropError")
+        }
+    }
+
+    private fun startCrop(uri: Uri) {
+        val destinationUri = Uri.fromFile(File(cacheDir, "cropped_${System.currentTimeMillis()}.jpg"))
+        val uCrop = UCrop.of(uri, destinationUri)
+        uCrop.withAspectRatio(1f, 1f)
+        uCrop.withMaxResultSize(1000, 1000)
+        val options = UCrop.Options()
+        options.setToolbarColor(ContextCompat.getColor(this, R.color.grey_color))
+        options.setStatusBarColor(ContextCompat.getColor(this, R.color.grey_color))
+        options.setCompressionFormat(Bitmap.CompressFormat.JPEG)
+        options.setCompressionQuality(90)
+        options.setHideBottomControls(false)
+        options.setFreeStyleCropEnabled(true)
+        options.setToolbarWidgetColor(Color.WHITE)
+        uCrop.withOptions(options)
+        cropImageLauncher.launch(uCrop.getIntent(this))
+    }
+
     private fun initView() {
         binding.onClickHandler = this
+
+        isContactSaved = intent.getBooleanExtra(Constance.IS_CONTACT_SAVED, false)
+        if (isContactSaved) {
+            binding.tvTitle.text = getString(R.string.edit_contact)
+        } else {
+            binding.tvTitle.text = getString(R.string.new_contact)
+        }
 
 
         viewModel.getGoogleAccounts()
         viewModel.googleAccount.observe(this) { list ->
+            newDisplayList.clear()
             newDisplayList.add(
                 AccountModel(
                     name = "Device Only",
@@ -130,7 +174,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
                 )
             }
 
-            if (newDisplayList.isNotEmpty()) {
+            if (newDisplayList.isNotEmpty() && !isContactSaved) {
                 val itemData = newDisplayList[0]
                 binding.inAccountDesign.tvIdName.text = itemData.name
                 binding.inAccountDesign.cvProfile.isVisible = true
@@ -145,8 +189,8 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             }
         }
 
-        val isContactSaved = intent.getBooleanExtra(Constance.IS_CONTACT_SAVED, false)
-        val contactId = intent.getStringExtra(Constance.CONTACT_ID)
+        isContactSaved = intent.getBooleanExtra(Constance.IS_CONTACT_SAVED, false)
+        contactId = intent.getStringExtra(Constance.CONTACT_ID)
 
         if (isContactSaved) {
             contactId?.let { id ->
@@ -163,6 +207,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
                         // Fetch email
                         it.contactId?.let { id ->
                             viewModel.fetchContactEmail(id)
+                            viewModel.fetchContactAccountName(id)
                         }
                     }
                 }
@@ -175,6 +220,42 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
 
         viewModel.contactEmail.observe(this) { email ->
             binding.edtEmail.setText(email)
+        }
+
+        viewModel.contactAccountName.observe(this) { accountName ->
+            val accName =
+                if (accountName != null && accountName.contains("@")) accountName.substringBefore("@") else "Device Only"
+            val email = if (accountName != null && accountName.contains("@")) accountName else ""
+            val itemData = AccountModel(
+                name = accName,
+                email = email,
+                avtar = Common.generateAvatar(accName)
+            )
+            binding.inAccountDesign.tvIdName.text = itemData.name
+            binding.inAccountDesign.cvProfile.isVisible = true
+            val color = Common.profileColors[1 % Common.profileColors.size]
+            binding.inAccountDesign.cvProfile.setCardBackgroundColor(
+                ContextCompat.getColor(binding.root.context, color)
+            )
+            val firstChar = itemData.name.firstOrNull()?.uppercase() ?: ""
+            binding.inAccountDesign.tvContactName.text = firstChar
+
+            accountModel = itemData
+        }
+
+        viewModel.newContactId.observe(this) { newId ->
+            if (newId != null) {
+                val resultIntent = Intent()
+                resultIntent.putExtra(Constance.CONTACT_ID, newId)
+                setResult(RESULT_OK, resultIntent)
+                finish()
+            }
+        }
+
+        viewModel.savedContactMassage.observe(this) { msg ->
+            if (msg.contains("✅")) {
+                finish()
+            }
         }
     }
 
@@ -196,7 +277,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
 
             binding.cvSave.id -> {
 
-                val isContactSaved = intent.getBooleanExtra(Constance.IS_CONTACT_SAVED, false)
+                isContactSaved = intent.getBooleanExtra(Constance.IS_CONTACT_SAVED, false)
                 val account = accountModel
                 val name = binding.edtFirstName.text.toString().trim()
                 val email = binding.edtEmail.text.toString().trim()
@@ -220,22 +301,11 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
                         binding.edtPhone.error = "Enter number"
                     }
 
-                    isValidEmail -> {
+                    email.isNotEmpty() && isValidEmail -> {
                         binding.edtEmail.error = "Enter valid email"
                     }
 
                     else -> {
-
-                        viewModel.savedContactMassage.observe(this) { msg ->
-                            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-                            val resultIntent = Intent().apply {
-                                putExtra(Constance.DATA_FETCH, true)
-                            }
-                            setResult(RESULT_OK, resultIntent)
-
-                            finish()
-                        }
-
                         viewModel.saveOrUpdateContact(
                             name = name,
                             number = number,
@@ -243,7 +313,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
                             selectedImageUri = imageUrl,
                             accountModel = accountModel!!,
                             isContactSaved = isContactSaved,
-                            contactId = intent.getStringExtra(Constance.CONTACT_ID)
+                            contactId = contactId
                         )
                     }
                 }
@@ -261,77 +331,6 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         }
     }
 
-    /*private fun addPhoneRow(number: String = "") {
-        val bindingItem = ItemPhoneDesignBinding.inflate(layoutInflater, null, false)
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, phoneTypes)
-        bindingItem.spinnerType.adapter = adapter
-
-        bindingItem.ivDelete.setOnClickListener {
-            if (binding.llPhoneContainer.childCount > 1) {
-                binding.llPhoneContainer.removeView(bindingItem.root)
-            } else {
-                Toast.makeText(this, "At least one phone required", Toast.LENGTH_SHORT).show()
-            }
-        }
-        if (number.isNotEmpty()) {
-            bindingItem.etPhone.setText(number)
-        }
-
-        binding.llPhoneContainer.addView(bindingItem.root)
-    }*/
-
-    /*fun getPhoneList(): List<Pair<String, String>> {
-        val list = mutableListOf<Pair<String, String>>()
-
-        for (i in 0 until binding.llPhoneContainer.childCount) {
-            val view = binding.llPhoneContainer.getChildAt(i)
-
-            val phone = view.findViewById<EditText>(R.id.etPhone).text.toString()
-            val type = view.findViewById<Spinner>(R.id.spinnerType).selectedItem.toString()
-
-            if (phone.isNotEmpty()) {
-                list.add(Pair(phone, type))
-            }
-        }
-
-        return list
-    }*/
-
-    /*private fun addEmailRow() {
-        val bindingItem = ItemEmailDesignBinding.inflate(layoutInflater, null, false)
-
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, emailTypes)
-        bindingItem.spinnerEmailType.adapter = adapter
-
-
-        bindingItem.ivDelete.setOnClickListener {
-            if (binding.llEmailContainer.childCount > 1) {
-                binding.llEmailContainer.removeView(bindingItem.root)
-            } else {
-                Toast.makeText(this, "At least one email required", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        binding.llEmailContainer.addView(bindingItem.root)
-    }*/
-
-    /*fun getEmailList(): List<Pair<String, String>> {
-        val list = mutableListOf<Pair<String, String>>()
-
-        for (i in 0 until binding.llEmailContainer.childCount) {
-            val view = binding.llEmailContainer.getChildAt(i)
-
-            val email = view.findViewById<EditText>(R.id.etEmail).text.toString()
-            val type = view.findViewById<Spinner>(R.id.spinnerEmailType).selectedItem.toString()
-
-            if (email.isNotEmpty()) {
-                list.add(Pair(email, type))
-            }
-        }
-
-        return list
-    }*/
-
     private fun showAccountPopup(anchorView: View, list: List<AccountModel>) {
 
         val popupBinding = DialogGoogleAccountsBinding.inflate(layoutInflater)
@@ -344,13 +343,14 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         )
 
         popupWindow.isOutsideTouchable = true
-        popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        popupWindow.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         popupWindow.elevation = 10f
 
         val adapter = AllAccountAdapter(onClick = { accountModel ->
             this.accountModel = accountModel
             binding.inAccountDesign.tvIdName.text = accountModel.name
-            val color = Common.profileColors[1 % Common.profileColors.size]
+            val color =
+                Common.profileColors[abs(accountModel.name.hashCode()) % Common.profileColors.size]
             binding.inAccountDesign.cvProfile.setCardBackgroundColor(
                 ContextCompat.getColor(binding.root.context, color)
             )
@@ -381,7 +381,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
     }
 
     private fun showImagePickerDialog() {
-        val options = arrayOf("Camera", "Gallery")
+        /*val options = arrayOf("Camera", "Gallery")
 
         AlertDialog.Builder(this)
             .setTitle("Select Image")
@@ -393,7 +393,10 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
                     )
                 }
             }
-            .show()
+            .show()*/
+        pickImageLauncher.launch(
+            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        )
     }
 
     private fun hasPermissions(): Boolean {

@@ -17,9 +17,9 @@
             android:id="@+id/cv_profile"
             android:layout_width="@dimen/_34sdp"
             android:layout_height="@dimen/_34sdp"
+            android:visibility="visible"
             app:cardBackgroundColor="@color/color_1"
             app:cardCornerRadius="@dimen/_40sdp"
-            android:visibility="gone"
             app:cardElevation="0dp">
 
             <TextView

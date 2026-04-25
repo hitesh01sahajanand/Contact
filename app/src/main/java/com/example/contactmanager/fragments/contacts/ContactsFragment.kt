@@ -59,6 +59,8 @@ class ContactsFragment : Fragment(), OnClickHandler {
                 false
             )
             allContactsAdapter.setMergeDuplicate(isMerge)
+            updateAccountUI()
+            allContactsAdapter.filter(binding.edtSearch.text.toString())
             viewModel.loadContacts()
         }
     }
@@ -72,6 +74,8 @@ class ContactsFragment : Fragment(), OnClickHandler {
                 false
             )
             allContactsAdapter.setMergeDuplicate(isMerge)
+            updateAccountUI()
+            allContactsAdapter.filter(binding.edtSearch.text.toString())
             viewModel.loadContacts()
         }
     }
@@ -138,6 +142,7 @@ class ContactsFragment : Fragment(), OnClickHandler {
         })
         binding.rvAllContacts.adapter = allContactsAdapter
         binding.rvAllContacts.layoutManager = LinearLayoutManager(requireActivity())
+        updateAccountUI()
 
         viewModel.allContactList.observe(viewLifecycleOwner) { allContacts ->
             allContactsAdapter.addAll(allContacts)
@@ -276,5 +281,17 @@ class ContactsFragment : Fragment(), OnClickHandler {
                 }
             }
         }
+    }
+
+    private fun updateAccountUI() {
+        val email = viewModel.currentSelectedAccount
+        val tvTitle = binding.cvAccounts.findViewById<TextView>(R.id.tv_title)
+
+        val title = when (email) {
+            "All Accounts" -> "All"
+            "Device Only" -> "Device"
+            else -> email.substringBefore("@")
+        }
+        tvTitle?.text = title
     }
 }

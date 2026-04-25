@@ -187,6 +187,11 @@
         <receiver
             android:name=".receivers.CallActionReceiver"
             android:exported="false" />
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.UCrop"
+            tools:replace="android:theme" />
     </application>
 
 </manifest>

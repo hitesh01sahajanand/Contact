@@ -128,28 +128,39 @@ class ContactDetailsRepository @Inject constructor(@param:ApplicationContext pri
             var photoUri: String? = null
             var number: String? = null
 
-            // 👉 Get basic contact info
+            // 👉 Get name parts from Data table (more immediate than aggregated DISPLAY_NAME)
             resolver.query(
-                ContactsContract.Contacts.CONTENT_URI,
+                ContactsContract.Data.CONTENT_URI,
                 arrayOf(
-                    ContactsContract.Contacts._ID,
-                    ContactsContract.Contacts.DISPLAY_NAME,
-                    ContactsContract.Contacts.PHOTO_URI
+                    ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME,
+                    ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME,
+                    ContactsContract.Data.PHOTO_URI
                 ),
-                "${ContactsContract.Contacts._ID}=?",
-                arrayOf(contactId),
+                "${ContactsContract.Data.CONTACT_ID}=? AND ${ContactsContract.Data.MIMETYPE}=?",
+                arrayOf(contactId, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE),
                 null
             )?.use { cursor ->
-
                 if (cursor.moveToFirst()) {
+                    val firstName = cursor.getString(0) ?: ""
+                    val lastName = cursor.getString(1) ?: ""
+                    name = "$firstName $lastName".trim()
+                    photoUri = cursor.getString(2)
+                }
+            }
 
-                    name = cursor.getString(
-                        cursor.getColumnIndexOrThrow(ContactsContract.Contacts.DISPLAY_NAME)
-                    )
-
-                    photoUri = cursor.getString(
-                        cursor.getColumnIndexOrThrow(ContactsContract.Contacts.PHOTO_URI)
-                    )
+            // 👉 If name still null, fallback to Contacts table
+            if (name == null) {
+                resolver.query(
+                    ContactsContract.Contacts.CONTENT_URI,
+                    arrayOf(ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts.PHOTO_URI),
+                    "${ContactsContract.Contacts._ID}=?",
+                    arrayOf(contactId),
+                    null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        name = cursor.getString(0)
+                        if (photoUri == null) photoUri = cursor.getString(1)
+                    }
                 }
             }
 

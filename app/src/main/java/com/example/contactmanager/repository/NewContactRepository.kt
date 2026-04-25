@@ -4,6 +4,7 @@ import android.accounts.AccountManager
 import android.content.ContentProviderOperation
 import android.content.Context
 import android.net.Uri
+import android.content.ContentUris
 import android.provider.ContactsContract
 import android.util.Log
 import com.example.contactmanager.models.AccountModel
@@ -32,7 +33,6 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
     }
 
 
-
     fun saveOrUpdateContact(
         name: String,
         number: String,
@@ -41,7 +41,7 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
         accountModel: AccountModel,
         isContactSaved: Boolean,
         contactId: String? = null,
-        onCallBack: (String) -> Unit
+        onCallBack: (String, String?) -> Unit
     ) {
 
         val ops = ArrayList<ContentProviderOperation>()
@@ -52,14 +52,33 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
             val firstName = nameParts.getOrNull(0) ?: ""
             val lastName = nameParts.drop(1).joinToString(" ")
 
-            val existingRawId = contactId?.let { getRawContactIdFromContactId(it) } 
-                ?: getRawContactIdByNumber(number)
+            val existingRawId = if (isContactSaved) {
+                contactId?.let { getRawContactIdFromContactId(it) }
+            } else {
+                null
+            }
+
+            // 👉 Determine if we need to MOVE the contact (Account changed)
+            var shouldRecreate = false
+            if (isContactSaved && contactId != null) {
+                val currentAccount = getContactAccountName(contactId)
+                val isCurrentLocal = currentAccount.isNullOrBlank()
+                val isTargetLocal =
+                    accountModel.name == "Device Only" || accountModel.email.isBlank()
+
+                if (isCurrentLocal != isTargetLocal || (!isCurrentLocal && currentAccount != accountModel.email)) {
+                    shouldRecreate = true
+                }
+            }
 
             // =========================
-            // 🔄 UPDATE CONTACT
+            // 🔄 UPDATE OR MOVE
             // =========================
-            if (existingRawId != null) {
+            if (existingRawId != null && !shouldRecreate) {
                 val rawId = existingRawId
+
+                // 👉 Account (Same account, just ensure it's set - though usually unnecessary)
+                // We skip updating account fields if they haven't changed to avoid potential crashes
 
                 // 👉 Update Name
                 ops.add(
@@ -82,16 +101,36 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
                         .build()
                 )
 
-                // 👉 Update Number (We update the first mobile number found, or insert if not exists)
-                ops.add(
-                    ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
-                        .withSelection(
-                            "${ContactsContract.Data.RAW_CONTACT_ID}=? AND ${ContactsContract.Data.MIMETYPE}=? AND ${ContactsContract.Data.DATA2}=?",
-                            arrayOf(rawId, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE, ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE.toString())
-                        )
-                        .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, number)
-                        .build()
-                )
+                // 👉 Update Number
+                if (isPhoneExists(rawId)) {
+                    ops.add(
+                        ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+                            .withSelection(
+                                "${ContactsContract.Data.RAW_CONTACT_ID}=? AND ${ContactsContract.Data.MIMETYPE}=?",
+                                arrayOf(
+                                    rawId,
+                                    ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE
+                                )
+                            )
+                            .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, number)
+                            .build()
+                    )
+                } else {
+                    ops.add(
+                        ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                            .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId)
+                            .withValue(
+                                ContactsContract.Data.MIMETYPE,
+                                ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE
+                            )
+                            .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, number)
+                            .withValue(
+                                ContactsContract.CommonDataKinds.Phone.TYPE,
+                                ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE
+                            )
+                            .build()
+                    )
+                }
 
                 // 👉 Email (Update existing or insert if not found)
                 if (!email.isNullOrEmpty()) {
@@ -100,7 +139,10 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
                             ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
                                 .withSelection(
                                     "${ContactsContract.Data.RAW_CONTACT_ID}=? AND ${ContactsContract.Data.MIMETYPE}=?",
-                                    arrayOf(rawId, ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE)
+                                    arrayOf(
+                                        rawId,
+                                        ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE
+                                    )
                                 )
                                 .withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, email)
                                 .build()
@@ -109,9 +151,15 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
                         ops.add(
                             ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
                                 .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId)
-                                .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE)
+                                .withValue(
+                                    ContactsContract.Data.MIMETYPE,
+                                    ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE
+                                )
                                 .withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, email)
-                                .withValue(ContactsContract.CommonDataKinds.Email.TYPE, ContactsContract.CommonDataKinds.Email.TYPE_HOME)
+                                .withValue(
+                                    ContactsContract.CommonDataKinds.Email.TYPE,
+                                    ContactsContract.CommonDataKinds.Email.TYPE_HOME
+                                )
                                 .build()
                         )
                     }
@@ -126,49 +174,57 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
                                 ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
                                     .withSelection(
                                         "${ContactsContract.Data.RAW_CONTACT_ID}=? AND ${ContactsContract.Data.MIMETYPE}=?",
-                                        arrayOf(rawId, ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE)
+                                        arrayOf(
+                                            rawId,
+                                            ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE
+                                        )
                                     )
-                                    .withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, photoBytes)
+                                    .withValue(
+                                        ContactsContract.CommonDataKinds.Photo.PHOTO,
+                                        photoBytes
+                                    )
                                     .build()
                             )
                         } else {
                             ops.add(
                                 ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
                                     .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId)
-                                    .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE)
-                                    .withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, photoBytes)
+                                    .withValue(
+                                        ContactsContract.Data.MIMETYPE,
+                                        ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE
+                                    )
+                                    .withValue(
+                                        ContactsContract.CommonDataKinds.Photo.PHOTO,
+                                        photoBytes
+                                    )
                                     .build()
                             )
                         }
                     }
                 }
 
-                onCallBack("Contact Updated ✅")
+                onCallBack("Contact Updated ✅", null)
             } else {
 
                 // =========================
-                // 🆕 NEW CONTACT
+                // 🆕 NEW OR MOVE CONTACT
                 // =========================
 
                 // 👉 Account
-                if (accountModel.name == "Device Only") {
-                    ops.add(
-                        ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
-                            .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
-                            .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null)
-                            .build()
-                    )
+                val accountValues = android.content.ContentValues()
+                if (accountModel.name != "Device Only" && accountModel.email.isNotBlank()) {
+                    accountValues.put(ContactsContract.RawContacts.ACCOUNT_TYPE, "com.google")
+                    accountValues.put(ContactsContract.RawContacts.ACCOUNT_NAME, accountModel.email)
                 } else {
-                    ops.add(
-                        ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
-                            .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, "com.google")
-                            .withValue(
-                                ContactsContract.RawContacts.ACCOUNT_NAME,
-                                accountModel.email
-                            )
-                            .build()
-                    )
+                    accountValues.putNull(ContactsContract.RawContacts.ACCOUNT_TYPE)
+                    accountValues.putNull(ContactsContract.RawContacts.ACCOUNT_NAME)
                 }
+
+                ops.add(
+                    ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
+                        .withValues(accountValues)
+                        .build()
+                )
 
                 // 👉 Name
                 ops.add(
@@ -249,16 +305,68 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
                     }
                 }
 
-                onCallBack("Contact Saved ✅")
+                // 🔥 If moving, delete the old raw contact
+                if (shouldRecreate && existingRawId != null) {
+                    ops.add(
+                        ContentProviderOperation.newDelete(ContactsContract.RawContacts.CONTENT_URI)
+                            .withSelection(
+                                "${ContactsContract.RawContacts._ID}=?",
+                                arrayOf(existingRawId)
+                            )
+                            .build()
+                    )
+                }
+
+                // 👉 APPLY
+                val results = context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
+
+                // 👉 Get NEW Contact ID
+                var newContactId: String? = null
+                if (results.isNotEmpty() && results[0].uri != null) {
+                    val newRawId = ContentUris.parseId(results[0].uri!!)
+                    newContactId = getContactIdFromRawId(newRawId.toString())
+                }
+
+                onCallBack(
+                    if (shouldRecreate) "Contact Moved & Saved" else "Contact Saved",
+                    newContactId
+                )
             }
 
-            // 👉 APPLY
-            context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
+            // 👉 APPLY (Only if not already applied in the Recreate branch)
+            if (existingRawId != null && !shouldRecreate) {
+                context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
+            }
 
         } catch (e: Exception) {
             e.printStackTrace()
-            onCallBack(e.message ?: "Error")
+            onCallBack(e.message ?: "Error", null)
         }
+    }
+
+    fun getContactIdFromRawId(rawContactId: String): String? {
+        var contactId: String? = null
+        // 👉 Aggregation can take a few ms. Try 5 times with delay.
+        for (i in 0 until 5) {
+            val cursor = context.contentResolver.query(
+                ContactsContract.RawContacts.CONTENT_URI,
+                arrayOf(ContactsContract.RawContacts.CONTACT_ID),
+                "${ContactsContract.RawContacts._ID}=?",
+                arrayOf(rawContactId),
+                null
+            )
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    contactId = it.getString(0)
+                }
+            }
+            if (contactId != null) break
+            try {
+                Thread.sleep(200)
+            } catch (e: Exception) {
+            }
+        }
+        return contactId
     }
 
 
@@ -578,6 +686,22 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
         return null
     }
 
+    fun getContactAccountName(contactId: String): String? {
+        val rawCursor = context.contentResolver.query(
+            ContactsContract.RawContacts.CONTENT_URI,
+            arrayOf(ContactsContract.RawContacts.ACCOUNT_NAME),
+            "${ContactsContract.RawContacts.CONTACT_ID}=?",
+            arrayOf(contactId),
+            null
+        )
+        rawCursor?.use { rc ->
+            if (rc.moveToFirst()) {
+                return rc.getString(0)
+            }
+        }
+        return null
+    }
+
     fun getContactEmail(contactId: String): String? {
         val cursor = context.contentResolver.query(
             ContactsContract.CommonDataKinds.Email.CONTENT_URI,
@@ -600,6 +724,18 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
             arrayOf(ContactsContract.Data._ID),
             "${ContactsContract.Data.RAW_CONTACT_ID}=? AND ${ContactsContract.Data.MIMETYPE}=?",
             arrayOf(rawContactId, ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE),
+            null
+        )
+        cursor?.use { return it.count > 0 }
+        return false
+    }
+
+    fun isPhoneExists(rawContactId: String): Boolean {
+        val cursor = context.contentResolver.query(
+            ContactsContract.Data.CONTENT_URI,
+            arrayOf(ContactsContract.Data._ID),
+            "${ContactsContract.Data.RAW_CONTACT_ID}=? AND ${ContactsContract.Data.MIMETYPE}=?",
+            arrayOf(rawContactId, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE),
             null
         )
         cursor?.use { return it.count > 0 }

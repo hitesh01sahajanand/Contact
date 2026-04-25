@@ -125,6 +125,9 @@
     <string name="i_m_on_my_way">I’m on my way</string>
     <string name="can_t_talk_now_call_me_later">Can’t talk now. Call me later.</string>
     <string name="all">All</string>
+    <string name="new_contact">New Contact</string>
+    <string name="edit_contact">Edit Contact</string>
+    <string name="contact_details">Contact Details</string>
 
 
 </resources>

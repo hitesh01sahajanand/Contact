@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
@@ -113,9 +114,10 @@ class AllContactsAdapter(
                 is ContactListItem.Header -> {
                     lastHeader = item
                 }
+
                 is ContactListItem.Contact -> {
                     val displayName = item.data.displayName ?: ""
-                    
+
                     val matchQuery = searchText.isEmpty() ||
                             displayName.contains(searchText, true) ||
                             item.data.number?.contains(searchText, true) == true
@@ -302,7 +304,12 @@ class AllContactsAdapter(
 
 
                 tvCollapseName.text = data.displayName
-                tvExpandedContactNumber.text = "Mobile +${data.number}"
+                if (!data.number.isNullOrEmpty()) {
+                    tvExpandedContactNumber.visibility = View.VISIBLE
+                    tvExpandedContactNumber.text = "Mobile +${data.number}"
+                } else {
+                    tvExpandedContactNumber.visibility = View.GONE
+                }
 
                 if (data.userThumbnail.isNullOrEmpty()) {
                     binding.tvCollapseContactName.isVisible = true

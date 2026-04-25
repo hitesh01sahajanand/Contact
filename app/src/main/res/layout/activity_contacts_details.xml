@@ -19,7 +19,7 @@
         android:orientation="vertical"
         tools:context=".activities.details.ContactsDetailsActivity">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/ll_header"
             android:layout_width="match_parent"
             android:layout_height="?actionBarSize"
@@ -36,9 +36,27 @@
                 android:layout_width="@dimen/_35sdp"
                 android:layout_height="@dimen/_35sdp"
                 android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                android:src="@drawable/ic_back" />
+                android:src="@drawable/ic_back"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        </LinearLayout>
+            <TextView
+                style="@style/TextStyle.Medium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:padding="@dimen/_10sdp"
+                android:text="@string/contact_details"
+                android:textColor="@color/black_color"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
 
         <LinearLayout
@@ -258,8 +276,8 @@
                     android:layout_width="@dimen/_20sdp"
                     android:layout_height="@dimen/_20sdp"
                     android:layout_gravity="center"
-                    android:tint="@color/black_color"
-                    android:src="@drawable/ic_edit" />
+                    android:src="@drawable/ic_edit"
+                    android:tint="@color/black_color" />
 
                 <TextView
                     style="@style/TextStyle.Regular"
@@ -287,8 +305,8 @@
                     android:layout_width="@dimen/_20sdp"
                     android:layout_height="@dimen/_20sdp"
                     android:layout_gravity="center"
-                    android:tint="@color/black_color"
-                    android:src="@drawable/ic_share" />
+                    android:src="@drawable/ic_share"
+                    android:tint="@color/black_color" />
 
                 <TextView
                     style="@style/TextStyle.Regular"
@@ -316,8 +334,8 @@
                     android:layout_width="@dimen/_20sdp"
                     android:layout_height="@dimen/_20sdp"
                     android:layout_gravity="center"
-                    android:tint="@color/black_color"
-                    android:src="@drawable/ic_more" />
+                    android:src="@drawable/ic_more"
+                    android:tint="@color/black_color" />
 
                 <TextView
                     style="@style/TextStyle.Regular"

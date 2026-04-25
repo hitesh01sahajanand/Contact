@@ -40,6 +40,19 @@ class NewContactViewModel @Inject constructor(
         }
     }
 
+    private var _contactAccountName: MutableLiveData<String?> = MutableLiveData()
+    val contactAccountName: LiveData<String?> = _contactAccountName
+
+    fun fetchContactAccountName(contactId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val accountName = repository.getContactAccountName(contactId)
+            _contactAccountName.postValue(accountName)
+        }
+    }
+
+    private var _newContactId: MutableLiveData<String?> = MutableLiveData()
+    val newContactId: LiveData<String?> = _newContactId
+
     fun saveOrUpdateContact(
         name: String,
         number: String,
@@ -58,8 +71,9 @@ class NewContactViewModel @Inject constructor(
                 accountModel = accountModel,
                 isContactSaved = isContactSaved,
                 contactId = contactId,
-                onCallBack = { msg ->
+                onCallBack = { msg, newId ->
                     _savedContactMassage.postValue(msg)
+                    _newContactId.postValue(newId)
                 }
             )
         }

@@ -71,12 +71,13 @@ dependencies {
     //Glide
     implementation("com.github.bumptech.glide:glide:4.16.0")
 
-    implementation("com.googlecode.libphonenumber:libphonenumber:8.13.38")
-
     //Room Database
     val roomVersion = "2.8.4"
     implementation("androidx.room:room-runtime:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
+
+    //for crop image
+    implementation("com.github.yalantis:ucrop:2.2.2")
 
 }
