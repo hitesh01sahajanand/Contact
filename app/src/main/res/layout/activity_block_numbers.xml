@@ -89,7 +89,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:gravity="center"
-                android:text="You don’t have any blocked contacts yet"
+                android:text="@string/you_don_t_have_any_blocked_contacts_yet"
                 android:textColor="@color/grey_color" />
 
         </LinearLayout>

@@ -128,6 +128,25 @@
     <string name="new_contact">New Contact</string>
     <string name="edit_contact">Edit Contact</string>
     <string name="contact_details">Contact Details</string>
+    <string name="add">Add</string>
+    <string name="tag">Tag</string>
+    <string name="block">Block</string>
+    <string name="delete">Delete</string>
+    <string name="unblock_contact">Unblock Contact?</string>
+    <string name="you_will_be_able_to_receive_call">You will be able to receive calls from this contact.</string>
+    <string name="block_contact">Block Contact?</string>
+    <string name="delete_history">Delete History</string>
+    <string name="are_you_sure_you_want_to_delete_all_history">Are you sure you want to delete all history?</string>
 
-
+    <string name="history_deleted">History deleted successfully</string>
+    <string name="no_recent_history">No Recent History</string>
+    <string name="no_recent_history_records_found">No recent history records found</string>
+    <string name="you_don_t_have_any_blocked_contacts_yet">You don’t have any blocked contacts yet</string>
+    <string name="no_contacts">No Contacts</string>
+    <string name="private_calls_without_saved_numbers">Private calls without saved numbers</string>
+    <string name="set_ringtone">Set Ringtone</string>
+    <string name="custom_ringtone">Custom Ringtone</string>
+    <string name="recent_ringtone">Recent Ringtone</string>
+    <string name="default_">Default</string>
+    <string name="select_ringtone">Select Ringtone</string>
 </resources>

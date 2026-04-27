@@ -5,6 +5,7 @@ import android.transition.Fade
 import android.transition.TransitionManager
 import android.transition.TransitionSet
 import android.util.Log
+import java.util.HashMap
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,6 +29,8 @@ class AllContactsAdapter(
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val contactList = ArrayList<ContactListItem>()
     private var filteredList: MutableList<ContactListItem> = mutableListOf()
+    private val initialFavoriteStatus = HashMap<String, Int>()
+    private val pendingChanges = HashMap<String, Int>()
 
     companion object {
         const val TYPE_HEADER = 0
@@ -88,6 +91,23 @@ class AllContactsAdapter(
     fun addAll(newList: List<ContactListItem>) {
         contactList.clear()
         contactList.addAll(newList)
+        
+        // Store initial favorite status for all contacts (unique by ID)
+        // and re-apply pending changes
+        newList.filterIsInstance<ContactListItem.Contact>().forEach { contactItem ->
+            val id = contactItem.data.contactId
+            if (id != null) {
+                if (!initialFavoriteStatus.containsKey(id)) {
+                    initialFavoriteStatus[id] = contactItem.data.isFavourite
+                }
+                
+                // Re-apply pending change if it exists
+                if (pendingChanges.containsKey(id)) {
+                    contactItem.data.isFavourite = pendingChanges[id]!!
+                }
+            }
+        }
+        
         applyFilter()
     }
 
@@ -159,6 +179,18 @@ class AllContactsAdapter(
         return contactList
             .filterIsInstance<ContactListItem.Contact>()
             .map { it.data }
+            .distinctBy { it.contactId }
+    }
+
+    fun getChangedContacts(): List<ContactModel> {
+        return contactList
+            .filterIsInstance<ContactListItem.Contact>()
+            .map { it.data }
+            .distinctBy { it.contactId }
+            .filter { contact ->
+                val id = contact.contactId
+                id != null && contact.isFavourite != initialFavoriteStatus[id]
+            }
     }
 
     class HeaderViewHolder(private val binding: HeaderItemDesignBinding) :
@@ -265,16 +297,33 @@ class AllContactsAdapter(
                     val contactId = data.contactId ?: return@setOnClickListener
 
                     // Toggle in filtered list (UI)
-                    data.isFavourite = if (data.isFavourite == 1) 0 else 1
-
-                    // 🔥 ALSO update in master list
-                    contactList.forEach {
-                        if (it is ContactListItem.Contact && it.data.contactId == contactId) {
-                            it.data.isFavourite = data.isFavourite
+                    val newFavStatus = if (data.isFavourite == 1) 0 else 1
+                    
+                    // Track this change
+                    pendingChanges[contactId] = newFavStatus
+                    
+                    // 🔥 Update ALL instances in the master list and collect their positions for UI refresh
+                    val positionsToRefresh = mutableListOf<Int>()
+                    
+                    // First, find all positions in the filtered list that need refreshing
+                    filteredList.forEachIndexed { index, item ->
+                        if (item is ContactListItem.Contact && item.data.contactId == contactId) {
+                            item.data.isFavourite = newFavStatus
+                            positionsToRefresh.add(index)
                         }
                     }
 
-                    notifyItemChanged(position)
+                    // Also update the master list to ensure consistency if filters change
+                    contactList.forEach { item ->
+                        if (item is ContactListItem.Contact && item.data.contactId == contactId) {
+                            item.data.isFavourite = newFavStatus
+                        }
+                    }
+
+                    // Refresh all affected items in the UI
+                    positionsToRefresh.forEach { pos ->
+                        notifyItemChanged(pos)
+                    }
                 }
             }
 

@@ -48,6 +48,9 @@ import java.io.ByteArrayOutputStream
 import java.util.Calendar
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
+import androidx.core.content.FileProvider
+import java.io.File
+import java.io.FileOutputStream
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
@@ -115,6 +118,17 @@ object Common {
         }
     }
 
+    fun isNumberBlocked(context: Context, number: String): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                return android.provider.BlockedNumberContract.isBlocked(context, number)
+            } catch (e: Exception) {
+                Log.e("Common", "isNumberBlocked: ${e.message}")
+            }
+        }
+        return false
+    }
+
     fun formatHeaderDate(date: Date?): String {
         /*val sdf = SimpleDateFormat("EEEE, dd MMMM", Locale.getDefault())
         return sdf.format(Date(timestamp))*/
@@ -142,6 +156,74 @@ object Common {
             mins > 0 -> "${mins} min ${secs} sec"
             else -> "${secs} sec"
         }
+    }
+
+    fun isNumberSaved(context: Context, number: String): Boolean {
+        if (number.isEmpty()) return false
+
+        // Layer 1: Standard PhoneLookup (Fastest & Handles international formatting)
+        val uri = Uri.withAppendedPath(
+            ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
+            Uri.encode(number)
+        )
+        try {
+            context.contentResolver.query(
+                uri,
+                arrayOf(ContactsContract.PhoneLookup._ID),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                if (cursor.count > 0) return true
+            }
+        } catch (e: Exception) {
+            Log.e("Common", "PhoneLookup failed: ${e.message}")
+        }
+
+        // Layer 2: Cleaned Digit Search (Handles mismatched formatting in DB)
+        val cleanNumber = number.replace(Regex("\\D"), "")
+        if (cleanNumber.length >= 7) {
+            val last7 = cleanNumber.takeLast(7)
+            val phoneUri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+            val selection = "${ContactsContract.CommonDataKinds.Phone.NUMBER} LIKE ?"
+            // Match numbers ending with the clean number (helps with varied formatting)
+            val selectionArgs =
+                arrayOf("%${last7.first()}%${last7.substring(1).chunked(1).joinToString("%")}%")
+
+            try {
+                context.contentResolver.query(
+                    phoneUri,
+                    arrayOf(ContactsContract.CommonDataKinds.Phone._ID),
+                    selection,
+                    selectionArgs,
+                    null
+                )?.use { cursor ->
+                    if (cursor.count > 0) return true
+                }
+            } catch (e: Exception) {
+                Log.e("Common", "Cleaned search failed: ${e.message}")
+            }
+        }
+
+        // Layer 3: High-Accuracy Comparison (Final fallback for tricky cases)
+        // Note: Iterating contacts is a bit slower but extremely accurate
+        try {
+            context.contentResolver.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER),
+                null, null, null
+            )?.use { cursor ->
+                val numberIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                while (cursor.moveToNext()) {
+                    val storedNumber = cursor.getString(numberIdx)
+                    if (PhoneNumberUtils.compare(number, storedNumber)) return true
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("Common", "Deep lookup failed: ${e.message}")
+        }
+
+        return false
     }
 
     fun generateAvatar(input: String): Bitmap {
@@ -334,6 +416,93 @@ object Common {
             }
         }
         return null
+    }
+
+    fun shareContact(context: Context, phoneNumber: String?) {
+        if (phoneNumber.isNullOrEmpty()) return
+
+        try {
+            val resolver = context.contentResolver
+            val lookupUri = Uri.withAppendedPath(
+                ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
+                Uri.encode(phoneNumber)
+            )
+
+            var lookupKey: String? = null
+            var displayName: String? = null
+
+            resolver.query(
+                lookupUri,
+                arrayOf(
+                    ContactsContract.PhoneLookup.LOOKUP_KEY,
+                    ContactsContract.PhoneLookup.DISPLAY_NAME
+                ),
+                null, null, null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    lookupKey = cursor.getString(0)
+                    displayName = cursor.getString(1)
+                }
+            }
+
+            if (lookupKey == null) {
+                Toast.makeText(context, "Please save contact first", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            val vCardUri = Uri.withAppendedPath(
+                ContactsContract.Contacts.CONTENT_VCARD_URI,
+                lookupKey
+            )
+
+            // Create temporary file in cache
+            val fileName = "Contact_${System.currentTimeMillis()}.vcf"
+            val cacheFile = File(context.cacheDir, fileName)
+
+            var success = false
+            try {
+                resolver.openAssetFileDescriptor(vCardUri, "r")?.use { fd ->
+                    fd.createInputStream().use { input ->
+                        FileOutputStream(cacheFile).use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                }
+                success = cacheFile.exists() && cacheFile.length() > 0
+            } catch (e: Exception) {
+                Log.e("TAG", "Error reading vCard: ${e.message}")
+            }
+
+            if (!success) {
+                // Fallback: Generate a simple vCard manually if system one fails or is empty
+                val vcardContent = "BEGIN:VCARD\n" +
+                        "VERSION:3.0\n" +
+                        "N:;${displayName ?: ""};;;\n" +
+                        "FN:${displayName ?: ""}\n" +
+                        "TEL;TYPE=CELL:$phoneNumber\n" +
+                        "END:VCARD"
+                cacheFile.writeText(vcardContent)
+            }
+
+            val shareUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.provider",
+                cacheFile
+            )
+
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/x-vcard"
+                putExtra(Intent.EXTRA_STREAM, shareUri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            context.startActivity(Intent.createChooser(intent, "Share Contact"))
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.e("TAG", "shareContact error: ${e.message}")
+            Toast.makeText(context, "Unable to share contact", Toast.LENGTH_SHORT).show()
+        }
     }
 
     fun popUpMenu(

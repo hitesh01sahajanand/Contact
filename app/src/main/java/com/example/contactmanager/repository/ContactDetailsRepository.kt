@@ -106,6 +106,49 @@ class ContactDetailsRepository @Inject constructor(@param:ApplicationContext pri
         return list
     }
 
+    fun deleteCallHistoryForNumber(number: String) {
+        val contentResolver = context.contentResolver
+        val normalizedInput = number.replace(Regex("[^0-9]"), "")
+
+        val projection = arrayOf(CallLog.Calls._ID, CallLog.Calls.NUMBER)
+        val selection = "${CallLog.Calls.NUMBER} LIKE ?"
+        val selectionArgs = arrayOf("%$normalizedInput%")
+
+        var cursor: Cursor? = null
+        try {
+            cursor = contentResolver.query(
+                CallLog.Calls.CONTENT_URI,
+                projection,
+                selection,
+                selectionArgs,
+                null
+            )
+
+            cursor?.let {
+                val idIdx = it.getColumnIndex(CallLog.Calls._ID)
+                val numberIdx = it.getColumnIndex(CallLog.Calls.NUMBER)
+
+                while (it.moveToNext()) {
+                    val id = it.getLong(idIdx)
+                    val numberDb = it.getString(numberIdx)
+                    val normDb = numberDb?.replace(Regex("[^0-9]"), "") ?: ""
+
+                    if (Common.compareNumbers(normDb, normalizedInput)) {
+                        contentResolver.delete(
+                            CallLog.Calls.CONTENT_URI,
+                            "${CallLog.Calls._ID} = ?",
+                            arrayOf(id.toString())
+                        )
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            cursor?.close()
+        }
+    }
+
 
     fun getUpdatedContact(contactId: String?): CallLogEntry? {
 

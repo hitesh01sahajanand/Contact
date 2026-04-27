@@ -36,5 +36,9 @@ class ContactDetailsViewModel @Inject constructor(private val repository: Contac
         }
     }
 
-
+    fun deleteCallHistoryForNumber(number: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteCallHistoryForNumber(number)
+        }
+    }
 }

@@ -273,6 +273,14 @@
                     android:layout_weight="1"
                     android:src="@drawable/ic_new_call_info" />
 
+                <ImageView
+                    android:id="@+id/iv_call_history"
+                    android:layout_width="@dimen/_38sdp"
+                    android:layout_height="@dimen/_38sdp"
+                    android:layout_weight="1"
+                    android:src="@drawable/ic_history"
+                    android:visibility="gone" />
+
             </LinearLayout>
 
             <LinearLayout

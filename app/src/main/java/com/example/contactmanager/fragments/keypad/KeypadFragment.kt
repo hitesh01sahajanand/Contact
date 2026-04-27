@@ -46,6 +46,10 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import android.media.AudioManager
+import android.media.ToneGenerator
+import com.example.contactmanager.utils.Constance
+import com.example.contactmanager.utils.SharedPreferenceManager
 
 @AndroidEntryPoint
 class KeypadFragment : Fragment(), OnClickHandler {
@@ -70,6 +74,23 @@ class KeypadFragment : Fragment(), OnClickHandler {
         R.id.linear11 to "0",
         R.id.linear12 to "#"
     )
+
+    private val toneMap = mapOf(
+        R.id.linear1 to ToneGenerator.TONE_DTMF_1,
+        R.id.linear2 to ToneGenerator.TONE_DTMF_2,
+        R.id.linear3 to ToneGenerator.TONE_DTMF_3,
+        R.id.linear4 to ToneGenerator.TONE_DTMF_4,
+        R.id.linear5 to ToneGenerator.TONE_DTMF_5,
+        R.id.linear6 to ToneGenerator.TONE_DTMF_6,
+        R.id.linear7 to ToneGenerator.TONE_DTMF_7,
+        R.id.linear8 to ToneGenerator.TONE_DTMF_8,
+        R.id.linear9 to ToneGenerator.TONE_DTMF_9,
+        R.id.linear10 to ToneGenerator.TONE_DTMF_S,
+        R.id.linear11 to ToneGenerator.TONE_DTMF_0,
+        R.id.linear12 to ToneGenerator.TONE_DTMF_P
+    )
+
+    private var toneGenerator: ToneGenerator? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -235,16 +256,31 @@ class KeypadFragment : Fragment(), OnClickHandler {
         setupDialPad()
 
         allPermissionGranted()
+
+        try {
+            toneGenerator = ToneGenerator(AudioManager.STREAM_DTMF, 80)
+        } catch (e: Exception) {
+            Log.e("KeypadFragment", "Exception while creating ToneGenerator: $e")
+        }
     }
 
     private fun appendDigit(viewId: Int) {
         val value = keyMap[viewId] ?: return
+
+        if (SharedPreferenceManager.getBoolean(requireContext(), Constance.DIAL_PAD_SOUND, false)) {
+            playTone(viewId)
+        }
 
         binding.edtDisplayNumber.append(value)
 
         if (binding.edtDisplayNumber.text.isNotEmpty()) {
             binding.buttonDelete.visibility = View.VISIBLE
         }
+    }
+
+    private fun playTone(viewId: Int) {
+        val tone = toneMap[viewId] ?: return
+        toneGenerator?.startTone(tone, 150)
     }
 
     private fun setupDialPad() {
@@ -471,5 +507,10 @@ class KeypadFragment : Fragment(), OnClickHandler {
                 context.startActivity(intent)
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        toneGenerator?.release()
     }
 }

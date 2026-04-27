@@ -5,6 +5,7 @@ import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
@@ -12,6 +13,7 @@ import android.os.PowerManager.WakeLock
 import android.telecom.Call
 import android.telecom.CallAudioState
 import android.util.Log
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
@@ -110,6 +112,54 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
     override fun onDestroy() {
         super.onDestroy()
         removeProximitySensor()
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val state = NewCallManager.getState()
+
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            when (event.keyCode) {
+                KeyEvent.KEYCODE_VOLUME_UP -> {
+                    if (state == Call.STATE_RINGING) {
+                        // Increase ringer volume
+                        audioManager.adjustStreamVolume(
+                            AudioManager.STREAM_RING,
+                            AudioManager.ADJUST_RAISE,
+                            AudioManager.FLAG_SHOW_UI
+                        )
+                    } else {
+                        // Increase in-call voice volume
+                        audioManager.adjustStreamVolume(
+                            AudioManager.STREAM_VOICE_CALL,
+                            AudioManager.ADJUST_RAISE,
+                            AudioManager.FLAG_SHOW_UI
+                        )
+                    }
+                    return true
+                }
+
+                KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                    if (state == Call.STATE_RINGING) {
+                        // Decrease ringer volume (also mutes/silences ringtone)
+                        audioManager.adjustStreamVolume(
+                            AudioManager.STREAM_RING,
+                            AudioManager.ADJUST_LOWER,
+                            AudioManager.FLAG_SHOW_UI
+                        )
+                    } else {
+                        // Decrease in-call voice volume
+                        audioManager.adjustStreamVolume(
+                            AudioManager.STREAM_VOICE_CALL,
+                            AudioManager.ADJUST_LOWER,
+                            AudioManager.FLAG_SHOW_UI
+                        )
+                    }
+                    return true
+                }
+            }
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     private val callListener = object : NewCallManager.CallManagerListener {

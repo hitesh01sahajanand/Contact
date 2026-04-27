@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.CallLog
 import android.telephony.PhoneNumberUtils
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -29,6 +30,7 @@ import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
 import androidx.core.graphics.toColorInt
+import com.example.contactmanager.utils.Constance
 import kotlinx.coroutines.flow.first
 
 @HiltViewModel
@@ -45,7 +47,7 @@ class RecentViewModel @Inject constructor(
             super.onChange(selfChange)
             handler.removeCallbacksAndMessages(null)
             handler.postDelayed({
-                loadAllRecentsHistory(0, 1000)
+                loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
             }, 1000)
         }
     }
@@ -89,6 +91,9 @@ class RecentViewModel @Inject constructor(
     private var _isNextPageLoading = MutableLiveData<Boolean>()
     val isNextPageLoading: LiveData<Boolean> = _isNextPageLoading
 
+    private var _isLoadingFirstTime = MutableLiveData<Boolean>()
+    val isLoadingFirstTime: LiveData<Boolean> = _isLoadingFirstTime
+
     private val colorList = listOf(
         "#2173C2".toColorInt(),
         "#FFB950".toColorInt(),
@@ -100,10 +105,11 @@ class RecentViewModel @Inject constructor(
     fun loadAllRecentsHistory(offset: Int, limit: Int) {
         if (isLoading) return
         isLoading = true
-        
+
         if (offset == 0) {
             currentOffset = 0
             isLastPage = false
+            _isLoadingFirstTime.postValue(true)
         }
 
         if (offset > 0) {
@@ -112,11 +118,12 @@ class RecentViewModel @Inject constructor(
 
         viewModelScope.launch(Dispatchers.IO) {
             val rawData = repository.getCallHistory(offset, limit)
-            
+
             if (rawData.isEmpty()) {
                 isLastPage = true
                 isLoading = false
                 _isNextPageLoading.postValue(false)
+                _isLoadingFirstTime.postValue(false)
                 if (offset == 0) {
                     _allRecentCallHistory.postValue(ArrayList())
                 }
@@ -132,12 +139,13 @@ class RecentViewModel @Inject constructor(
 
                 processRawCallLogs(allRawEntries)
             }
-            
+
             _allRecentCallHistory.postValue(processedData)
-            
+
             isLoading = false
             _isNextPageLoading.postValue(false)
-            
+            _isLoadingFirstTime.postValue(false)
+
             if (rawData.size < limit) {
                 isLastPage = true
             }
@@ -146,7 +154,7 @@ class RecentViewModel @Inject constructor(
 
     fun loadNextPage() {
         if (!isLoading && !isLastPage) {
-            loadAllRecentsHistory(currentOffset, 1000)
+            loadAllRecentsHistory(currentOffset, Constance.LOAD_DATA_COUNT)
         }
     }
 
@@ -154,8 +162,12 @@ class RecentViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             tagRepository.saveTag(phoneNumber, tagName)
             // Reload history to show the tag
-            loadAllRecentsHistory(0, currentOffset.coerceAtLeast(1000))
+            loadAllRecentsHistory(0, currentOffset.coerceAtLeast(Constance.LOAD_DATA_COUNT))
         }
+    }
+
+    suspend fun getTag(phoneNumber: String): String {
+        return tagRepository.getTag(phoneNumber)!!
     }
 
     fun blockNumber(phoneNumber: String) {
@@ -229,10 +241,10 @@ class RecentViewModel @Inject constructor(
                     entry.stringCallName = tag
                 }
             }
-            
+
             // Check if blocked in custom DB
-            entry.isBlocked = blockedNumbersSet.contains(cleaned) || 
-                             allBlocked.any { b -> PhoneNumberUtils.compare(b.phoneNumber, entryNum) }
+            entry.isBlocked = blockedNumbersSet.contains(cleaned) ||
+                    allBlocked.any { b -> PhoneNumberUtils.compare(b.phoneNumber, entryNum) }
 
             val currentCategory = when {
                 entryTime >= todayStart -> todayStr
@@ -247,14 +259,14 @@ class RecentViewModel @Inject constructor(
                 if (entryDate != null && lastDate != null) {
                     cal1.time = entryDate
                     cal2.time = lastDate
-                    
+
                     val sameDay = cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
-                                 cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
+                            cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
 
                     if (sameDay) {
                         val isSameNumber = PhoneNumberUtils.compare(entryNum, last.stringNumber)
-                        val isSameName = !entry.stringCallName.isNullOrEmpty() && 
-                                        entry.stringCallName == last.stringCallName
+                        val isSameName = !entry.stringCallName.isNullOrEmpty() &&
+                                entry.stringCallName == last.stringCallName
 
                         if (isSameNumber || isSameName) {
                             isDuplicate = true

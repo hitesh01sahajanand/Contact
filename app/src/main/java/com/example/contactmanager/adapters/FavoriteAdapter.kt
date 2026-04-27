@@ -12,6 +12,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.contactmanager.databinding.FavoriteDesignBinding
+import com.example.contactmanager.models.ContactListItem
 import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
@@ -64,6 +65,10 @@ class FavoriteAdapter(private val onClick: (ContactModel, String) -> Unit) :
         notifyDataSetChanged()
     }
 
+    fun getCurrentList(): List<ContactModel> {
+        return filteredList
+    }
+
     inner class FavoriteDataHolder(private val binding: FavoriteDesignBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun setData(
@@ -72,6 +77,7 @@ class FavoriteAdapter(private val onClick: (ContactModel, String) -> Unit) :
             val isExpanded = position == expandedPosition
 
             binding.run {
+                binding.viewSep.isVisible = position != filteredList.size - 1
                 llCollapseView.visibility = View.VISIBLE
                 llExpandedView.visibility = if (isExpanded) View.VISIBLE else View.GONE
 
@@ -86,24 +92,13 @@ class FavoriteAdapter(private val onClick: (ContactModel, String) -> Unit) :
 
                     TransitionManager.beginDelayedTransition(llMainView, transition)
 
+                    // refresh current item
                     notifyItemChanged(position)
-                    // Notify all affected items
 
-                   /* val itemsToNotify = mutableSetOf<Int>()
+                    // refresh previous expanded item (IMPORTANT)
                     if (previousPosition != -1) {
-                        itemsToNotify.add(previousPosition)
-                        itemsToNotify.add(previousPosition - 1)
-                        itemsToNotify.add(previousPosition + 1)
+                        notifyItemChanged(previousPosition)
                     }
-                    itemsToNotify.add(position)
-                    itemsToNotify.add(position - 1)
-                    itemsToNotify.add(position + 1)
-
-                    itemsToNotify.forEach { pos ->
-                        if (pos in 0 until itemCount) {
-
-                        }
-                    }*/
                 }
 
 

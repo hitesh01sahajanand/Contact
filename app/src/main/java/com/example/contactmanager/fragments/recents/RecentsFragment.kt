@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.call.CallActivity
 import com.example.contactmanager.activities.details.ContactsDetailsActivity
+import com.example.contactmanager.activities.history.HistoryActivity
 import com.example.contactmanager.activities.newContact.NewContactActivity
 import com.example.contactmanager.activities.settings.SettingsActivity
 import com.example.contactmanager.adapters.RecentAdapter
@@ -53,14 +54,14 @@ class RecentsFragment : Fragment(), OnClickHandler {
     override fun onResume() {
         super.onResume()
         if (PermissionManager.hasPermissions(requireActivity())) {
-            viewModel.loadAllRecentsHistory(0, 1000)
+            viewModel.loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
         }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
         if (!hidden && PermissionManager.hasPermissions(requireActivity())) {
-            viewModel.loadAllRecentsHistory(0, 1000)
+            viewModel.loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
         }
     }
 
@@ -99,10 +100,16 @@ class RecentsFragment : Fragment(), OnClickHandler {
                     requireActivity().startActivity(intent)
                 }
 
+                Constance.ACTION_CALL_HISTORY -> {
+                    val intent = Intent(requireActivity(), HistoryActivity::class.java)
+                    intent.putExtra(Constance.NUMBER, callLogModel.stringNumber)
+                    requireActivity().startActivity(intent)
+                }
+
                 Constance.ACTION_ADD_TO_CONTACT -> {
                     val isContactSaved = callLogModel.contactId.isNullOrEmpty()
                     val intent = Intent(requireActivity(), NewContactActivity::class.java)
-                    intent.putExtra("Number", callLogModel.stringNumber)
+                    intent.putExtra(Constance.NUMBER, callLogModel.stringNumber)
                     intent.putExtra(Constance.IS_CONTACT_SAVED, !isContactSaved)
                     requireActivity().startActivity(intent)
                 }
@@ -123,9 +130,9 @@ class RecentsFragment : Fragment(), OnClickHandler {
                     if (callLogModel.isBlocked) {
                         Common.alertDialog(
                             context = requireActivity(),
-                            title = "Unblock Contact?",
-                            description = "You will be able to receive calls from this contact.",
-                            btnOkay = "Unblock",
+                            title = requireActivity().getString(R.string.unblock_contact),
+                            description = requireActivity().getString(R.string.you_will_be_able_to_receive_call),
+                            btnOkay = requireActivity().getString(R.string.unblock),
                             onItemClick = {
                                 callLogModel.stringNumber?.let {
                                     viewModel.unblockNumber(it)
@@ -134,9 +141,9 @@ class RecentsFragment : Fragment(), OnClickHandler {
                     } else {
                         Common.alertDialog(
                             context = requireActivity(),
-                            title = "Block Contact?",
-                            description = "You will no longer be able to receive calls from this contact.",
-                            btnOkay = "Block",
+                            title = requireActivity().getString(R.string.block_contact),
+                            description = requireActivity().getString(R.string.you_will_be_able_to_receive_call),
+                            btnOkay = requireActivity().getString(R.string.block),
                             onItemClick = {
                                 callLogModel.stringNumber?.let {
                                     viewModel.blockNumber(it)
@@ -151,13 +158,31 @@ class RecentsFragment : Fragment(), OnClickHandler {
 
         binding.rvRecents.adapter = adapter
         binding.rvRecents.layoutManager = LinearLayoutManager(requireActivity())
-
+        val itemTouchHelper = adapter.getItemTouchHelper(requireActivity())
+        itemTouchHelper.attachToRecyclerView(binding.rvRecents)
 
         viewModel.allRecentCallHistory.observe(viewLifecycleOwner) { recentList ->
             allList.clear()
             allList.addAll(recentList)
-
             updateAdapterList()
+
+            // Update visibility only after the first load is complete
+           /* if (viewModel.isLoadingFirstTime.value != true) {
+                binding.llHistorySpaceHolder.isVisible = recentList.isEmpty()
+                binding.rvRecents.isVisible = recentList.isNotEmpty()
+            }*/
+        }
+
+        viewModel.isLoadingFirstTime.observe(viewLifecycleOwner) { isLoading ->
+            binding.pbLoading.isVisible = isLoading
+            if (isLoading) {
+                binding.llHistorySpaceHolder.isVisible = false
+                binding.rvRecents.isVisible = false
+            } else {
+                val isEmpty = allList.isEmpty()
+                binding.llHistorySpaceHolder.isVisible = isEmpty
+                binding.rvRecents.isVisible = !isEmpty
+            }
         }
 
         viewModel.isNextPageLoading.observe(viewLifecycleOwner) { isLoading ->
@@ -186,6 +211,8 @@ class RecentsFragment : Fragment(), OnClickHandler {
         binding.edtSearch.addTextChangedListener { editable ->
             val query = editable.toString()
             adapter.filter(query)
+            binding.llHistorySpaceHolder.isVisible = adapter.getCurrentList().isEmpty()
+            binding.rvRecents.isVisible = adapter.getCurrentList().isNotEmpty()
         }
 
         binding.edtSearch.setOnEditorActionListener { v, actionId, _ ->

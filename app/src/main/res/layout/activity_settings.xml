@@ -548,6 +548,7 @@
                             android:textColor="@color/black_color" />
 
                         <Switch
+                            android:id="@+id/switch_dial_pad_sound"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
@@ -584,6 +585,7 @@
                             android:textColor="@color/black_color" />
 
                         <Switch
+                            android:id="@+id/switch_call_flash"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
@@ -621,6 +623,7 @@
                             android:textColor="@color/black_color" />
 
                         <Switch
+                            android:id="@+id/switch_swipe_action"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"

@@ -34,93 +34,102 @@ class FavoriteRepository @Inject constructor(@param:ApplicationContext private v
     }
 
     fun updateFavoriteStatusBatch(contacts: List<ContactModel>) {
-        val operations = ArrayList<android.content.ContentProviderOperation>()
-
+        Log.d("FavoriteRepository", "updateFavoriteStatusBatch: updating ${contacts.size} contacts")
         for (contact in contacts) {
-            val contactIdLong = contact.contactId?.toLongOrNull() ?: continue
-            val uri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactIdLong)
-
-            operations.add(
-                android.content.ContentProviderOperation.newUpdate(uri)
-                    .withValue(ContactsContract.Contacts.STARRED, if (contact.isFavourite == 1) 1 else 0)
-                    .build()
-            )
-
-            // To avoid TransactionTooLargeException, apply in chunks if necessary
-            if (operations.size >= 100) {
-                try {
-                    context.contentResolver.applyBatch(ContactsContract.AUTHORITY, operations)
-                    operations.clear()
-                } catch (e: Exception) {
-                    Log.e("TAG", "updateFavoriteStatusBatch error: ${e.message}")
-                }
-            }
-        }
-
-        if (operations.isNotEmpty()) {
-            try {
-                context.contentResolver.applyBatch(ContactsContract.AUTHORITY, operations)
-            } catch (e: Exception) {
-                Log.e("TAG", "updateFavoriteStatusBatch error: ${e.message}")
-            }
+            val contactId = contact.contactId ?: continue
+            val isFav = contact.isFavourite == 1
+            
+            Log.d("FavoriteRepository", "Updating contact $contactId to favorite=$isFav")
+            addToFavoriteUnFavorite(contactId, isFav)
         }
     }
 
 
     fun getAllFavoriteContacts(): ArrayList<ContactModel> {
         val favoritesList = ArrayList<ContactModel>()
+        val contactMap = LinkedHashMap<String, ContactModel>()
 
         try {
             val contentResolver = context.contentResolver
-            val uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
-
-            val cursor = contentResolver.query(
-                uri,
+            
+            // 🔹 1. Get Starred Contacts from the Contacts table
+            val contactsUri = ContactsContract.Contacts.CONTENT_URI
+            val contactsCursor = contentResolver.query(
+                contactsUri,
+                arrayOf(
+                    ContactsContract.Contacts._ID,
+                    ContactsContract.Contacts.DISPLAY_NAME_PRIMARY,
+                    ContactsContract.Contacts.PHOTO_URI,
+                    ContactsContract.Contacts.STARRED
+                ),
+                "${ContactsContract.Contacts.STARRED} = 1",
                 null,
-                "starred=?",
-                arrayOf("1"),
-                "display_name ASC"
+                "display_name COLLATE NOCASE ASC"
             )
 
-            cursor?.use { query ->
-                val contactIdIndex = query.getColumnIndex("contact_id")
-                val nameIndex = query.getColumnIndex("display_name")
-                val numberIndex = query.getColumnIndex("data1")
-                val photoIndex = query.getColumnIndex("photo_uri")
+            val starredIds = mutableSetOf<String>()
+            contactsCursor?.use { cursor ->
+                val idIndex = cursor.getColumnIndex(ContactsContract.Contacts._ID)
+                val nameIndex = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)
+                val photoIndex = cursor.getColumnIndex(ContactsContract.Contacts.PHOTO_URI)
 
-                val addedIds = HashSet<String>() // 🔥 better duplicate handling
-
-                while (query.moveToNext()) {
-                    val contactId = query.getString(contactIdIndex)
-
-                    // Skip duplicates
-                    if (addedIds.contains(contactId)) continue
-                    addedIds.add(contactId)
-
-                    val displayName = query.getString(nameIndex)
-                    val phoneNumber = query.getString(numberIndex)
-                    val photoUri = query.getString(photoIndex)
-
-                    val split = displayName?.split("\\s+".toRegex()) ?: listOf("")
-                    val firstName = split.getOrNull(0) ?: ""
-                    val middleName = split.getOrNull(1) ?: ""
-                    val surname = split.getOrNull(2) ?: ""
+                while (cursor.moveToNext()) {
+                    val contactId = cursor.getLong(idIndex).toString()
+                    val displayName = cursor.getString(nameIndex) ?: ""
+                    val photoUri = cursor.getString(photoIndex)
+                    
+                    starredIds.add(contactId)
 
                     val contact = ContactModel().apply {
                         this.contactId = contactId
                         this.displayName = displayName
-                        this.number = phoneNumber
                         this.userThumbnail = photoUri
-                        this.firstName = firstName
-                        this.middleName = middleName
-                        this.surname = surname
                         this.isFavourite = 1
                     }
-
-                    favoritesList.add(contact)
+                    contactMap[contactId] = contact
                 }
             }
+
+            if (starredIds.isEmpty()) return favoritesList
+
+            // 🔹 2. Get Phone Numbers for these starred contacts
+            val dataUri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+            val phoneCursor = contentResolver.query(
+                dataUri,
+                arrayOf(
+                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
+                    ContactsContract.CommonDataKinds.Phone.NUMBER
+                ),
+                "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} IN (${starredIds.joinToString(",")})",
+                null,
+                null
+            )
+
+            phoneCursor?.use { cursor ->
+                val idIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
+                val numberIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+
+                while (cursor.moveToNext()) {
+                    val contactId = cursor.getLong(idIndex).toString()
+                    val phoneNumber = cursor.getString(numberIndex) ?: continue
+
+                    contactMap[contactId]?.let { contact ->
+                        if (contact.number.isNullOrEmpty()) {
+                            contact.number = phoneNumber
+                        } else if (contact.number != phoneNumber) {
+                            // If multiple numbers, we can either add a new entry or keep one.
+                            // The UI seems to expect one entry per favorite.
+                            // But let's follow the ContactRepository pattern if needed.
+                            // For favorites, usually one representative number is enough.
+                        }
+                    }
+                }
+            }
+            
+            favoritesList.addAll(contactMap.values)
+
         } catch (e: Exception) {
+            Log.e("FavoriteRepository", "Error loading favorites: ${e.message}")
             e.printStackTrace()
         }
 

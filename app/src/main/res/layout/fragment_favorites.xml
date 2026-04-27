@@ -103,6 +103,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
+            android:paddingBottom="@dimen/_10sdp"
             app:layout_constraintTop_toBottomOf="@+id/cv_search">
 
             <androidx.cardview.widget.CardView

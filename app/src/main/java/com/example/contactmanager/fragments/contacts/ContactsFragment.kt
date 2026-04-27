@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -146,16 +147,17 @@ class ContactsFragment : Fragment(), OnClickHandler {
 
         viewModel.allContactList.observe(viewLifecycleOwner) { allContacts ->
             allContactsAdapter.addAll(allContacts)
-            binding.tvNoData.isVisible = allContactsAdapter.itemCount == 0
+            binding.llContactSpaceHolder.isVisible = allContactsAdapter.itemCount == 0
         }
 
         val letters = ('A'..'Z') + "#"
 
+        val sizeInPx = resources.getDimension(com.intuit.sdp.R.dimen._11sdp)
         letters.forEach { letter ->
             val tv = TextView(context).apply {
                 text = letter.toString()
-                textSize = 14f
-                setTextColor(ContextCompat.getColor(context, R.color.grey_color))
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, sizeInPx)
+                setTextColor(ContextCompat.getColor(context, R.color.main_color))
                 typeface = ResourcesCompat.getFont(context, R.font.fig_tree_semi_bold)
                 setPadding(4, 2, 4, 2)
             }
@@ -179,6 +181,8 @@ class ContactsFragment : Fragment(), OnClickHandler {
         binding.edtSearch.addTextChangedListener { editable ->
             val query = editable.toString()
             allContactsAdapter.filter(query)
+            binding.llContactSpaceHolder.isVisible = allContactsAdapter.itemCount == 0
+            binding.rvAllContacts.isVisible = allContactsAdapter.itemCount != 0
         }
 
         binding.edtSearch.setOnEditorActionListener { v, actionId, _ ->
@@ -254,7 +258,7 @@ class ContactsFragment : Fragment(), OnClickHandler {
                     arrayOf("com.google"),
                     null
                 )
-                
+
                 cursor?.use {
                     while (it.moveToNext()) {
                         val email = it.getString(0)
@@ -263,18 +267,22 @@ class ContactsFragment : Fragment(), OnClickHandler {
                         }
                     }
                 }
-                
+
                 for (email in existingEmails) {
                     val name = email.substringBefore("@")
                     accountList.add(AccountModel(name, email))
                 }
 
-                Common.contactPopUpMenu(requireActivity(), binding.cvAccounts, accountList) { email ->
+                Common.contactPopUpMenu(
+                    requireActivity(),
+                    binding.cvAccounts,
+                    accountList
+                ) { email ->
                     val selectedName = accountList.find { it.email == email }?.name ?: "All"
                     val tvTitle = binding.cvAccounts.findViewById<TextView>(R.id.tv_title)
                     tvTitle?.text = selectedName
 
-                    Log.e("TAG", "onClick: $selectedName", )
+                    Log.e("TAG", "onClick: $selectedName")
 
                     viewModel.currentSelectedAccount = email
                     viewModel.loadContacts()

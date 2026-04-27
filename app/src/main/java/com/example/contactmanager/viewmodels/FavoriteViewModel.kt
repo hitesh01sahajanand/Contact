@@ -54,13 +54,16 @@ class FavoriteViewModel @Inject constructor(
     fun getAllFavoriteContact(){
         viewModelScope.launch(Dispatchers.IO) {
             val data = repository.getAllFavoriteContacts()
+            Log.d("FavoriteViewModel", "getAllFavoriteContact: loaded ${data.size} favorites")
             _allFavoriteContacts.postValue(data)
         }
     }
 
     fun addToFavoriteUnFavorite(contactId: String, makeFavorite: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.addToFavoriteUnFavorite(contactId, makeFavorite)
+            kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                repository.addToFavoriteUnFavorite(contactId, makeFavorite)
+            }
         }
     }
 
@@ -68,6 +71,7 @@ class FavoriteViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
                 repository.updateFavoriteStatusBatch(contacts)
+                kotlinx.coroutines.delay(500) // Give DB time to settle
                 getAllFavoriteContact()
             }
         }

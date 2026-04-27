@@ -9,6 +9,8 @@
 
 
     <color name="grey_color">#6B7173</color>
+    <color name="action_call_color">#4CAF50</color>
+    <color name="action_message_color">#2196F3</color>
     <color name="setting_grey_color">#828C98</color>
     <color name="bg_color">#EDF2F4</color>
     <color name="main_color">#327DFF</color>

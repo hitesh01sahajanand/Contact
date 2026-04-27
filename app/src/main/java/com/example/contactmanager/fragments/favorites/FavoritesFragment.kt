@@ -103,6 +103,8 @@ class FavoritesFragment : Fragment(), OnClickHandler {
         binding.edtSearch.addTextChangedListener { editable ->
             val query = editable.toString()
             favoriteAdapter.filter(query)
+            binding.cvFavorite.isVisible = favoriteAdapter.getCurrentList().isNotEmpty()
+            binding.llFavoriteSpaceHolder.isVisible = favoriteAdapter.getCurrentList().isEmpty()
         }
 
         binding.edtSearch.setOnEditorActionListener { v, actionId, _ ->

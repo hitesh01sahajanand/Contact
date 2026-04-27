@@ -108,9 +108,9 @@ class BlockNumbersActivity : AppCompatActivity(), OnClickHandler {
 
         Common.alertDialog(
             context = this,
-            title = "Unblock Contact?",
-            description = "You will be able to receive calls from this contact.",
-            btnOkay = "Unblock",
+            title = getString(R.string.block_contact),
+            description = getString(R.string.you_will_be_able_to_receive_call),
+            btnOkay = getString(R.string.unblock),
             onItemClick = {
                 viewModel.unblockNumber(blockModel.phoneNumber)
             })

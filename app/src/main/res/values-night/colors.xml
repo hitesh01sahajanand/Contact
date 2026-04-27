@@ -7,6 +7,8 @@
     <color name="divider_grey">#33FFFFFF</color>
 
     <color name="grey_color">#A0A0A0</color>
+    <color name="action_call_color">#4CAF50</color>
+    <color name="action_message_color">#2196F3</color>
     <color name="setting_grey_color">#B0B0B0</color>
     <color name="bg_color">#121212</color>
     <color name="main_color">#327DFF</color>

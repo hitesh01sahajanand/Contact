@@ -214,7 +214,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             }
 
         } else {
-            val number = intent.getStringExtra("Number")
+            val number = intent.getStringExtra(Constance.NUMBER)
             binding.edtPhone.setText(number)
         }
 

@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -51,11 +52,9 @@ class AllContactsActivity : AppCompatActivity(), OnClickHandler {
     private fun initView() {
         binding.onClickHandler = this
 
-        allContactsAdapter =
-            AllContactsAdapter(
-                isAllContact = true, onClick = { _, _ ->
-                }
-            )
+        allContactsAdapter = AllContactsAdapter(
+            isAllContact = true, onClick = { _, _ ->
+            })
 
         binding.rvAllContacts.adapter = allContactsAdapter
         binding.rvAllContacts.layoutManager = LinearLayoutManager(this)
@@ -65,18 +64,28 @@ class AllContactsActivity : AppCompatActivity(), OnClickHandler {
         }
 
         viewModelContact.allContactList.observe(this) { allContacts ->
+            binding.llContactSpaceHolder.visibility =
+                if (allContacts.isEmpty()) View.VISIBLE else View.GONE
+            binding.rvAllContacts.visibility =
+                if (allContacts.isNotEmpty()) View.VISIBLE else View.GONE
             allContactsAdapter.addAll(allContacts)
         }
 
         binding.edtSearch.addTextChangedListener { editable ->
             val query = editable.toString()
             allContactsAdapter.filter(query)
+            binding.llContactSpaceHolder.isVisible = allContactsAdapter.getCurrentList().isEmpty()
+            binding.rvAllContacts.isVisible = allContactsAdapter.getCurrentList().isNotEmpty()
+
         }
 
         binding.edtSearch.setOnEditorActionListener { v, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 val query = binding.edtSearch.text.toString()
                 allContactsAdapter.filter(query)
+                binding.llContactSpaceHolder.isVisible =
+                    allContactsAdapter.getCurrentList().isEmpty()
+                binding.rvAllContacts.isVisible = allContactsAdapter.getCurrentList().isNotEmpty()
                 binding.edtSearch.clearFocus()
                 Common.hideKeyboard(this, v)
                 true
@@ -89,8 +98,18 @@ class AllContactsActivity : AppCompatActivity(), OnClickHandler {
     override fun onClick(view: View) {
         when (view.id) {
             binding.tvDone.id -> {
-                val allContacts = allContactsAdapter.getAllContacts()
-                viewModel.updateFavoriteStatus(allContacts)
+                val changedContacts = allContactsAdapter.getChangedContacts()
+                android.util.Log.d(
+                    "AllContactsActivity", "Saving ${changedContacts.size} changed contacts"
+                )
+                if (changedContacts.isNotEmpty()) {
+                    viewModel.updateFavoriteStatus(changedContacts)
+                    android.widget.Toast.makeText(
+                        this,
+                        "Updating ${changedContacts.size} favorites...",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
                 finish()
             }
         }

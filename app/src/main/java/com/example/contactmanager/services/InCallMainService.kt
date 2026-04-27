@@ -12,11 +12,13 @@ import com.example.contactmanager.activities.call.CallActivity
 import com.example.contactmanager.utils.CallNotificationManager
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
+import com.example.contactmanager.utils.FlashLightUtils
 import com.example.contactmanager.utils.NewCallManager
 import com.example.contactmanager.utils.SharedPreferenceManager
 import com.example.contactmanager.utils.isOutgoing
 
 import com.example.contactmanager.repository.BlockRepository
+import com.example.contactmanager.utils.RingtonePlayer
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,10 +32,12 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
     lateinit var blockRepository: BlockRepository
     
     private lateinit var callNotificationManager: CallNotificationManager
+    private lateinit var ringtonePlayer: RingtonePlayer
 
     override fun onCreate() {
         super.onCreate()
         callNotificationManager = CallNotificationManager(this)
+        ringtonePlayer = RingtonePlayer(this)
         NewCallManager.inCallService = this
         NewCallManager.addListener(this)
     }
@@ -44,6 +48,7 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
 
     override fun onDestroy() {
         super.onDestroy()
+        ringtonePlayer.stopRinging()
         NewCallManager.removeListener(this)
     }
 
@@ -94,6 +99,11 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
     private val callListener = object : Call.Callback() {
         override fun onStateChanged(call: Call, state: Int) {
             super.onStateChanged(call, state)
+            // Stop ringing as soon as state leaves RINGING
+            if (state != Call.STATE_RINGING) {
+                ringtonePlayer.stopRinging()
+                FlashLightUtils.getInstance(this@InCallMainService).stopBlinking()
+            }
             if (state == Call.STATE_DISCONNECTED || state == Call.STATE_DISCONNECTING) {
                 stopForeground(true)
                 callNotificationManager.cancelNotification()
@@ -135,6 +145,15 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
             val isOutgoing = call.isOutgoing()
             val state = call.state
             val isIncomingRinging = state == Call.STATE_RINGING
+
+            // Start ringtone & vibration for incoming ringing calls
+            if (isIncomingRinging) {
+                ringtonePlayer.startRinging()
+            }
+
+            if (isIncomingRinging && SharedPreferenceManager.getBoolean(this@InCallMainService, Constance.CALL_FLASH, false)) {
+                FlashLightUtils.getInstance(this@InCallMainService).startBlinking()
+            }
 
             // High priority for incoming call, low for outgoing/ongoing
             val lowPriority = !isIncomingRinging
@@ -183,6 +202,8 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
 
     override fun onCallRemoved(call: Call) {
         super.onCallRemoved(call)
+        ringtonePlayer.stopRinging()
+        FlashLightUtils.getInstance(this).stopBlinking()
         call.unregisterCallback(callListener)
 
         // Check for missed call

@@ -177,7 +177,8 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
 
             binding.llShare.id -> {
                 contactDetail?.let {
-                    shareContact(this, it.contactId)
+//                    shareContact(this, it.contactId)
+                    Common.shareContact(this, it.stringNumber)
                 }
             }
 
@@ -188,7 +189,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
         }
     }
 
-    fun shareContact(context: Context, contactId: String?) {
+    /*fun shareContact(context: Context, contactId: String?) {
         if (contactId.isNullOrEmpty()) return
 
         try {
@@ -224,7 +225,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             e.printStackTrace()
             Toast.makeText(context, "Unable to share contact", Toast.LENGTH_SHORT).show()
         }
-    }
+    }*/
 
     fun isContactFavorite(context: Context, contactId: String): Boolean {
 

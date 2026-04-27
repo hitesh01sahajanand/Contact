@@ -20,6 +20,7 @@ import com.example.contactmanager.R
 import com.example.contactmanager.activities.blockNumbers.BlockNumbersActivity
 import com.example.contactmanager.activities.home.HomeActivity
 import com.example.contactmanager.activities.quickResponse.QuickResponseActivity
+import com.example.contactmanager.activities.setRingtone.SetRingtoneActivity
 import com.example.contactmanager.activities.speedDial.SpeedDialActivity
 import com.example.contactmanager.databinding.ActivitySettingsBinding
 import com.example.contactmanager.utils.Common
@@ -56,9 +57,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                     binding.llCallerIdDisable.visibility = View.VISIBLE
                     binding.llShowConfirmationDialog.visibility = View.GONE
                 }
-
             }
-
         }
 
     private fun initView() {
@@ -80,8 +79,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             if (isChecked) {
                 if (!Settings.canDrawOverlays(this)) {
                     val intent = Intent(
-                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        "package:$packageName".toUri()
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:$packageName".toUri()
                     )
                     startActivity(intent)
                     // Optional: reset switch if permission not granted, but usually we just let them go to settings
@@ -92,7 +90,8 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             }
         }
 
-        val isMergeDuplicate = SharedPreferenceManager.getBoolean(this, Constance.MERGE_DUPLICATE_CONTACT, false)
+        val isMergeDuplicate =
+            SharedPreferenceManager.getBoolean(this, Constance.MERGE_DUPLICATE_CONTACT, false)
         binding.switchMergeDuplicateContact.isChecked = isMergeDuplicate
 
         binding.switchMergeDuplicateContact.setOnCheckedChangeListener { _, isChecked ->
@@ -100,6 +99,39 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                 SharedPreferenceManager.putBoolean(this, Constance.MERGE_DUPLICATE_CONTACT, true)
             } else {
                 SharedPreferenceManager.putBoolean(this, Constance.MERGE_DUPLICATE_CONTACT, false)
+            }
+        }
+        val isDialPadSound =
+            SharedPreferenceManager.getBoolean(this, Constance.DIAL_PAD_SOUND, false)
+        binding.switchDialPadSound.isChecked = isDialPadSound
+
+        binding.switchDialPadSound.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                SharedPreferenceManager.putBoolean(this, Constance.DIAL_PAD_SOUND, true)
+            } else {
+                SharedPreferenceManager.putBoolean(this, Constance.DIAL_PAD_SOUND, false)
+            }
+        }
+
+        val isCallFlash = SharedPreferenceManager.getBoolean(this, Constance.CALL_FLASH, false)
+        binding.switchCallFlash.isChecked = isCallFlash
+
+        binding.switchCallFlash.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                SharedPreferenceManager.putBoolean(this, Constance.CALL_FLASH, true)
+            } else {
+                SharedPreferenceManager.putBoolean(this, Constance.CALL_FLASH, false)
+            }
+        }
+
+        val isSwipeAction = SharedPreferenceManager.getBoolean(this, Constance.SWIPE_ACTION, false)
+        binding.switchSwipeAction.isChecked = isSwipeAction
+
+        binding.switchSwipeAction.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                SharedPreferenceManager.putBoolean(this, Constance.SWIPE_ACTION, true)
+            } else {
+                SharedPreferenceManager.putBoolean(this, Constance.SWIPE_ACTION, false)
             }
         }
 
@@ -119,8 +151,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                 val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
                 defaultDialerLauncher.launch(intent)
             } else {
-                val telecomManager =
-                    context.getSystemService(TELECOM_SERVICE) as TelecomManager
+                val telecomManager = context.getSystemService(TELECOM_SERVICE) as TelecomManager
                 if (context.packageName != telecomManager.defaultDialerPackage) {
                     val intent = Intent("android.telecom.action.CHANGE_DEFAULT_DIALER").apply {
                         putExtra(
@@ -189,11 +220,12 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             }
 
             binding.llSimPref.id -> {
-
+                val intent = Intent(Settings.ACTION_NETWORK_OPERATOR_SETTINGS)
+                startActivity(intent)
             }
 
             binding.llChangeRingtone.id -> {
-
+                startActivity(Intent(this, SetRingtoneActivity::class.java))
             }
 
             binding.llShare.id -> {
