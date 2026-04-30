@@ -9,23 +9,17 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.databinding.DataBindingUtil
-import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.contactmanager.R
 import com.example.contactmanager.adapters.SelectContactAdapter
-import com.example.contactmanager.adapters.SuggestionAdapter
 import com.example.contactmanager.databinding.ActivitySpeedDialSelectBinding
-import com.example.contactmanager.models.ContactListItem
-import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.viewmodels.ContactViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlin.getValue
 
 @AndroidEntryPoint
 class SpeedDialSelectActivity : AppCompatActivity(), OnClickHandler {

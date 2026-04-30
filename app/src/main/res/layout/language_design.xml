@@ -9,36 +9,52 @@
         android:id="@+id/ll_language"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/_10sdp"
+        android:layout_marginVertical="@dimen/_5sdp"
+        android:background="@drawable/new_all_rounded_corner"
+        android:gravity="center"
         android:orientation="horizontal"
-        android:paddingHorizontal="@dimen/_10sdp">
+        android:padding="@dimen/_12sdp">
+
+        <ImageView
+            android:id="@+id/iv_flag"
+            android:layout_width="@dimen/_30sdp"
+            android:layout_height="@dimen/_30sdp" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/_10sdp"
             android:layout_weight="1"
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/tv_language_name"
+                android:id="@+id/tv_language_name_local"
+                style="@style/TextStyle.MediumSemiBold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/language"
-                android:textSize="@dimen/_12sdp" />
+                android:textColor="@color/black_color" />
 
             <TextView
-                android:id="@+id/tv_language_sub"
+                android:id="@+id/tv_language_english"
+                style="@style/TextStyle.Regular"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_2sdp"
                 android:text="@string/language"
-                android:textSize="@dimen/_10sdp" />
+                android:textColor="@color/grey_color" />
         </LinearLayout>
 
-        <RadioButton
+        <CheckBox
             android:id="@+id/rb_language"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="@dimen/_20sdp"
+            android:layout_height="@dimen/_20sdp"
             android:layout_gravity="center_vertical"
+            android:button="@null"
+            android:background="@drawable/selector_check_box"
+            android:clickable="false"
             android:gravity="center_vertical" />
 
     </LinearLayout>

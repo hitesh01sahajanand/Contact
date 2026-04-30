@@ -1,7 +1,6 @@
 package com.example.contactmanager.services
 
 import android.app.role.RoleManager
-import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Handler
@@ -10,7 +9,6 @@ import android.provider.Settings
 import android.telecom.Call
 import android.telecom.CallScreeningService
 import android.util.Log
-
 import com.example.contactmanager.repository.BlockRepository
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Common.showDialerPopUp

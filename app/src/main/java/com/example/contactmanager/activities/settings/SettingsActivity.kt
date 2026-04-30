@@ -5,7 +5,6 @@ import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -25,6 +24,7 @@ import androidx.databinding.DataBindingUtil
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.blockNumbers.BlockNumbersActivity
 import com.example.contactmanager.activities.home.HomeActivity
+import com.example.contactmanager.activities.language.LanguageActivity
 import com.example.contactmanager.activities.quickResponse.QuickResponseActivity
 import com.example.contactmanager.activities.setRingtone.SetRingtoneActivity
 import com.example.contactmanager.activities.speedDial.SpeedDialActivity
@@ -144,7 +144,12 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
 
         val appTheme = SharedPreferenceManager.getString(this, Constance.APP_THEME)
         if (appTheme.isNotEmpty()) {
-            binding.tvThemeType.text = appTheme
+            val name = when (appTheme) {
+                getString(R.string.light_mode_app) -> getString(R.string.light_mode_app)
+                getString(R.string.dark_mode) -> getString(R.string.dark_mode)
+                else -> getString(R.string.set_default)
+            }
+            binding.tvThemeType.text = name
         } else {
             binding.tvThemeType.text = getString(R.string.set_default)
         }
@@ -155,7 +160,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
     private fun updateSimPrefUI() {
         val simPref = SharedPreferenceManager.getInt(this, Constance.SIM_PREFERENCE, -1)
         if (simPref == -1) {
-            binding.tvSimPref.text = "Ask every time"
+            binding.tvSimPref.text = getString(R.string.ask_every_time)
         } else {
             if (ActivityCompat.checkSelfPermission(
                     this, Manifest.permission.CALL_PHONE
@@ -168,11 +173,11 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                 if (selectedSim != null) {
                     binding.tvSimPref.text = selectedSim.carrierName
                 } else {
-                    binding.tvSimPref.text = "Ask every time"
+                    binding.tvSimPref.text = getString(R.string.ask_every_time)
                     SharedPreferenceManager.putInt(this, Constance.SIM_PREFERENCE, -1)
                 }
             } else {
-                binding.tvSimPref.text = "Ask every time"
+                binding.tvSimPref.text = getString(R.string.ask_every_time)
             }
         }
     }
@@ -227,7 +232,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             }
 
             binding.llLanguage.id -> {
-
+                startActivity(Intent(this, LanguageActivity::class.java))
             }
 
             binding.llBlockNumber.id -> {
@@ -262,7 +267,10 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                     val activeSimList = subscriptionManager?.activeSubscriptionInfoList
 
                     if (activeSimList.isNullOrEmpty()) {
-                        Toast.makeText(this, "No SIM cards found", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this,
+                            getString(R.string.no_sim_cards_found), Toast.LENGTH_SHORT
+                        ).show()
                         return
                     }
 
@@ -279,13 +287,13 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
 
                     val builder = MaterialAlertDialogBuilder(this)
 
-                    builder.setTitle("Select SIM")
+                    builder.setTitle(getString(R.string.select_sim))
 
                     builder.setSingleChoiceItems(simNames, selectedIndex) { _, which ->
                         selectedIndex = which
                     }
 
-                    builder.setPositiveButton("Set") { dialog, _ ->
+                    builder.setPositiveButton(getString(R.string.set)) { dialog, _ ->
                         if (selectedIndex == 0) {
                             SharedPreferenceManager.putInt(this, Constance.SIM_PREFERENCE, -1)
                         } else {
@@ -300,7 +308,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                         dialog.dismiss()
                     }
 
-                    builder.setNegativeButton("Cancel") { dialog, _ ->
+                    builder.setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                         dialog.dismiss()
                     }
 

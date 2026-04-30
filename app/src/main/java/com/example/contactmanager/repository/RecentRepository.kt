@@ -2,11 +2,8 @@ package com.example.contactmanager.repository
 
 import android.content.Context
 import android.database.Cursor
-import android.net.Uri
-import android.provider.BlockedNumberContract
 import android.provider.CallLog
 import android.provider.ContactsContract
-import android.telephony.PhoneNumberUtils
 import com.example.contactmanager.models.CallLogEntry
 import com.example.contactmanager.models.ContactCacheData
 import com.example.contactmanager.utils.Common
@@ -15,194 +12,6 @@ import java.util.Date
 import javax.inject.Inject
 
 class RecentRepository @Inject constructor(@param:ApplicationContext private val context: Context) {
-
-    /*fun getRecentList(): List<CallLogModel> {
-
-        val map = linkedMapOf<String, CallLogModel>()
-        val phoneUtil = PhoneNumberUtil.getInstance()
-
-        try {
-
-            val cursor = context.contentResolver.query(
-                CallLog.Calls.CONTENT_URI,
-                null,
-                null,
-                null,
-                "${CallLog.Calls.DATE} DESC"
-            )
-
-            cursor?.use {
-                while (it.moveToNext()) {
-
-                    var number = it.getString(
-                        it.getColumnIndexOrThrow(CallLog.Calls.NUMBER)
-                    ) ?: continue
-
-                    val name = it.getString(
-                        it.getColumnIndexOrThrow(CallLog.Calls.CACHED_NAME)
-                    )
-
-                    val type = it.getInt(
-                        it.getColumnIndexOrThrow(CallLog.Calls.TYPE)
-                    )
-
-                    val date = it.getLong(
-                        it.getColumnIndexOrThrow(CallLog.Calls.DATE)
-                    )
-
-                    val duration = it.getLong(
-                        it.getColumnIndexOrThrow(CallLog.Calls.DURATION)
-                    )
-
-                    val photoUri = it.getString(
-                        it.getColumnIndexOrThrow(CallLog.Calls.CACHED_PHOTO_URI)
-                    )
-
-                    val isMissed = type == CallLog.Calls.MISSED_TYPE
-                    val isIncoming = type == CallLog.Calls.INCOMING_TYPE
-                    val isOutgoing = type == CallLog.Calls.OUTGOING_TYPE
-                    val isRejected = type == CallLog.Calls.REJECTED_TYPE
-
-                    val nameTemp = if (name.isNullOrEmpty()) number else name
-                    val imageAvatar = Common.generateAvatar(nameTemp)
-
-                    // 🔥 Normalize number (global)
-                    var normalizedNumber: String? = null
-
-                    try {
-                        val parsed = phoneUtil.parse(number, null)
-                        normalizedNumber = phoneUtil.format(
-                            parsed,
-                            PhoneNumberUtil.PhoneNumberFormat.E164
-                        )
-                    } catch (e: Exception) {
-                        normalizedNumber = number.replace("\\D".toRegex(), "")
-                    }
-
-                    if (normalizedNumber.isNullOrEmpty()) continue
-
-                    // 🔥 GROUPING LOGIC
-                    if (map.containsKey(normalizedNumber)) {
-
-                        val existing = map[normalizedNumber]!!
-
-                        // count++
-                        existing.callCount += 1
-
-                        // latest call update (important 🔥)
-                        if (date > existing.date) {
-                            existing.date = date
-                            existing.type = type
-                            existing.duration = duration
-                            existing.isMissed = isMissed
-                            existing.isIncoming = isIncoming
-                            existing.isOutgoing = isOutgoing
-                            existing.isRejected = isRejected
-                        }
-
-                    } else {
-
-                        map[normalizedNumber] = CallLogModel(
-                            name = name,
-                            number = normalizedNumber,
-                            type = type,
-                            date = date,
-                            duration = duration,
-                            isMissed = isMissed,
-                            isIncoming = isIncoming,
-                            isOutgoing = isOutgoing,
-                            photoUri = photoUri,
-                            callCount = 1,
-                            avatar = imageAvatar,
-                            isRejected = isRejected
-                        )
-                    }
-                }
-            }
-
-        } catch (e: Exception) {
-            Log.e("TAG", "getRecentList: ${e.message}")
-        }
-
-        // 🔥 FINAL SORT (latest first)
-        return map.values.sortedByDescending { it.date }
-    }
-
-
-
-    fun getMissedCalls(): List<CallLogModel> {
-
-        val callList = mutableListOf<CallLogModel>()
-
-        try {
-
-            val cursor = context.contentResolver.query(
-                CallLog.Calls.CONTENT_URI,
-                null,
-                "${CallLog.Calls.TYPE} = ?", // 👈 filter only missed
-                arrayOf(CallLog.Calls.MISSED_TYPE.toString()),
-                "${CallLog.Calls.DATE} DESC"
-            )
-
-            cursor?.use {
-                while (it.moveToNext()) {
-
-                    val number = it.getString(
-                        it.getColumnIndexOrThrow(CallLog.Calls.NUMBER)
-                    )
-
-                    val name = it.getString(
-                        it.getColumnIndexOrThrow(CallLog.Calls.CACHED_NAME)
-                    )
-
-                    val type = it.getInt(
-                        it.getColumnIndexOrThrow(CallLog.Calls.TYPE)
-                    )
-
-                    val date = it.getLong(
-                        it.getColumnIndexOrThrow(CallLog.Calls.DATE)
-                    )
-
-                    val duration = it.getLong(
-                        it.getColumnIndexOrThrow(CallLog.Calls.DURATION)
-                    )
-
-                    val photoUri = it.getString(
-                        it.getColumnIndexOrThrow(CallLog.Calls.CACHED_PHOTO_URI)
-                    )
-                    val nameTemp = if (name.isNullOrEmpty()) number else name
-                    val imageAvatar = Common.generateAvatar(nameTemp)
-
-                    val isIncoming = type == CallLog.Calls.INCOMING_TYPE
-                    val isOutgoing = type == CallLog.Calls.OUTGOING_TYPE
-                    val isMissed = type == CallLog.Calls.MISSED_TYPE
-                    val isRejected = type == CallLog.Calls.REJECTED_TYPE
-
-                    callList.add(
-                        CallLogModel(
-                            name = name,
-                            number = number,
-                            type = type,
-                            date = date,
-                            duration = duration,
-                            isMissed = isMissed,
-                            isIncoming = isIncoming,
-                            isOutgoing = isOutgoing,
-                            photoUri = photoUri,
-                            callCount = 1,
-                            avatar = imageAvatar,
-                            isRejected = isRejected
-                        )
-                    )
-                }
-            }
-
-        } catch (e: Exception) {
-            Log.e("TAG", "getMissedCalls: ${e.message}")
-        }
-        return callList
-    }*/
-
 
     fun getCallHistory(
         offset: Int,
@@ -239,8 +48,6 @@ class RecentRepository @Inject constructor(@param:ApplicationContext private val
             val typeIdx = cursor.getColumnIndex(CallLog.Calls.TYPE)
             val dateIdx = cursor.getColumnIndex(CallLog.Calls.DATE)
             val durationIdx = cursor.getColumnIndex(CallLog.Calls.DURATION)
-            val nameIdx = cursor.getColumnIndex("name")
-            val photoIdx = cursor.getColumnIndex("photo_uri")
 
             val entriesToProcess = mutableListOf<Triple<Long, String, Int>>()
             if (cursor.moveToPosition(offset)) {
@@ -256,7 +63,8 @@ class RecentRepository @Inject constructor(@param:ApplicationContext private val
 
             if (entriesToProcess.isEmpty()) return list
 
-            val uniqueNumbers = entriesToProcess.map { it.second }.filter { it.isNotEmpty() }.toSet()
+            val uniqueNumbers =
+                entriesToProcess.map { it.second }.filter { it.isNotEmpty() }.toSet()
             val contactCache = HashMap<String, ContactCacheData>()
 
             if (uniqueNumbers.isNotEmpty()) {
@@ -276,11 +84,16 @@ class RecentRepository @Inject constructor(@param:ApplicationContext private val
                         null,
                         null
                     )?.use { contactsCursor ->
-                        val numIdx = contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                        val nameIdx2 = contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-                        val photoIdx2 = contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.PHOTO_URI)
-                        val idIdx2 = contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
-                        val normIdx = contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER)
+                        val numIdx =
+                            contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                        val nameIdx2 =
+                            contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                        val photoIdx2 =
+                            contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.PHOTO_URI)
+                        val idIdx2 =
+                            contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
+                        val normIdx =
+                            contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER)
 
                         while (contactsCursor.moveToNext()) {
                             val data = ContactCacheData().apply {
@@ -288,11 +101,13 @@ class RecentRepository @Inject constructor(@param:ApplicationContext private val
                                 photoUri = contactsCursor.getString(photoIdx2)
                                 contactId = contactsCursor.getString(idIdx2)
                             }
-                            contactsCursor.getString(numIdx)?.let { contactCache[Common.cleanNumber(it)] = data }
+                            contactsCursor.getString(numIdx)
+                                ?.let { contactCache[Common.cleanNumber(it)] = data }
                             contactsCursor.getString(normIdx)?.let { contactCache[it] = data }
                         }
                     }
-                } catch (_: Exception) { }
+                } catch (_: Exception) {
+                }
             }
 
             for (item in entriesToProcess) {
@@ -300,7 +115,9 @@ class RecentRepository @Inject constructor(@param:ApplicationContext private val
                 try {
                     val number = item.second
                     val type = if (typeIdx != -1) cursor.getString(typeIdx) else "3"
-                    val dateStr = if (dateIdx != -1) cursor.getString(dateIdx) else System.currentTimeMillis().toString()
+                    val dateStr =
+                        if (dateIdx != -1) cursor.getString(dateIdx) else System.currentTimeMillis()
+                            .toString()
                     val duration = if (durationIdx != -1) cursor.getString(durationIdx) else "0"
 
                     val normNum = Common.cleanNumber(number)

@@ -19,7 +19,6 @@ import com.example.contactmanager.databinding.DateHeaderDesignBinding
 import com.example.contactmanager.databinding.RecentsDesignBinding
 import com.example.contactmanager.models.CallHistoryListItems
 import com.example.contactmanager.models.CallLogEntry
-import com.example.contactmanager.models.ContactListItem
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.SharedPreferenceManager
@@ -108,14 +107,6 @@ class RecentAdapter(
         originalList.addAll(newList)
         notifyDataSetChanged()
     }
-
-    fun addMoreData(list: List<CallHistoryListItems>) {
-        val startPosition = originalList.size
-        originalList.addAll(list)
-        filteredList.addAll(list)
-        notifyItemRangeInserted(startPosition, list.size)
-    }
-
     fun showLoader() {
         if (filteredList.lastOrNull() !is CallHistoryListItems.Loader) {
             filteredList.add(CallHistoryListItems.Loader)
@@ -129,12 +120,6 @@ class RecentAdapter(
             filteredList.removeAt(position)
             notifyItemRemoved(position)
         }
-    }
-
-    fun clearList() {
-        originalList.clear()
-        filteredList.clear()
-        notifyDataSetChanged()
     }
 
 
@@ -245,7 +230,7 @@ class RecentAdapter(
             binding.llMainView.setBackgroundResource(backgroundRes)
             if (isSelected) {
                 binding.llMainView.backgroundTintList =
-                    ColorStateList.valueOf(ContextCompat.getColor(context, R.color.border_color))
+                    ColorStateList.valueOf(ContextCompat.getColor(context, R.color.border_color_2))
             } else {
                 binding.llMainView.backgroundTintList = null
             }
@@ -269,7 +254,6 @@ class RecentAdapter(
             binding.cbSelect.isChecked = selectedEntries.contains(data)
             binding.cbSelect.isClickable = false
             binding.cbSelect.isFocusable = false
-            binding.cbSelect.background = null
 
             binding.llMainView.setOnLongClickListener {
                 if (!isSelectionMode) {
@@ -572,9 +556,5 @@ class RecentAdapter(
 
     fun getSelectedEntries(): List<CallLogEntry> {
         return selectedEntries.toList()
-    }
-
-    fun getContactCount(): Int {
-        return filteredList.count { it is CallHistoryListItems.Contact }
     }
 }

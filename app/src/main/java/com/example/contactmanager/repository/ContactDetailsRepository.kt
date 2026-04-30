@@ -217,7 +217,7 @@ class ContactDetailsRepository @Inject constructor(
                 )?.use { cursor ->
                     if (cursor.moveToFirst()) {
                         name = cursor.getString(0)
-                        if (photoUri == null) photoUri = cursor.getString(1)
+                        photoUri = cursor.getString(1)
                     }
                 }
             }

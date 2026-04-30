@@ -9,18 +9,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.contactmanager.R
-import com.example.contactmanager.activities.call.CallActivity
 import com.example.contactmanager.activities.details.ContactsDetailsActivity
 import com.example.contactmanager.activities.history.HistoryActivity
 import com.example.contactmanager.activities.newContact.NewContactActivity
@@ -134,28 +131,30 @@ class RecentsFragment : Fragment(), OnClickHandler {
                 }
 
                 Constance.ACTION_BLOCK_CONTACT -> {
-                    if (callLogModel.isBlocked) {
-                        Common.alertDialog(
-                            context = requireActivity(),
-                            title = requireActivity().getString(R.string.unblock_contact),
-                            description = requireActivity().getString(R.string.you_will_be_able_to_receive_call),
-                            btnOkay = requireActivity().getString(R.string.unblock),
-                            onItemClick = {
-                                callLogModel.stringNumber?.let {
-                                    viewModel.unblockNumber(it)
-                                }
-                            })
-                    } else {
-                        Common.alertDialog(
-                            context = requireActivity(),
-                            title = requireActivity().getString(R.string.block_contact),
-                            description = requireActivity().getString(R.string.you_will_be_able_to_receive_call),
-                            btnOkay = requireActivity().getString(R.string.block),
-                            onItemClick = {
-                                callLogModel.stringNumber?.let {
-                                    viewModel.blockNumber(it)
-                                }
-                            })
+                    Common.ensureDefaultDialer(requireActivity()) {
+                        if (callLogModel.isBlocked) {
+                            Common.alertDialog(
+                                context = requireActivity(),
+                                title = requireActivity().getString(R.string.unblock_contact),
+                                description = requireActivity().getString(R.string.you_will_be_able_to_receive_call),
+                                btnOkay = requireActivity().getString(R.string.unblock),
+                                onItemClick = {
+                                    callLogModel.stringNumber?.let {
+                                        viewModel.unblockNumber(it)
+                                    }
+                                })
+                        } else {
+                            Common.alertDialog(
+                                context = requireActivity(),
+                                title = requireActivity().getString(R.string.block_contact),
+                                description = requireActivity().getString(R.string.you_will_be_able_to_receive_call),
+                                btnOkay = requireActivity().getString(R.string.block),
+                                onItemClick = {
+                                    callLogModel.stringNumber?.let {
+                                        viewModel.blockNumber(it)
+                                    }
+                                })
+                        }
                     }
                 }
             }
@@ -215,7 +214,7 @@ class RecentsFragment : Fragment(), OnClickHandler {
             updateVisibility()
         }
 
-        viewModel.isLoadingFirstTime.observe(viewLifecycleOwner) { isLoading ->
+        viewModel.isLoadingFirstTime.observe(viewLifecycleOwner) { _ ->
             updateVisibility()
         }
 

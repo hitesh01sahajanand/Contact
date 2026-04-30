@@ -7,7 +7,8 @@ import android.telecom.Call.STATE_DIALING
 import android.telecom.Call.STATE_SELECT_PHONE_ACCOUNT
 import androidx.annotation.ChecksSdkIntAtLeast
 
-private val OUTGOING_CALL_STATES = arrayOf(STATE_CONNECTING, STATE_DIALING, STATE_SELECT_PHONE_ACCOUNT)
+private val OUTGOING_CALL_STATES =
+    arrayOf(STATE_CONNECTING, STATE_DIALING, STATE_SELECT_PHONE_ACCOUNT)
 
 @Suppress("DEPRECATION")
 fun Call?.getStateCompat(): Int {
@@ -46,6 +47,7 @@ fun isQPlus() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
 fun Call.hasCapability(capability: Int): Boolean = (details.callCapabilities and capability) != 0
 
-fun Call?.isConference(): Boolean = this?.details?.hasProperty(Call.Details.PROPERTY_CONFERENCE) == true
+fun Call?.isConference(): Boolean =
+    this?.details?.hasProperty(Call.Details.PROPERTY_CONFERENCE) == true
 
 fun Call?.isHD(): Boolean = this?.details?.hasProperty(Call.Details.PROPERTY_HIGH_DEF_AUDIO) == true

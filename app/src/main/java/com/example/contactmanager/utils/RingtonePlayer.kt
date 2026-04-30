@@ -41,6 +41,7 @@ class RingtonePlayer(private val context: Context) {
                     context, RingtoneManager.TYPE_RINGTONE
                 )
             } catch (e: SecurityException) {
+                Log.e("TAG", "startRingtone: ${e.message}")
                 null
             } ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
 
@@ -61,6 +62,7 @@ class RingtonePlayer(private val context: Context) {
                     mp.setDataSource(context, ringtoneUri)
                 }
             } catch (e: Exception) {
+                Log.e("TAG", "startRingtone: ${e.message}")
                 // Fallback: directly set data source with context
                 mp.setDataSource(context, ringtoneUri)
             }
@@ -81,7 +83,8 @@ class RingtonePlayer(private val context: Context) {
             val pattern = longArrayOf(0, 1000, 1000) // wait 0ms, vibrate 1s, wait 1s
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                val manager =
+                    context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
                 vibrator = manager.defaultVibrator
             } else {
                 @Suppress("DEPRECATION")

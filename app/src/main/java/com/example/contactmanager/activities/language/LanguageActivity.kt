@@ -26,8 +26,18 @@ class LanguageActivity : AppCompatActivity(), OnClickHandler {
     private lateinit var adapter: LanguageAdapter
 
     val languageList = mutableListOf(
-        LanguageModel("English", "United States", "en", true),
-        LanguageModel("Hindi", "India", "hi", false)
+        LanguageModel(R.drawable.ic_flag_english, "English", "English", "United States", "en"),
+        LanguageModel(R.drawable.ic_flag_india, "हिंदी", "Hindi", "India", "hi"),
+        LanguageModel(R.drawable.ic_flag_french, "Français", "French", "France", "fr"),
+        LanguageModel(R.drawable.ic_flag_japanese, "日本語", "Japanese", "Japan", "ja"),
+        LanguageModel(R.drawable.ic_flag_spanish, "Español", "Spanish", "Spain", "es"),
+        LanguageModel(R.drawable.ic_flag_korean, "한국어", "Korean", "South Korea", "ko"),
+        LanguageModel(R.drawable.ic_flag_italian, "Italiano", "Italian", "Italy", "it"),
+        LanguageModel(R.drawable.ic_flag_russian, "Русский", "Russian", "Russia", "ru"),
+        LanguageModel(R.drawable.ic_flag_german, "Deutsch", "German", "Germany", "de"),
+        LanguageModel(R.drawable.ic_flag_nepali, "नेपाली", "Nepali", "Nepal", "ne"),
+        LanguageModel(R.drawable.ic_flag_chinese, "中文", "Chinese", "China", "zh"),
+        LanguageModel(R.drawable.ic_flag_thai, "ไทย", "Thai", "Thailand", "th"),
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,6 +55,14 @@ class LanguageActivity : AppCompatActivity(), OnClickHandler {
     private fun initView() {
         binding.onClickHandler = this
 
+        val currentLangCode = LanguageManager.getCurrentLanguage()
+        languageList.forEach {
+            it.isSelected = it.code == currentLangCode
+        }
+        if (languageList.none { it.isSelected }) {
+            languageList.firstOrNull()?.isSelected = true
+        }
+
         adapter = LanguageAdapter(languageList)
         binding.rvLanguages.adapter = adapter
         binding.rvLanguages.layoutManager = LinearLayoutManager(this)
@@ -54,17 +72,15 @@ class LanguageActivity : AppCompatActivity(), OnClickHandler {
     override fun onClick(view: View) {
         when (view.id) {
             binding.cvDone.id -> {
-
                 val selectedLanguage = adapter.getSelectedLanguage()
 
-                when (selectedLanguage.code) {
-                    "en" -> LanguageManager.setEnglish()
-                    "hi" -> LanguageManager.setHindi()
-                }
+                LanguageManager.setLanguage(selectedLanguage.code)
 
                 SharedPreferenceManager.putBoolean(this, Constance.IS_LOG_IN, true)
 
-                startActivity(Intent(this, HomeActivity::class.java))
+                val intent = Intent(this, HomeActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
                 finishAffinity()
             }
         }

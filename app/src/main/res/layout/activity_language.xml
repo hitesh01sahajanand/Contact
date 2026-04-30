@@ -27,14 +27,14 @@
             android:paddingHorizontal="@dimen/_10sdp">
 
             <TextView
+                style="@style/TextStyle.Large"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_weight="1"
                 android:gravity="center_vertical"
-                android:text="@string/language"
-                android:textColor="@color/black"
-                android:textSize="@dimen/_16sdp" />
+                android:text="@string/select_language"
+                android:textColor="@color/black" />
 
 
             <androidx.cardview.widget.CardView
@@ -46,15 +46,17 @@
                 android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
                 android:text="@string/allow_permission"
                 android:textStyle="bold"
-                app:cardBackgroundColor="@color/blue_color"
-                app:cardCornerRadius="@dimen/_15sdp">
+                app:cardBackgroundColor="@color/main_color"
+                app:cardCornerRadius="@dimen/_25sdp">
 
                 <TextView
+                    style="@style/TextStyle.Medium"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:gravity="center"
-                    android:padding="@dimen/_10sdp"
+                    android:paddingHorizontal="@dimen/_25sdp"
+                    android:paddingVertical="@dimen/_10sdp"
                     android:text="@string/done"
                     android:textColor="@color/white"
                     android:textSize="@dimen/_12sdp"
@@ -67,7 +69,9 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_languages"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/_10sdp" />
 
     </LinearLayout>
 </layout>

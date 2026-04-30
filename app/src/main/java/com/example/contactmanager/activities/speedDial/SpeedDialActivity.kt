@@ -2,22 +2,21 @@ package com.example.contactmanager.activities.speedDial
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.lifecycleScope
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.speedDialSelect.SpeedDialSelectActivity
 import com.example.contactmanager.databinding.ActivitySpeedDialBinding
+import com.example.contactmanager.models.SpeedDialModel
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
-import androidx.activity.viewModels
-import androidx.lifecycle.lifecycleScope
-import com.example.contactmanager.models.SpeedDialModel
 import com.example.contactmanager.viewmodels.SpeedDialViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest

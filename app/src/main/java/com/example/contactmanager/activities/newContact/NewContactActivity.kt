@@ -1,27 +1,14 @@
 package com.example.contactmanager.activities.newContact
 
-import android.Manifest
-import android.app.AlertDialog
-import android.content.ContentProviderOperation
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.ContactsContract
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
-import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.PopupWindow
-import android.widget.Spinner
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.PickVisualMediaRequest
@@ -29,39 +16,28 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.contactmanager.R
 import com.example.contactmanager.adapters.AllAccountAdapter
 import com.example.contactmanager.databinding.ActivityNewContactBinding
 import com.example.contactmanager.databinding.DialogGoogleAccountsBinding
-import com.example.contactmanager.databinding.ItemEmailDesignBinding
-import com.example.contactmanager.databinding.ItemPhoneDesignBinding
 import com.example.contactmanager.models.AccountModel
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
-import com.example.contactmanager.utils.SendData
 import com.example.contactmanager.viewmodels.ContactDetailsViewModel
-import com.example.contactmanager.viewmodels.HomeViewModel
 import com.example.contactmanager.viewmodels.NewContactViewModel
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileOutputStream
-import kotlin.getValue
-import kotlin.text.get
-import androidx.core.net.toUri
-import androidx.core.view.isVisible
-import androidx.core.graphics.drawable.toDrawable
-import kotlin.math.abs
 import com.yalantis.ucrop.UCrop
+import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
+import kotlin.math.abs
 
 
 @AndroidEntryPoint
@@ -90,23 +66,13 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         initView()
     }
 
-
-    private val cameraLauncher = registerForActivityResult(
-        ActivityResultContracts.TakePicturePreview()
-    ) { bitmap ->
-        bitmap?.let {
-            val uri = bitmapToUri(it)
-            startCrop(uri)
-        }
-    }
-
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) {
             startCrop(uri)
         } else {
-            Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.no_image_selected), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -126,7 +92,8 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
     }
 
     private fun startCrop(uri: Uri) {
-        val destinationUri = Uri.fromFile(File(cacheDir, "cropped_${System.currentTimeMillis()}.jpg"))
+        val destinationUri =
+            Uri.fromFile(File(cacheDir, "cropped_${System.currentTimeMillis()}.jpg"))
         val uCrop = UCrop.of(uri, destinationUri)
         uCrop.withAspectRatio(1f, 1f)
         uCrop.withMaxResultSize(1000, 1000)
@@ -268,11 +235,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             }
 
             binding.cvAddPhoto.id -> {
-                if (hasPermissions()) {
-                    showImagePickerDialog()
-                } else {
-                    requestCameraGalleryPermission()
-                }
+                showImagePickerDialog()
             }
 
             binding.cvSave.id -> {
@@ -294,15 +257,15 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
 
                 when {
                     name.isEmpty() -> {
-                        binding.edtFirstName.error = "Enter first name"
+                        binding.edtFirstName.error = getString(R.string.enter_first_name)
                     }
 
                     number.isEmpty() -> {
-                        binding.edtPhone.error = "Enter number"
+                        binding.edtPhone.error = getString(R.string.enter_number)
                     }
 
                     email.isNotEmpty() && isValidEmail -> {
-                        binding.edtEmail.error = "Enter valid email"
+                        binding.edtEmail.error = getString(R.string.enter_valid_email)
                     }
 
                     else -> {
@@ -367,63 +330,10 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         popupWindow.showAsDropDown(anchorView)
     }
 
-    private val permissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-
-        val cameraGranted = permissions[Manifest.permission.CAMERA] == true
-
-        if (cameraGranted) {
-            showImagePickerDialog()
-        } else {
-            Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
-        }
-    }
-
     private fun showImagePickerDialog() {
-        /*val options = arrayOf("Camera", "Gallery")
-
-        AlertDialog.Builder(this)
-            .setTitle("Select Image")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> cameraLauncher.launch(null)
-                    1 -> pickImageLauncher.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                    )
-                }
-            }
-            .show()*/
         pickImageLauncher.launch(
             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
         )
-    }
-
-    private fun hasPermissions(): Boolean {
-
-        val cameraGranted = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.CAMERA
-        ) == PackageManager.PERMISSION_GRANTED
-        return cameraGranted
-    }
-
-    private fun requestCameraGalleryPermission() {
-        val permissions = mutableListOf(
-            Manifest.permission.CAMERA
-        )
-        permissionLauncher.launch(permissions.toTypedArray())
-    }
-
-    private fun bitmapToUri(bitmap: Bitmap): Uri {
-        val file = File(cacheDir, "photo_${System.currentTimeMillis()}.jpg")
-
-        val stream = FileOutputStream(file)
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-        stream.flush()
-        stream.close()
-
-        return Uri.fromFile(file)
     }
 
 }

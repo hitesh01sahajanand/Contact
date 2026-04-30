@@ -13,8 +13,7 @@ class LanguageAdapter(
     private var selectedPosition = list.indexOfFirst { it.isSelected }
 
     override fun onCreateViewHolder(
-        parent: ViewGroup,
-        p1: Int
+        parent: ViewGroup, p1: Int
     ): LanguageDataHolder {
         val binding =
             LanguageDesignBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -22,8 +21,7 @@ class LanguageAdapter(
     }
 
     override fun onBindViewHolder(
-        holder: LanguageDataHolder,
-        position: Int
+        holder: LanguageDataHolder, position: Int
     ) {
         val itemData = list[position]
         holder.setData(itemData, holder.bindingAdapterPosition)
@@ -41,8 +39,9 @@ class LanguageAdapter(
     inner class LanguageDataHolder(private val binding: LanguageDesignBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun setData(itemData: LanguageModel, bindingAdapterPosition: Int) {
-            binding.tvLanguageName.text = itemData.name
-            binding.tvLanguageSub.text = itemData.region
+            binding.ivFlag.setImageResource(itemData.flag)
+            binding.tvLanguageNameLocal.text = itemData.nameLocal
+            binding.tvLanguageEnglish.text = itemData.nameEnglish
 
             binding.rbLanguage.isChecked = itemData.isSelected
 

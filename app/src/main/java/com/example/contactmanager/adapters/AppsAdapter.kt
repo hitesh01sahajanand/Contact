@@ -9,14 +9,15 @@ import com.example.contactmanager.R
 import com.example.contactmanager.databinding.ItemVideoCallBinding
 
 
-class AppsAdapter(private val pm: PackageManager,private val onClick:(ResolveInfo) -> Unit) :
+class AppsAdapter(private val pm: PackageManager, private val onClick: (ResolveInfo) -> Unit) :
     RecyclerView.Adapter<AppsAdapter.AppsHolder>() {
     private var appsList = mutableListOf<ResolveInfo>()
 
     override fun onCreateViewHolder(
         parent: ViewGroup, p1: Int
     ): AppsHolder {
-        val binding = ItemVideoCallBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding =
+            ItemVideoCallBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return AppsHolder(binding)
     }
 
@@ -48,7 +49,7 @@ class AppsAdapter(private val pm: PackageManager,private val onClick:(ResolveInf
                 binding.tvTitle.text = itemData.loadLabel(pm)
             } catch (_: Exception) {
                 binding.ivImage.setImageResource(R.drawable.ic_message)
-                binding.tvTitle.text = "Message"
+                binding.tvTitle.text = binding.root.context.getString(R.string.message)
             }
         }
     }

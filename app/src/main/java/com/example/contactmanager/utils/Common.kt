@@ -6,6 +6,7 @@ import android.app.Activity
 import android.app.AlarmManager
 import android.app.Dialog
 import android.app.PendingIntent
+import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -18,9 +19,9 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.PowerManager
 import android.provider.ContactsContract
 import android.provider.Settings
+import android.telecom.PhoneAccountHandle
 import android.telecom.TelecomManager
 import android.telephony.PhoneNumberUtils
 import android.telephony.SubscriptionManager
@@ -28,32 +29,22 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
 import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.graphics.createBitmap
-import androidx.core.view.isVisible
-import com.example.contactmanager.models.ContactModel
-import com.example.contactmanager.R
-import com.example.contactmanager.databinding.PopUpMenuDesignBinding
-import com.example.contactmanager.databinding.SendMessageDialogDesignBinding
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import java.io.ByteArrayOutputStream
-import java.util.Calendar
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
-import androidx.core.content.FileProvider
-import java.io.File
-import java.io.FileOutputStream
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.example.contactmanager.R
 import com.example.contactmanager.adapters.AllAccountAdapter
 import com.example.contactmanager.adapters.AppsAdapter
 import com.example.contactmanager.adapters.QuickResponseAdapter
@@ -62,14 +53,25 @@ import com.example.contactmanager.databinding.AppThemeDialogBinding
 import com.example.contactmanager.databinding.ContactPopUpDesignBinding
 import com.example.contactmanager.databinding.DialerPopUpDesignBinding
 import com.example.contactmanager.databinding.EditQuickMessageBinding
-import com.example.contactmanager.databinding.RemindMeDialogDesignBinding
-import com.example.contactmanager.receivers.ReminderReceiver
-import com.example.contactmanager.databinding.VideoCallDialogBinding
 import com.example.contactmanager.databinding.ItemVideoCallBinding
+import com.example.contactmanager.databinding.PopUpMenuDesignBinding
+import com.example.contactmanager.databinding.RemindMeDialogDesignBinding
 import com.example.contactmanager.databinding.SaveTagDesignBinding
+import com.example.contactmanager.databinding.SendMessageDialogDesignBinding
+import com.example.contactmanager.databinding.VideoCallDialogBinding
 import com.example.contactmanager.models.AccountModel
-import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.models.QuickResponseModel
+import com.example.contactmanager.receivers.ReminderReceiver
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 object Common {
 
@@ -85,37 +87,6 @@ object Common {
     fun hideKeyboard(context: Context, view: View) {
         val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(view.windowToken, 0)
-    }
-
-    fun formatDate(timestamp: Long?): String {
-        if (timestamp == null) return ""
-
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        return sdf.format(Date(timestamp))
-    }
-
-    fun formatSmartDate(timestamp: Long): String {
-        val cal = Calendar.getInstance()
-        val today = Calendar.getInstance()
-        val yesterday = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
-
-        cal.timeInMillis = timestamp
-
-        return when {
-            cal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
-                    cal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR) -> {
-                SimpleDateFormat("hh:mm a", Locale.ENGLISH).format(Date(timestamp))
-            }
-
-            cal.get(Calendar.YEAR) == yesterday.get(Calendar.YEAR) &&
-                    cal.get(Calendar.DAY_OF_YEAR) == yesterday.get(Calendar.DAY_OF_YEAR) -> {
-                "Yesterday " + SimpleDateFormat("hh:mm a", Locale.ENGLISH).format(Date(timestamp))
-            }
-
-            else -> {
-                SimpleDateFormat("dd MMM yyyy hh:mm a", Locale.ENGLISH).format(Date(timestamp))
-            }
-        }
     }
 
     fun isNumberBlocked(context: Context, number: String?): Boolean {
@@ -143,21 +114,6 @@ object Common {
     fun formatTime(timestamp: Long): String {
         val sdf = SimpleDateFormat("hh:mm a", Locale.getDefault())
         return sdf.format(Date(timestamp))
-    }
-
-    fun formatDuration(seconds: Long): String {
-
-        if (seconds <= 0) return "0 sec"
-
-        val hrs = seconds / 3600
-        val mins = (seconds % 3600) / 60
-        val secs = seconds % 60
-
-        return when {
-            hrs > 0 -> "${hrs} hr ${mins} min"
-            mins > 0 -> "${mins} min ${secs} sec"
-            else -> "${secs} sec"
-        }
     }
 
     fun isNumberSaved(context: Context, number: String): Boolean {
@@ -320,27 +276,6 @@ object Common {
         return Color.HSVToColor(floatArrayOf(hue, saturation, value))
     }
 
-    fun getPhoneType(type: String): Int {
-        return when (type) {
-            "Mobile" -> ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE
-            "Work" -> ContactsContract.CommonDataKinds.Phone.TYPE_WORK
-            "Home" -> ContactsContract.CommonDataKinds.Phone.TYPE_HOME
-            "Main" -> ContactsContract.CommonDataKinds.Phone.TYPE_MAIN
-            "Work Fax" -> ContactsContract.CommonDataKinds.Phone.TYPE_FAX_WORK
-            "Home Fax" -> ContactsContract.CommonDataKinds.Phone.TYPE_FAX_HOME
-            "Pager" -> ContactsContract.CommonDataKinds.Phone.TYPE_PAGER
-            else -> ContactsContract.CommonDataKinds.Phone.TYPE_OTHER
-        }
-    }
-
-    fun getEmailType(type: String): Int {
-        return when (type) {
-            "Home" -> ContactsContract.CommonDataKinds.Email.TYPE_HOME
-            "Work" -> ContactsContract.CommonDataKinds.Email.TYPE_WORK
-            else -> ContactsContract.CommonDataKinds.Email.TYPE_OTHER
-        }
-    }
-
     fun getPhotoBytes(uri: Uri, context: Context): ByteArray? {
         return try {
             val inputStream = context.contentResolver.openInputStream(uri)
@@ -349,6 +284,7 @@ object Common {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
             stream.toByteArray()
         } catch (e: Exception) {
+            Log.e("TAG", "isAppInstalled: ${e.message}")
             null
         }
     }
@@ -388,6 +324,7 @@ object Common {
             val date = inputFormat.parse(dateString)
             outputFormat.format(date!!)
         } catch (e: Exception) {
+            Log.e("TAG", "isAppInstalled: ${e.message}")
             ""
         }
     }
@@ -406,18 +343,31 @@ object Common {
                 (s1.endsWith(s2) || s2.endsWith(s1))
     }
 
-    fun Activity.getAlertDialogBuilder() = MaterialAlertDialogBuilder(this)
+    fun getHandleForSubId(subId: Int, context: Context): PhoneAccountHandle? {
 
-    fun getHandleForSubId(subId: Int, context: Context): android.telecom.PhoneAccountHandle? {
-        val telecomManager =
-            context.getSystemService(Context.TELECOM_SERVICE) as android.telecom.TelecomManager
-        val phoneAccounts = telecomManager.callCapablePhoneAccounts
-        for (account in phoneAccounts) {
-            if (account.id.contains(subId.toString())) {
-                return account
-            }
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.READ_PHONE_STATE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return null // or handle properly
         }
-        return null
+
+        val telecomManager =
+            context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+
+        return try {
+            val phoneAccounts = telecomManager.callCapablePhoneAccounts
+            for (account in phoneAccounts) {
+                if (account.id.contains(subId.toString())) {
+                    return account
+                }
+            }
+            null
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+            null
+        }
     }
 
     fun shareContact(context: Context, phoneNumber: String?) {
@@ -586,10 +536,6 @@ object Common {
             View.MeasureSpec.UNSPECIFIED,
             View.MeasureSpec.UNSPECIFIED
         )
-
-        val popupWidth = popUpBinding.root.measuredWidth
-        val margin = (2 * context.resources.displayMetrics.density).toInt()
-        val xOffset = anchorView.width - popupWidth - margin
 
         popupWindow.showAsDropDown(anchorView, 0, 20)
 
@@ -912,9 +858,6 @@ object Common {
         )
     }
 
-    val Context.powerManager: PowerManager
-        get() = getSystemService(Context.POWER_SERVICE) as PowerManager
-
     fun cleanNumber(number: String?): String {
         if (number == null) return ""
         val sb = StringBuilder()
@@ -931,26 +874,89 @@ object Common {
                 android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
-    fun sendSMSMessage(context: Context, number: String?, msg: String) {
-        if (number.isNullOrEmpty()) return
-
-        try {
-            val intent = Intent(Intent.ACTION_SENDTO).apply {
-                data = "smsto:$number".toUri()
-                putExtra("sms_body", msg)
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
     fun actionCall(number: String?, context: Context) {
         if (number.isNullOrEmpty()) return
 
         if (NewCallManager.isNumberActive(number)) {
-            Toast.makeText(context, "Number already in a call", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                context.getString(R.string.number_already_in_a_call),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        // Check if the app is the default dialer
+        if (!PermissionManager.isDefaultDialer(context)) {
+            if (context is Activity) {
+                MaterialAlertDialogBuilder(context)
+                    .setTitle(context.getString(R.string.set_as_default_dialer))
+                    .setMessage(context.getString(R.string.to_make_calls_and_manage_sim))
+                    .setPositiveButton(context.getString(R.string.set_as_default)) { _, _ ->
+                        try {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                val roleManager =
+                                    context.getSystemService(Context.ROLE_SERVICE) as RoleManager
+                                val intent =
+                                    roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
+                                context.startActivityForResult(intent, 123)
+                            } else {
+                                val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER)
+                                intent.putExtra(
+                                    TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME,
+                                    context.packageName
+                                )
+                                context.startActivity(intent)
+                            }
+                        } catch (e: Exception) {
+                            Log.e("TAG", "actionCall: ${e.message}")
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.unable_to_open_default_app_settings),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                    .setNegativeButton(context.getString(R.string.call_anyway)) { _, _ ->
+                        try {
+                            val intent = Intent(Intent.ACTION_CALL, "tel:$number".toUri())
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Log.e("TAG", "actionCall: ${e.message}")
+                            val intent = Intent(Intent.ACTION_DIAL, "tel:$number".toUri())
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            context.startActivity(intent)
+                        }
+                    }
+                    .setNeutralButton("Cancel", null)
+                    .show()
+            } else {
+                try {
+                    val intent = Intent(Intent.ACTION_CALL, "tel:$number".toUri())
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("TAG", "actionCall: ${e.message}")
+                    val intent = Intent(Intent.ACTION_DIAL, "tel:$number".toUri())
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    context.startActivity(intent)
+                }
+            }
+            return
+        }
+
+        if (ActivityCompat.checkSelfPermission(
+                context, Manifest.permission.CALL_PHONE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            try {
+                val intent = Intent(Intent.ACTION_DIAL, "tel:$number".toUri())
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
             return
         }
 
@@ -962,38 +968,34 @@ object Common {
             putBoolean("android.telecom.extra.START_CALL_WITH_SPEAKERPHONE", false)
         }
 
-        if (ActivityCompat.checkSelfPermission(
-                context, Manifest.permission.CALL_PHONE
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
+        val subscriptionManager =
+            context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+        val activeSimList = subscriptionManager?.activeSubscriptionInfoList
+        val simPref = SharedPreferenceManager.getInt(context, Constance.SIM_PREFERENCE, -1)
 
-            val subscriptionManager =
-                context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
-            val activeSimList = subscriptionManager?.activeSubscriptionInfoList
-            val simPref = SharedPreferenceManager.getInt(context, Constance.SIM_PREFERENCE, -1)
-
-            if (!activeSimList.isNullOrEmpty() && activeSimList.size > 1) {
-                if (simPref != -1) {
-                    val preferredSim = activeSimList.find { it.subscriptionId == simPref }
-                    if (preferredSim != null) {
-                        val callBundlePref = Bundle().apply {
-                            putParcelable(
-                                TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
-                                getHandleForSubId(preferredSim.subscriptionId, context)
-                            )
-                        }
-                        telecomManager.placeCall(callUri, callBundlePref)
-                        return
+        if (!activeSimList.isNullOrEmpty() && activeSimList.size > 1) {
+            if (simPref != -1) {
+                val preferredSim = activeSimList.find { it.subscriptionId == simPref }
+                if (preferredSim != null) {
+                    val callBundlePref = Bundle().apply {
+                        putParcelable(
+                            TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
+                            getHandleForSubId(preferredSim.subscriptionId, context)
+                        )
                     }
+                    telecomManager.placeCall(callUri, callBundlePref)
+                    return
                 }
+            }
 
-                val simNames = Array(activeSimList.size) { i ->
-                    "SIM ${i + 1} (${activeSimList[i].carrierName})"
-                }
+            val simNames = Array(activeSimList.size) { i ->
+                "SIM ${i + 1} (${activeSimList[i].carrierName})"
+            }
 
-                val builder = MaterialAlertDialogBuilder(context)
+            val builder = MaterialAlertDialogBuilder(context)
 
-                builder.setTitle("Select SIM").setItems(simNames) { _, which ->
+            builder.setTitle(context.getString(R.string.select_sim))
+                .setItems(simNames) { _, which ->
 
                     val selectedSim = activeSimList[which]
 
@@ -1010,27 +1012,71 @@ object Common {
                     telecomManager.placeCall(callUri2, callBundle2)
                 }
 
-                val dialog = builder.create()
-                dialog.show()
+            val dialog = builder.create()
+            dialog.show()
 
-                dialog.getButton(Dialog.BUTTON_POSITIVE)?.setTextColor(Color.RED)
+            dialog.getButton(Dialog.BUTTON_POSITIVE)?.setTextColor(Color.RED)
 
-            } else {
-                // Single SIM or SIM preference not set/matched
-                if (!activeSimList.isNullOrEmpty() && simPref != -1) {
-                    val preferredSim = activeSimList.find { it.subscriptionId == simPref }
-                    if (preferredSim != null) {
-                        val callBundlePref = Bundle().apply {
-                            putParcelable(
-                                TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
-                                getHandleForSubId(preferredSim.subscriptionId, context)
-                            )
-                        }
-                        telecomManager.placeCall(callUri, callBundlePref)
-                        return
+        } else {
+            // Single SIM or SIM preference not set/matched
+            if (!activeSimList.isNullOrEmpty() && simPref != -1) {
+                val preferredSim = activeSimList.find { it.subscriptionId == simPref }
+                if (preferredSim != null) {
+                    val callBundlePref = Bundle().apply {
+                        putParcelable(
+                            TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
+                            getHandleForSubId(preferredSim.subscriptionId, context)
+                        )
                     }
+                    telecomManager.placeCall(callUri, callBundlePref)
+                    return
                 }
-                telecomManager.placeCall(callUri, callBundle)
+            }
+            telecomManager.placeCall(callUri, callBundle)
+        }
+    }
+
+    fun ensureDefaultDialer(context: Context, onProceed: () -> Unit) {
+        if (PermissionManager.isDefaultDialer(context)) {
+            onProceed()
+        } else {
+            if (context is Activity) {
+                MaterialAlertDialogBuilder(context)
+                    .setTitle(context.getString(R.string.set_as_default_dialer))
+                    .setMessage(context.getString(R.string.to_manage_blocked_numbers))
+                    .setPositiveButton(context.getString(R.string.set_as_default)) { _, _ ->
+                        try {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                val roleManager =
+                                    context.getSystemService(Context.ROLE_SERVICE) as RoleManager
+                                val intent =
+                                    roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
+                                context.startActivityForResult(intent, 123)
+                            } else {
+                                val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER)
+                                intent.putExtra(
+                                    TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME,
+                                    context.packageName
+                                )
+                                context.startActivity(intent)
+                            }
+                        } catch (e: Exception) {
+                            Log.e("TAG", "ensureDefaultDialer: ${e.message}")
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.unable_to_open_default_app_settings),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                    .setNeutralButton(context.getString(R.string.cancel), null)
+                    .show()
+            } else {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.please_set_this_app_as_default_in_settings),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -1053,8 +1099,10 @@ object Common {
 
             true
         } catch (e: PackageManager.NameNotFoundException) {
+            Log.e("TAG", "isAppInstalled: ${e.message}")
             false
         } catch (e: Exception) {
+            Log.e("TAG", "isAppInstalled: ${e.message}")
             false
         }
     }
@@ -1084,7 +1132,7 @@ object Common {
                     itemBinding.ivImage.setImageResource(R.drawable.ic_video_call)
                     itemBinding.tvTitle.text = when (pkg) {
                         Constance.WHATSAPP -> "Install WhatsApp"
-                        Constance.WHATSAPP_BUSSINESS -> "Install WA Business"
+                        Constance.WHATSAPP_BUSINESS -> "Install WA Business"
                         Constance.DUO -> "Install Meet"
                         else -> "Install App"
                     }
@@ -1122,7 +1170,7 @@ object Common {
                             }
                         }
 
-                        Constance.WHATSAPP_BUSSINESS -> {
+                        Constance.WHATSAPP_BUSINESS -> {
                             val wabId = getVideoCallID(
                                 activity,
                                 number,
@@ -1138,7 +1186,7 @@ object Common {
                             } ?: run {
                                 Toast.makeText(
                                     activity,
-                                    "WhatsApp Business video call not available for this contact",
+                                    activity.getString(R.string.whatsapp_business_video_call_not_available),
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
@@ -1146,12 +1194,8 @@ object Common {
 
                         else -> {
                             // Default fallback is to try Duo if it's the only other option
-                            if (pkg == Constance.DUO) {
-                                startDuoCall(activity, number)
-                            } else {
-                                activity.packageManager.getLaunchIntentForPackage(pkg)?.let {
-                                    activity.startActivity(it)
-                                }
+                            activity.packageManager.getLaunchIntentForPackage(pkg)?.let {
+                                activity.startActivity(it)
                             }
                         }
                     }
@@ -1164,6 +1208,7 @@ object Common {
                             )
                         )
                     } catch (e: Exception) {
+                        Log.e("TAG", "isAppInstalled: ${e.message}")
                         activity.startActivity(
                             Intent(
                                 Intent.ACTION_VIEW,
@@ -1189,7 +1234,11 @@ object Common {
             }
             activity.startActivity(intent)
         } catch (e: Exception) {
-            Toast.makeText(activity, "Meet not available", Toast.LENGTH_SHORT).show()
+            Log.e("TAG", "isAppInstalled: ${e.message}")
+            Toast.makeText(
+                activity,
+                activity.getString(R.string.meet_not_available), Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -1203,7 +1252,11 @@ object Common {
             }
             activity.startActivity(intent)
         } catch (e: Exception) {
-            Toast.makeText(activity, "Failed to start video call", Toast.LENGTH_SHORT).show()
+            Log.e("TAG", "isAppInstalled: ${e.message}")
+            Toast.makeText(
+                activity,
+                activity.getString(R.string.failed_to_start_video_call), Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -1232,6 +1285,7 @@ object Common {
             }
             null
         } catch (e: Exception) {
+            Log.e("TAG", "isAppInstalled: ${e.message}")
             null
         }
     }
@@ -1264,8 +1318,8 @@ object Common {
         val dialog = BottomSheetDialog(activity, R.style.TransparentDialog)
         val view = VideoCallDialogBinding.inflate(activity.layoutInflater, null, false)
         dialog.setContentView(view.root)
-        view.tvTitleDialog.text = "Send Message"
-        view.tvSubtitle.text = "Choose your preferred messaging app"
+        view.tvTitleDialog.text = activity.getString(R.string.send_message)
+        view.tvSubtitle.text = activity.getString(R.string.choose_your_preferred_messaging_app)
         view.loutVideoCall.isVisible = false
         view.rvApps.isVisible = true
 
@@ -1273,7 +1327,7 @@ object Common {
             val pkg = app.activityInfo.packageName
 
             dialog.dismiss()
-            val isWhatsApp = pkg == Constance.WHATSAPP || pkg == Constance.WHATSAPP_BUSSINESS
+            val isWhatsApp = pkg == Constance.WHATSAPP || pkg == Constance.WHATSAPP_BUSINESS
             if (isWhatsApp) {
                 val mime =
                     if (pkg == Constance.WHATSAPP) "vnd.android.cursor.item/vnd.com.whatsapp.profile"
@@ -1371,7 +1425,11 @@ object Common {
             }
             activity.startActivity(intent)
         } catch (e: Exception) {
-            Toast.makeText(activity, "Failed to send message", Toast.LENGTH_SHORT).show()
+            Log.e("TAG", "isAppInstalled: ${e.message}")
+            Toast.makeText(
+                activity,
+                activity.getString(R.string.failed_to_send_message), Toast.LENGTH_SHORT
+            ).show()
         }
     }
 

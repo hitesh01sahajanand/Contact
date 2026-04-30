@@ -29,7 +29,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/_10sdp"
-            android:text="Set Tag"
+            android:text="@string/set_tag"
             android:textColor="@color/black_color"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/view_line" />
@@ -39,7 +39,7 @@
             style="@style/TextStyle.Small"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="set your favorite tag to contact"
+            android:text="@string/set_your_favorite_tag_to_contact"
             android:textColor="@color/grey_color"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tv_title_dialog" />
@@ -61,7 +61,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@null"
-                android:hint="enter tag"
+                android:hint="@string/enter_tag"
                 android:imeOptions="actionDone"
                 android:padding="@dimen/_10sdp"
                 android:singleLine="true"

@@ -1,6 +1,7 @@
 package com.example.contactmanager.activities.home
 
 import android.Manifest
+import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
@@ -35,6 +36,7 @@ import com.example.contactmanager.fragments.recents.RecentsFragment
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.core.net.toUri
 
 @AndroidEntryPoint
 class HomeActivity : AppCompatActivity(), OnClickHandler {
@@ -49,6 +51,7 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
     private var selectedTab: View? = null
     private var isViewInitialized = false
     private var isFromPermissionRequest = false
+    private var permissionDialog: Dialog? = null
 
     private val contactPermissions = arrayOf(
         Manifest.permission.READ_CONTACTS,
@@ -73,12 +76,15 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
             if (isPermanentlyDenied) {
                 Toast.makeText(
                     this,
-                    "Permissions are required. Please enable them in settings.",
+                    getString(R.string.permissions_are_required),
                     Toast.LENGTH_LONG
                 ).show()
                 openAppSettings()
+                isFromPermissionRequest = false
             } else {
-                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.permission_denied), Toast.LENGTH_SHORT)
+                    .show()
+                checkPermissions(showCustomDialog = true)
             }
         }
     }
@@ -94,7 +100,7 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
         ActivityResultContracts.StartActivityForResult()
     ) {
         isFromPermissionRequest = true
-        checkPermissions(showCustomDialog = false)
+        checkPermissions(showCustomDialog = true)
     }
 
 
@@ -128,7 +134,13 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
         isFromPermissionRequest = false
     }
 
+    override fun onStop() {
+        super.onStop()
+        permissionDialog?.dismiss()
+    }
+
     private fun checkPermissions(showCustomDialog: Boolean) {
+        permissionDialog?.dismiss()
         val missingPermissions = contactPermissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
@@ -136,30 +148,35 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
         if (missingPermissions.isNotEmpty()) {
             binding.llContainer.visibility = View.INVISIBLE
             if (showCustomDialog) {
-                PermissionManager.openPermissionDialog(this) {
+                permissionDialog = PermissionManager.openPermissionDialog(this) {
                     isFromPermissionRequest = true
                     requestPermissionLauncher.launch(contactPermissions)
                 }
             } else {
-                isFromPermissionRequest = true
-                requestPermissionLauncher.launch(contactPermissions)
+                // If we are here, we are likely in a sequence, but standard permissions are still missing.
+                // To be safe, we show the dialog instead of auto-launching to avoid system dialog loops.
+                permissionDialog = PermissionManager.openPermissionDialog(this) {
+                    isFromPermissionRequest = true
+                    requestPermissionLauncher.launch(contactPermissions)
+                }
             }
         } else if (!PermissionManager.hasOverlayPermission(this)) {
             binding.llContainer.visibility = View.INVISIBLE
             if (showCustomDialog) {
-                PermissionManager.openPermissionDialog(this) {
+                permissionDialog = PermissionManager.openPermissionDialog(this) {
                     isFromPermissionRequest = true
                     val intent = Intent(
                         Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:$packageName")
+                        "package:$packageName".toUri()
                     )
                     overlayPermissionLauncher.launch(intent)
                 }
             } else {
+                // Just allowed Contacts/Call Log: go directly to Overlay settings for a seamless experience
                 isFromPermissionRequest = true
                 val intent = Intent(
                     Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:$packageName")
+                    "package:$packageName".toUri()
                 )
                 overlayPermissionLauncher.launch(intent)
             }
@@ -309,7 +326,7 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
                     doubleBackToExitPressedOnce = true
                     Toast.makeText(
                         this@HomeActivity,
-                        "Press back again to exit",
+                        getString(R.string.press_back_again_to_exit),
                         Toast.LENGTH_SHORT
                     ).show()
 

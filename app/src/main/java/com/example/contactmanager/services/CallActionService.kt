@@ -4,7 +4,6 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.telecom.VideoProfile
-import com.example.contactmanager.ApplicationClass
 import com.example.contactmanager.utils.NewCallManager
 
 class CallActionService : Service() {

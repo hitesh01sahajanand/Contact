@@ -30,7 +30,8 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 "display_name COLLATE NOCASE ASC"
             )?.use { cursor ->
                 val idIndex = cursor.getColumnIndex(ContactsContract.Contacts._ID)
-                val nameIndex = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)
+                val nameIndex =
+                    cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)
                 val photoIndex = cursor.getColumnIndex(ContactsContract.Contacts.PHOTO_URI)
                 val starredIndex = cursor.getColumnIndex(ContactsContract.Contacts.STARRED)
 
@@ -63,7 +64,8 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 null
             )?.use { cursor ->
                 val idIndex = cursor.getColumnIndex(ContactsContract.Data.CONTACT_ID)
-                val numberIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                val numberIndex =
+                    cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
 
                 val contactsWithMultipleNumbers = mutableListOf<ContactModel>()
                 while (cursor.moveToNext()) {
@@ -174,7 +176,8 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
         var lastHeader = ""
         for (contact in sortedList) {
             val firstChar = contact.displayName?.firstOrNull()?.uppercaseChar()
-            val header = if (firstChar != null && firstChar.isLetter()) firstChar.toString() else "#"
+            val header =
+                if (firstChar != null && firstChar.isLetter()) firstChar.toString() else "#"
             if (header != lastHeader) {
                 result.add(ContactListItem.Header(header))
                 lastHeader = header
@@ -221,7 +224,8 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 "display_name COLLATE NOCASE ASC"
             )?.use { cursor ->
                 val idIndex = cursor.getColumnIndex(ContactsContract.Contacts._ID)
-                val nameIndex = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)
+                val nameIndex =
+                    cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)
                 val photoIndex = cursor.getColumnIndex(ContactsContract.Contacts.PHOTO_URI)
                 val starredIndex = cursor.getColumnIndex(ContactsContract.Contacts.STARRED)
 
@@ -257,7 +261,8 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 null
             )?.use { cursor ->
                 val idIndex = cursor.getColumnIndex(ContactsContract.Data.CONTACT_ID)
-                val numberIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                val numberIndex =
+                    cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
                 val rawIdIndex = cursor.getColumnIndex(ContactsContract.Data.RAW_CONTACT_ID)
 
                 val contactsWithMultipleNumbers = mutableListOf<ContactModel>()
@@ -265,7 +270,8 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                     if (cursor.isNull(idIndex)) continue
                     val contactId = cursor.getLong(idIndex)
                     val phoneNumber = cursor.getString(numberIndex) ?: continue
-                    val rawContactId = if (!cursor.isNull(rawIdIndex)) cursor.getLong(rawIdIndex) else null
+                    val rawContactId =
+                        if (!cursor.isNull(rawIdIndex)) cursor.getLong(rawIdIndex) else null
 
                     if (rawContactId != null && rawContactId in validRawContactIds) {
                         contactMap[contactId.toString()]?.let { contact ->
@@ -372,7 +378,8 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
         var lastHeader = ""
         for (contact in sortedList) {
             val firstChar = contact.displayName?.firstOrNull()?.uppercaseChar()
-            val header = if (firstChar != null && firstChar.isLetter()) firstChar.toString() else "#"
+            val header =
+                if (firstChar != null && firstChar.isLetter()) firstChar.toString() else "#"
             if (header != lastHeader) {
                 result.add(ContactListItem.Header(header))
                 lastHeader = header
@@ -412,8 +419,12 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                     val rawId = if (!cursor.isNull(3)) cursor.getLong(3) else null
 
                     val isGoogle = type == "com.google"
-                    val isWhatsApp = type == "com.whatsapp" || type.contains("whatsapp", ignoreCase = true)
-                    val isTelegram = type == "org.telegram.messenger" || type.contains("telegram", ignoreCase = true)
+                    val isWhatsApp =
+                        type == "com.whatsapp" || type.contains("whatsapp", ignoreCase = true)
+                    val isTelegram = type == "org.telegram.messenger" || type.contains(
+                        "telegram",
+                        ignoreCase = true
+                    )
                     val isEmail = name.contains("@") && type.contains("exchange", ignoreCase = true)
 
                     if (!isGoogle && !isWhatsApp && !isTelegram && !isEmail) {
@@ -437,7 +448,8 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 "display_name COLLATE NOCASE ASC"
             )?.use { cursor ->
                 val idIndex = cursor.getColumnIndex(ContactsContract.Contacts._ID)
-                val nameIndex = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)
+                val nameIndex =
+                    cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)
                 val photoIndex = cursor.getColumnIndex(ContactsContract.Contacts.PHOTO_URI)
                 val starredIndex = cursor.getColumnIndex(ContactsContract.Contacts.STARRED)
 
@@ -473,7 +485,8 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 null
             )?.use { cursor ->
                 val idIndex = cursor.getColumnIndex(ContactsContract.Data.CONTACT_ID)
-                val numberIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                val numberIndex =
+                    cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
                 val rawIdIndex = cursor.getColumnIndex(ContactsContract.Data.RAW_CONTACT_ID)
 
                 val contactsWithMultipleNumbers = mutableListOf<ContactModel>()
@@ -481,7 +494,8 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                     if (cursor.isNull(idIndex)) continue
                     val contactId = cursor.getLong(idIndex)
                     val phoneNumber = cursor.getString(numberIndex) ?: continue
-                    val rawContactId = if (!cursor.isNull(rawIdIndex)) cursor.getLong(rawIdIndex) else null
+                    val rawContactId =
+                        if (!cursor.isNull(rawIdIndex)) cursor.getLong(rawIdIndex) else null
 
                     if (rawContactId != null && rawContactId in validRawContactIds) {
                         contactMap[contactId.toString()]?.let { contact ->
@@ -588,7 +602,8 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
         var lastHeader = ""
         for (contact in sortedList) {
             val firstChar = contact.displayName?.firstOrNull()?.uppercaseChar()
-            val header = if (firstChar != null && firstChar.isLetter()) firstChar.toString() else "#"
+            val header =
+                if (firstChar != null && firstChar.isLetter()) firstChar.toString() else "#"
             if (header != lastHeader) {
                 result.add(ContactListItem.Header(header))
                 lastHeader = header
@@ -596,107 +611,6 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
             result.add(ContactListItem.Contact(contact))
         }
         return result
-    }
-
-    fun loadAllContacts(): List<ContactModel> {
-        val contactMap = LinkedHashMap<String, ContactModel>()
-
-        try {
-            val resolver = context.contentResolver
-
-            // 🔹 1. Get ALL Contacts
-            resolver.query(
-                ContactsContract.Contacts.CONTENT_URI,
-                arrayOf(
-                    ContactsContract.Contacts._ID,
-                    ContactsContract.Contacts.DISPLAY_NAME_PRIMARY,
-                    ContactsContract.Contacts.PHOTO_URI,
-                    ContactsContract.Contacts.STARRED
-                ),
-                null,
-                null,
-                "display_name COLLATE NOCASE ASC"
-            )?.use { cursor ->
-                val idIndex = cursor.getColumnIndex(ContactsContract.Contacts._ID)
-                val nameIndex = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)
-                val photoIndex = cursor.getColumnIndex(ContactsContract.Contacts.PHOTO_URI)
-                val starredIndex = cursor.getColumnIndex(ContactsContract.Contacts.STARRED)
-
-                while (cursor.moveToNext()) {
-                    val contactId = cursor.getLong(idIndex).toString()
-                    val displayName = cursor.getString(nameIndex) ?: ""
-                    val photoUri = cursor.getString(photoIndex)
-                    val starred = cursor.getInt(starredIndex)
-
-                    val contact = ContactModel().apply {
-                        this.contactId = contactId
-                        this.displayName = displayName
-                        this.userThumbnail = photoUri
-                        this.isFavourite = starred
-                        this.firstName = displayName
-                    }
-                    contactMap[contactId] = contact
-                }
-            }
-
-            // 🔹 1.5 Get Phone Numbers
-            resolver.query(
-                ContactsContract.Data.CONTENT_URI,
-                arrayOf(
-                    ContactsContract.Data.CONTACT_ID,
-                    ContactsContract.CommonDataKinds.Phone.NUMBER
-                ),
-                "${ContactsContract.Data.MIMETYPE} = ?",
-                arrayOf(ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE),
-                null
-            )?.use { cursor ->
-                val idIndex = cursor.getColumnIndex(ContactsContract.Data.CONTACT_ID)
-                val numberIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-
-                val contactsWithMultipleNumbers = mutableListOf<ContactModel>()
-                while (cursor.moveToNext()) {
-                    if (cursor.isNull(idIndex)) continue
-                    val contactId = cursor.getLong(idIndex).toString()
-                    val phoneNumber = cursor.getString(numberIndex) ?: continue
-
-                    contactMap[contactId]?.let { contact ->
-                        if (contact.number.isNullOrEmpty()) {
-                            contact.number = phoneNumber
-                        } else if (contact.number != phoneNumber) {
-                            val additionalContact = contact.copy().apply {
-                                this.number = phoneNumber
-                            }
-                            contactsWithMultipleNumbers.add(additionalContact)
-                        }
-                    }
-                }
-                contactsWithMultipleNumbers.forEach {
-                    val uniqueKey = "${it.contactId}_${it.number}"
-                    contactMap[uniqueKey] = it
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-        val list = ArrayList(contactMap.values)
-        list.sortWith { c1, c2 ->
-            val name1 = c1.displayName?.trim() ?: ""
-            val name2 = c2.displayName?.trim() ?: ""
-            if (name1.isEmpty() && name2.isEmpty()) return@sortWith 0
-            if (name1.isEmpty()) return@sortWith 1
-            if (name2.isEmpty()) return@sortWith -1
-            val char1 = name1.uppercase()[0]
-            val char2 = name2.uppercase()[0]
-            val isLetter1 = char1 in 'A'..'Z'
-            val isLetter2 = char2 in 'A'..'Z'
-            when {
-                isLetter1 && !isLetter2 -> -1
-                !isLetter1 && isLetter2 -> 1
-                else -> name1.compareTo(name2, ignoreCase = true)
-            }
-        }
-        return list
     }
 
 
@@ -744,11 +658,12 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 val contactIdIndex = it.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID)
                 val accountNameIndex = it.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_NAME)
                 val accountTypeIndex = it.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE)
-                val displayNameIndex = it.getColumnIndex(ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY)
+                val displayNameIndex =
+                    it.getColumnIndex(ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY)
 
                 while (it.moveToNext()) {
                     val contactId = it.getString(contactIdIndex) ?: ""
-                    
+
                     // ONLY count if the contact_id exists in the visible Contacts table
                     if (contactId.isEmpty() || !visibleContactIds.contains(contactId)) continue
 
@@ -757,7 +672,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                     val displayName = it.getString(displayNameIndex) ?: ""
 
                     val identifier = if (isMerge) {
-                        if (displayName.isEmpty()) contactId else displayName
+                        displayName.ifEmpty { contactId }
                     } else {
                         contactId
                     }
@@ -765,9 +680,19 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                     allContacts.add(identifier)
 
                     val isGoogle = accountType == "com.google"
-                    val isWhatsApp = accountType == "com.whatsapp" || accountType.contains("whatsapp", ignoreCase = true)
-                    val isTelegram = accountType == "org.telegram.messenger" || accountType.contains("telegram", ignoreCase = true)
-                    val isEmail = accountName.contains("@") && accountType.contains("exchange", ignoreCase = true)
+                    val isWhatsApp = accountType == "com.whatsapp" || accountType.contains(
+                        "whatsapp",
+                        ignoreCase = true
+                    )
+                    val isTelegram =
+                        accountType == "org.telegram.messenger" || accountType.contains(
+                            "telegram",
+                            ignoreCase = true
+                        )
+                    val isEmail = accountName.contains("@") && accountType.contains(
+                        "exchange",
+                        ignoreCase = true
+                    )
 
                     if (!isGoogle && !isWhatsApp && !isTelegram && !isEmail) {
                         deviceContacts.add(identifier)

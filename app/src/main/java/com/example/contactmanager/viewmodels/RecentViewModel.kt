@@ -30,6 +30,7 @@ import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
 import androidx.core.graphics.toColorInt
+import com.example.contactmanager.R
 import com.example.contactmanager.utils.Constance
 import kotlinx.coroutines.flow.first
 
@@ -231,8 +232,8 @@ class RecentViewModel @Inject constructor(
         calendar.add(Calendar.DAY_OF_YEAR, -1)
         val yesterdayStart = calendar.timeInMillis
 
-        val todayStr = "Today"
-        val yesterdayStr = "Yesterday"
+        val todayStr = context.getString(R.string.today)
+        val yesterdayStr = context.getString(R.string.yesterday)
 
         val cal1 = Calendar.getInstance()
         val cal2 = Calendar.getInstance()

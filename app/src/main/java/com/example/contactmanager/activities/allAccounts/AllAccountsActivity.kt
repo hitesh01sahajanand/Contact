@@ -1,30 +1,23 @@
 package com.example.contactmanager.activities.allAccounts
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bumptech.glide.Glide
 import com.example.contactmanager.R
 import com.example.contactmanager.adapters.AllAccountAdapter
 import com.example.contactmanager.databinding.ActivityAllAccountsBinding
 import com.example.contactmanager.models.AccountModel
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.OnClickHandler
-import com.example.contactmanager.viewmodels.ContactDetailsViewModel
-import com.example.contactmanager.viewmodels.HomeViewModel
 import com.example.contactmanager.viewmodels.NewContactViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlin.getValue
 
 @AndroidEntryPoint
 class AllAccountsActivity : AppCompatActivity(), OnClickHandler {

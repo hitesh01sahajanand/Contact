@@ -23,39 +23,6 @@ import com.example.contactmanager.databinding.PermissionDialogDesignBinding
 
 object PermissionManager {
 
-    fun hasRequiredPermissions(context: Context): Boolean {
-
-        val callPermission = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.CALL_PHONE
-        ) == PackageManager.PERMISSION_GRANTED
-
-        val notificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ContextCompat.checkSelfPermission(
-                context, Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-
-        } else {
-            true
-        }
-
-        val readCallLog = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.READ_CALL_LOG
-        ) == PackageManager.PERMISSION_GRANTED
-
-        val readContacts = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.READ_CONTACTS
-        ) == PackageManager.PERMISSION_GRANTED
-
-
-        val writeContacts = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.WRITE_CONTACTS
-        ) == PackageManager.PERMISSION_GRANTED
-
-
-
-        return callPermission && notificationPermission && readCallLog && readContacts && writeContacts
-    }
-
     fun isDefaultDialer(context: Context): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val roleManager = context.getSystemService(RoleManager::class.java)
@@ -98,7 +65,7 @@ object PermissionManager {
         }
     }
 
-    fun openPermissionDialog(context: Context, onClick: () -> Unit) {
+    fun openPermissionDialog(context: Context, onClick: () -> Unit): Dialog {
         val dialog = Dialog(context)
         val alertBinding = PermissionDialogDesignBinding.inflate(LayoutInflater.from(context))
 
@@ -108,7 +75,7 @@ object PermissionManager {
         dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         dialog.setCancelable(false)
 
-        val margin = (30 * context.resources.displayMetrics.density).toInt()
+        val margin = (20 * context.resources.displayMetrics.density).toInt()
 
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
@@ -139,21 +106,22 @@ object PermissionManager {
         alertBinding.llDisplayOverOtherApps.visibility =
             if (hasOverlayPermission) android.view.View.GONE else android.view.View.VISIBLE
 
-        alertBinding.tvContinue.setOnClickListener {
+        alertBinding.cvContinue.setOnClickListener {
             dialog.dismiss()
             onClick()
         }
 
         dialog.show()
+        return dialog
     }
 
     fun hasOverlayPermission(context: Context): Boolean {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
 
         if (Settings.canDrawOverlays(context)) return true
 
         return try {
-            val appOpsManager = context.getSystemService(Context.APP_OPS_SERVICE) as android.app.AppOpsManager
+            val appOpsManager =
+                context.getSystemService(Context.APP_OPS_SERVICE) as android.app.AppOpsManager
             val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 appOpsManager.unsafeCheckOpNoThrow(
                     android.app.AppOpsManager.OPSTR_SYSTEM_ALERT_WINDOW,

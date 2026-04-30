@@ -128,28 +128,29 @@ class HistoryActivity : AppCompatActivity(), OnClickHandler {
             }
 
             binding.llBlock.id -> {
-                if (Common.isNumberBlocked(this, number)) {
-                    Common.alertDialog(
-                        context = this,
-                        title = getString(R.string.unblock_contact),
-                        description = getString(R.string.you_will_be_able_to_receive_call),
-                        btnOkay = getString(R.string.unblock),
-                        onItemClick = {
-                            recentViewModel.unblockNumber(number)
-                            binding.tvBlock.text = getString(R.string.block)
-                        })
-                } else {
-                    Common.alertDialog(
-                        context = this,
-                        title = getString(R.string.block_contact),
-                        description = getString(R.string.you_will_be_able_to_receive_call),
-                        btnOkay = getString(R.string.block),
-                        onItemClick = {
-                            recentViewModel.blockNumber(number)
-                            binding.tvBlock.text = getString(R.string.unblock)
-                        })
+                Common.ensureDefaultDialer(this) {
+                    if (Common.isNumberBlocked(this, number)) {
+                        Common.alertDialog(
+                            context = this,
+                            title = getString(R.string.unblock_contact),
+                            description = getString(R.string.you_will_be_able_to_receive_call),
+                            btnOkay = getString(R.string.unblock),
+                            onItemClick = {
+                                recentViewModel.unblockNumber(number)
+                                binding.tvBlock.text = getString(R.string.block)
+                            })
+                    } else {
+                        Common.alertDialog(
+                            context = this,
+                            title = getString(R.string.block_contact),
+                            description = getString(R.string.you_will_be_able_to_receive_call),
+                            btnOkay = getString(R.string.block),
+                            onItemClick = {
+                                recentViewModel.blockNumber(number)
+                                binding.tvBlock.text = getString(R.string.unblock)
+                            })
+                    }
                 }
-
             }
 
             binding.llDelete.id -> {

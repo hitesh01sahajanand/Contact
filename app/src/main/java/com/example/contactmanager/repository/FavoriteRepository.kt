@@ -3,11 +3,9 @@ package com.example.contactmanager.repository
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
-import android.provider.CallLog
 import android.provider.ContactsContract
 import android.util.Log
 import com.example.contactmanager.models.ContactModel
-import com.example.contactmanager.utils.Common
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
@@ -38,7 +36,7 @@ class FavoriteRepository @Inject constructor(@param:ApplicationContext private v
         for (contact in contacts) {
             val contactId = contact.contactId ?: continue
             val isFav = contact.isFavourite == 1
-            
+
             Log.d("FavoriteRepository", "Updating contact $contactId to favorite=$isFav")
             addToFavoriteUnFavorite(contactId, isFav)
         }
@@ -51,7 +49,7 @@ class FavoriteRepository @Inject constructor(@param:ApplicationContext private v
 
         try {
             val contentResolver = context.contentResolver
-            
+
             // 🔹 1. Get Starred Contacts from the Contacts table
             val contactsUri = ContactsContract.Contacts.CONTENT_URI
             val contactsCursor = contentResolver.query(
@@ -70,14 +68,15 @@ class FavoriteRepository @Inject constructor(@param:ApplicationContext private v
             val starredIds = mutableSetOf<String>()
             contactsCursor?.use { cursor ->
                 val idIndex = cursor.getColumnIndex(ContactsContract.Contacts._ID)
-                val nameIndex = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)
+                val nameIndex =
+                    cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)
                 val photoIndex = cursor.getColumnIndex(ContactsContract.Contacts.PHOTO_URI)
 
                 while (cursor.moveToNext()) {
                     val contactId = cursor.getLong(idIndex).toString()
                     val displayName = cursor.getString(nameIndex) ?: ""
                     val photoUri = cursor.getString(photoIndex)
-                    
+
                     starredIds.add(contactId)
 
                     val contact = ContactModel().apply {
@@ -100,14 +99,20 @@ class FavoriteRepository @Inject constructor(@param:ApplicationContext private v
                     ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
                     ContactsContract.CommonDataKinds.Phone.NUMBER
                 ),
-                "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} IN (${starredIds.joinToString(",")})",
+                "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} IN (${
+                    starredIds.joinToString(
+                        ","
+                    )
+                })",
                 null,
                 null
             )
 
             phoneCursor?.use { cursor ->
-                val idIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
-                val numberIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                val idIndex =
+                    cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
+                val numberIndex =
+                    cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
 
                 while (cursor.moveToNext()) {
                     val contactId = cursor.getLong(idIndex).toString()
@@ -125,7 +130,7 @@ class FavoriteRepository @Inject constructor(@param:ApplicationContext private v
                     }
                 }
             }
-            
+
             favoritesList.addAll(contactMap.values)
 
         } catch (e: Exception) {

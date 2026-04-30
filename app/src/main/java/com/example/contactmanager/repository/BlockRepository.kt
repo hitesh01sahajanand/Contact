@@ -3,7 +3,6 @@ package com.example.contactmanager.repository
 import android.content.ContentValues
 import android.content.Context
 import android.database.ContentObserver
-import android.os.Build
 import android.provider.BlockedNumberContract
 import android.telephony.PhoneNumberUtils
 import android.util.Log
@@ -33,17 +32,15 @@ class BlockRepository @Inject constructor(
         blockDao.blockNumber(BlockModel(clean))
         
         // 2. Save to system storage (if supported and permitted)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            try {
-                if (BlockedNumberContract.canCurrentUserBlockNumbers(context)) {
-                    val values = ContentValues().apply {
-                        put(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER, clean)
-                    }
-                    context.contentResolver.insert(BlockedNumberContract.BlockedNumbers.CONTENT_URI, values)
+        try {
+            if (BlockedNumberContract.canCurrentUserBlockNumbers(context)) {
+                val values = ContentValues().apply {
+                    put(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER, clean)
                 }
-            } catch (e: Exception) {
-                Log.e("BlockRepository", "Failed to block number in system storage: ${e.message}")
+                context.contentResolver.insert(BlockedNumberContract.BlockedNumbers.CONTENT_URI, values)
             }
+        } catch (e: Exception) {
+            Log.e("BlockRepository", "Failed to block number in system storage: ${e.message}")
         }
     }
 
@@ -54,31 +51,27 @@ class BlockRepository @Inject constructor(
         blockDao.deleteByNumber(clean)
         
         // 2. Delete from system storage
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            try {
-                if (BlockedNumberContract.canCurrentUserBlockNumbers(context)) {
-                    context.contentResolver.delete(
-                        BlockedNumberContract.BlockedNumbers.CONTENT_URI,
-                        "${BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER} = ?",
-                        arrayOf(clean)
-                    )
-                }
-            } catch (e: Exception) {
-                Log.e("BlockRepository", "Failed to unblock number in system storage: ${e.message}")
+        try {
+            if (BlockedNumberContract.canCurrentUserBlockNumbers(context)) {
+                context.contentResolver.delete(
+                    BlockedNumberContract.BlockedNumbers.CONTENT_URI,
+                    "${BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER} = ?",
+                    arrayOf(clean)
+                )
             }
+        } catch (e: Exception) {
+            Log.e("BlockRepository", "Failed to unblock number in system storage: ${e.message}")
         }
     }
 
     suspend fun isBlocked(number: String): Boolean {
         // First check system storage if available
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            try {
-                if (BlockedNumberContract.isBlocked(context, number)) {
-                    return true
-                }
-            } catch (e: Exception) {
-                Log.e("BlockRepository", "Error checking system blocked numbers: ${e.message}")
+        try {
+            if (BlockedNumberContract.isBlocked(context, number)) {
+                return true
             }
+        } catch (e: Exception) {
+            Log.e("BlockRepository", "Error checking system blocked numbers: ${e.message}")
         }
 
         // Fallback to local database
@@ -99,13 +92,11 @@ class BlockRepository @Inject constructor(
                 }
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                context.contentResolver.registerContentObserver(
-                    BlockedNumberContract.BlockedNumbers.CONTENT_URI,
-                    true,
-                    observer
-                )
-            }
+            context.contentResolver.registerContentObserver(
+                BlockedNumberContract.BlockedNumbers.CONTENT_URI,
+                true,
+                observer
+            )
 
             // Initial fetch
             launch {
@@ -113,9 +104,7 @@ class BlockRepository @Inject constructor(
             }
 
             awaitClose {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    context.contentResolver.unregisterContentObserver(observer)
-                }
+                context.contentResolver.unregisterContentObserver(observer)
             }
         }.flowOn(Dispatchers.IO)
     }
@@ -124,29 +113,27 @@ class BlockRepository @Inject constructor(
         val list = mutableListOf<BlockModel>()
         
         // 1. Fetch from system storage
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            try {
-                val cursor = context.contentResolver.query(
-                    BlockedNumberContract.BlockedNumbers.CONTENT_URI,
-                    arrayOf(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER),
-                    null, null, null
-                )
-                cursor?.use {
-                    while (it.moveToNext()) {
-                        val number = it.getString(it.getColumnIndexOrThrow(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER))
-                        val contact = Common.getContactByNumber(context, number)
-                        list.add(
-                            BlockModel(
-                                phoneNumber = number,
-                                name = contact?.displayName,
-                                photoUri = contact?.userThumbnail
-                            )
+        try {
+            val cursor = context.contentResolver.query(
+                BlockedNumberContract.BlockedNumbers.CONTENT_URI,
+                arrayOf(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER),
+                null, null, null
+            )
+            cursor?.use {
+                while (it.moveToNext()) {
+                    val number = it.getString(it.getColumnIndexOrThrow(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER))
+                    val contact = Common.getContactByNumber(context, number)
+                    list.add(
+                        BlockModel(
+                            phoneNumber = number,
+                            name = contact?.displayName,
+                            photoUri = contact?.userThumbnail
                         )
-                    }
+                    )
                 }
-            } catch (e: Exception) {
-                Log.e("BlockRepository", "Error fetching system blocked numbers: ${e.message}")
             }
+        } catch (e: Exception) {
+            Log.e("BlockRepository", "Error fetching system blocked numbers: ${e.message}")
         }
 
         // 2. Merge with local database to ensure all user-blocked numbers are captured

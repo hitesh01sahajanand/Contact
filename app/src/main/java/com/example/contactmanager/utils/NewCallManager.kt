@@ -8,7 +8,7 @@ import java.util.concurrent.CopyOnWriteArraySet
 
 class NewCallManager {
 
-    companion object{
+    companion object {
         @SuppressLint("StaticFieldLeak")
         var inCallService: InCallService? = null
         private var call: Call? = null
@@ -31,7 +31,10 @@ class NewCallManager {
                     updateState()
                 }
 
-                override fun onConferenceableCallsChanged(call: Call, conferenceableCalls: MutableList<Call>) {
+                override fun onConferenceableCallsChanged(
+                    call: Call,
+                    conferenceableCalls: MutableList<Call>
+                ) {
                     updateState()
                 }
 
@@ -82,9 +85,9 @@ class NewCallManager {
 
         fun getPhoneState(): PhoneState {
             val topLevelCalls = calls.filter { it.parent == null }
-            val nonDisconnected = topLevelCalls.filter { 
+            val nonDisconnected = topLevelCalls.filter {
                 val state = it.getStateCompat()
-                state != Call.STATE_DISCONNECTED && state != Call.STATE_DISCONNECTING 
+                state != Call.STATE_DISCONNECTED && state != Call.STATE_DISCONNECTING
             }
 
             if (nonDisconnected.isEmpty()) {
@@ -95,7 +98,8 @@ class NewCallManager {
                 1 -> SingleCall(nonDisconnected.first())
                 2 -> {
                     val active = nonDisconnected.find { it.getStateCompat() == Call.STATE_ACTIVE }
-                    val newCall = nonDisconnected.find { it.getStateCompat() == Call.STATE_CONNECTING || it.getStateCompat() == Call.STATE_DIALING || it.getStateCompat() == Call.STATE_RINGING }
+                    val newCall =
+                        nonDisconnected.find { it.getStateCompat() == Call.STATE_CONNECTING || it.getStateCompat() == Call.STATE_DIALING || it.getStateCompat() == Call.STATE_RINGING }
                     val onHold = nonDisconnected.find { it.getStateCompat() == Call.STATE_HOLDING }
 
                     if (active != null && newCall != null) {
@@ -110,7 +114,8 @@ class NewCallManager {
                 }
 
                 else -> {
-                    val activeConference = nonDisconnected.find { it.isConference() && it.getStateCompat() == Call.STATE_ACTIVE }
+                    val activeConference =
+                        nonDisconnected.find { it.isConference() && it.getStateCompat() == Call.STATE_ACTIVE }
                     val conferenceCall = nonDisconnected.find { it.isConference() }
 
                     val activeOrNew = activeConference
@@ -118,10 +123,11 @@ class NewCallManager {
                         ?: conferenceCall
                         ?: nonDisconnected.find { it.getStateCompat() != Call.STATE_HOLDING }
                         ?: nonDisconnected[0]
-                    
-                    val onHold = nonDisconnected.find { it != activeOrNew && it.getStateCompat() == Call.STATE_HOLDING } 
-                        ?: nonDisconnected.find { it != activeOrNew } 
-                        ?: nonDisconnected[0]
+
+                    val onHold =
+                        nonDisconnected.find { it != activeOrNew && it.getStateCompat() == Call.STATE_HOLDING }
+                            ?: nonDisconnected.find { it != activeOrNew }
+                            ?: nonDisconnected[0]
                     TwoCalls(activeOrNew, onHold)
                 }
             }
@@ -196,7 +202,7 @@ class NewCallManager {
             if (state is TwoCalls) {
                 val active = state.active
                 val onHold = state.onHold
-                
+
                 if (active.getStateCompat() == Call.STATE_ACTIVE) {
                     active.hold()
                     onHold.unhold()

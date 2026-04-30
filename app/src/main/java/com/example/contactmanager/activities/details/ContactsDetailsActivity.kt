@@ -1,16 +1,12 @@
 package com.example.contactmanager.activities.details
 
 import android.Manifest
-import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
 import android.provider.ContactsContract
 import android.provider.Settings
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
@@ -33,12 +29,10 @@ import com.example.contactmanager.activities.newContact.NewContactActivity
 import com.example.contactmanager.activities.setRingtone.SetRingtoneActivity
 import com.example.contactmanager.databinding.ActivityContactsDetailsBinding
 import com.example.contactmanager.databinding.MoreDetailDesignBinding
-import com.example.contactmanager.databinding.PopUpMenuDesignBinding
 import com.example.contactmanager.models.CallLogEntry
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
-import com.example.contactmanager.utils.SendData
 import com.example.contactmanager.viewmodels.ContactDetailsViewModel
 import com.example.contactmanager.viewmodels.FavoriteViewModel
 import com.example.contactmanager.viewmodels.RecentViewModel
@@ -254,26 +248,28 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
 
                 popUpBinding.tvBlock.setOnClickListener {
                     contactDetail?.let { model ->
-                        if (Common.isNumberBlocked(this, model.stringNumber)) {
-                            Common.alertDialog(
-                                context = this,
-                                title = getString(R.string.unblock_contact),
-                                description = getString(R.string.you_will_be_able_to_receive_call),
-                                btnOkay = getString(R.string.unblock),
-                                onItemClick = {
-                                    recentViewModel.unblockNumber(model.stringNumber)
-                                    popUpBinding.tvBlock.text = getString(R.string.block)
-                                })
-                        } else {
-                            Common.alertDialog(
-                                context = this,
-                                title = getString(R.string.block_contact),
-                                description = getString(R.string.you_will_be_able_to_receive_call),
-                                btnOkay = getString(R.string.block),
-                                onItemClick = {
-                                    recentViewModel.blockNumber(model.stringNumber)
-                                    popUpBinding.tvBlock.text = getString(R.string.unblock)
-                                })
+                        Common.ensureDefaultDialer(this) {
+                            if (Common.isNumberBlocked(this, model.stringNumber)) {
+                                Common.alertDialog(
+                                    context = this,
+                                    title = getString(R.string.unblock_contact),
+                                    description = getString(R.string.you_will_be_able_to_receive_call),
+                                    btnOkay = getString(R.string.unblock),
+                                    onItemClick = {
+                                        recentViewModel.unblockNumber(model.stringNumber)
+                                        popUpBinding.tvBlock.text = getString(R.string.block)
+                                    })
+                            } else {
+                                Common.alertDialog(
+                                    context = this,
+                                    title = getString(R.string.block_contact),
+                                    description = getString(R.string.you_will_be_able_to_receive_call),
+                                    btnOkay = getString(R.string.block),
+                                    onItemClick = {
+                                        recentViewModel.blockNumber(model.stringNumber)
+                                        popUpBinding.tvBlock.text = getString(R.string.unblock)
+                                    })
+                            }
                         }
                     }
                     popupWindow.dismiss()
@@ -299,44 +295,6 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
 
         }
     }
-
-    /*fun shareContact(context: Context, contactId: String?) {
-        if (contactId.isNullOrEmpty()) return
-
-        try {
-            val uri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI, contactId)
-            val projection = arrayOf(ContactsContract.Contacts.LOOKUP_KEY)
-            val cursor = context.contentResolver.query(uri, projection, null, null, null)
-
-            var lookupKey: String? = null
-            cursor?.use {
-                if (it.moveToFirst()) {
-                    lookupKey =
-                        it.getString(it.getColumnIndexOrThrow(ContactsContract.Contacts.LOOKUP_KEY))
-                }
-            }
-
-            if (lookupKey == null) {
-                Toast.makeText(context, "Contact not found", Toast.LENGTH_SHORT).show()
-                return
-            }
-
-            val vcardUri =
-                Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_VCARD_URI, lookupKey)
-
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/x-vcard"
-                putExtra(Intent.EXTRA_STREAM, vcardUri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-
-            context.startActivity(Intent.createChooser(intent, "Share Contact"))
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(context, "Unable to share contact", Toast.LENGTH_SHORT).show()
-        }
-    }*/
 
     fun isContactFavorite(context: Context, contactId: String): Boolean {
 

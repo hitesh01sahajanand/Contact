@@ -61,14 +61,14 @@ class BlockNumbersActivity : AppCompatActivity(), OnClickHandler {
     }
 
     private fun showSetDefaultDialerDialog() {
-        MaterialAlertDialogBuilder(this).setTitle("Set as Default Dialer")
-            .setMessage("To view and manage system-blocked numbers, this app must be set as your default dialer. Would you like to set it now?")
-            .setPositiveButton("Set as Default") { _, _ ->
+        MaterialAlertDialogBuilder(this).setTitle(getString(R.string.set_as_default_dialer))
+            .setMessage(getString(R.string.to_view_and_manage_system_block))
+            .setPositiveButton(getString(R.string.set_as_default)) { _, _ ->
                 val intent = PermissionManager.getDefaultDialerIntent(this)
                 if (intent != null) {
                     defaultDialerLauncher.launch(intent)
                 }
-            }.setNegativeButton("Not Now", null).setCancelable(false).show()
+            }.setNegativeButton(getString(R.string.not_now), null).setCancelable(false).show()
     }
 
     private fun initView() {
@@ -92,7 +92,7 @@ class BlockNumbersActivity : AppCompatActivity(), OnClickHandler {
                 if (list.isEmpty() && !PermissionManager.isDefaultDialer(this@BlockNumbersActivity)) {
                     Toast.makeText(
                         this@BlockNumbersActivity,
-                        "Set as default dialer to sync system blocked numbers",
+                        getString(R.string.set_as_default_dialer_to_sync_system),
                         Toast.LENGTH_LONG
                     ).show()
                 }

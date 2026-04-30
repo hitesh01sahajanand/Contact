@@ -14,10 +14,6 @@ object Constance {
     const val NUMBER = "Number"
     const val SIM_PREFERENCE = "sim_preference"
 
-    const val CALL_DISCONNECTED = "CALL_DISCONNECTED"
-    const val ADD_TO_FAVORITE = "Add to favorite"
-    const val REMOVE_TO_FAVORITE = "Remove to favorite"
-
     const val LOAD_DATA_COUNT = 200
 
     const val IS_DIALER = "isDialer"
@@ -29,14 +25,12 @@ object Constance {
     const val ACTION_ADD_TO_CONTACT = "action_add_to_contact"
     const val ACTION_ADD_TAG = "action_add_tag"
     const val ACTION_DELETE = "action_delete"
-    const val ACTION_FAVORITE = "action_favorite"
     const val ACTION_BLOCK_CONTACT = "action_block_contact"
     const val CONTACT_ID = "contactId"
     const val IS_CONTACT_SAVED = "isContactSaved"
-    const val CONTACT_MODEL = "contactModel"
     const val DATA_FETCH = "dataFetch"
     const val WHATSAPP: String = "com.whatsapp"
-    const val WHATSAPP_BUSSINESS: String = "com.whatsapp.w4b"
+    const val WHATSAPP_BUSINESS: String = "com.whatsapp.w4b"
     const val DUO: String = "com.google.android.apps.tachyon"
-    val videoCallList: Array<String> = arrayOf(WHATSAPP, WHATSAPP_BUSSINESS, DUO)
+    val videoCallList: Array<String> = arrayOf(WHATSAPP, WHATSAPP_BUSINESS, DUO)
 }

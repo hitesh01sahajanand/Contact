@@ -1,57 +1,38 @@
 package com.example.contactmanager.fragments.keypad
 
-import android.Manifest
-import android.app.Activity.RESULT_CANCELED
-import android.app.Activity.RESULT_OK
-import android.app.Dialog
-import android.app.role.RoleManager
-import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.graphics.Color
-import android.net.Uri
-import android.os.Build
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.Bundle
-import android.provider.Settings
-import android.telecom.TelecomManager
-import android.telephony.SubscriptionManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.newContact.NewContactActivity
+import com.example.contactmanager.activities.settings.SettingsActivity
+import com.example.contactmanager.activities.speedDial.SpeedDialActivity
 import com.example.contactmanager.adapters.SuggestionAdapter
 import com.example.contactmanager.databinding.FragmentKeypadBinding
 import com.example.contactmanager.models.ContactListItem
 import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.NewCallManager
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager
-import com.example.contactmanager.utils.PermissionManager.isDefaultDialer
+import com.example.contactmanager.utils.SharedPreferenceManager
 import com.example.contactmanager.viewmodels.ContactViewModel
 import com.example.contactmanager.viewmodels.SpeedDialViewModel
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import android.media.AudioManager
-import android.media.ToneGenerator
-import com.example.contactmanager.activities.settings.SettingsActivity
-import com.example.contactmanager.activities.speedDial.SpeedDialActivity
-import com.example.contactmanager.utils.Constance
-import com.example.contactmanager.utils.SharedPreferenceManager
 
 @AndroidEntryPoint
 class KeypadFragment : Fragment(), OnClickHandler {
@@ -102,87 +83,6 @@ class KeypadFragment : Fragment(), OnClickHandler {
         return binding.root
     }
 
-    private val permissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-
-            val allGranted = permissions.values.all { it }
-
-            if (allGranted) {
-                checkOverlayPermission()
-                Toast.makeText(requireActivity(), "Permissions Granted", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(requireActivity(), "Permissions Denied", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-    private val overlayLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            if (Settings.canDrawOverlays(requireActivity())) {
-                Toast.makeText(requireActivity(), "Overlay permission granted", Toast.LENGTH_SHORT)
-                    .show()
-                allPermissionGranted()
-            } else {
-                Toast.makeText(requireActivity(), "Overlay permission denied", Toast.LENGTH_SHORT)
-                    .show()
-            }
-        }
-
-    private val defaultDialerLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-
-            when (result.resultCode) {
-                RESULT_OK -> {
-                    checkOverlayPermission()
-                }
-
-                RESULT_CANCELED -> {
-
-                }
-            }
-        }
-
-    private fun checkOverlayPermission() {
-        if (!Settings.canDrawOverlays(requireActivity())) {
-            val intent = Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                "package:${requireActivity().packageName}".toUri()
-            )
-            overlayLauncher.launch(intent)
-        } else {
-            allPermissionGranted()
-            Toast.makeText(requireActivity(), "Overlay permission ", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun checkAndRequestPermissions() {
-        if (!PermissionManager.hasPermissions(requireActivity())) {
-
-            val permissionsList = mutableListOf<String>()
-
-            if (ContextCompat.checkSelfPermission(
-                    requireActivity(), Manifest.permission.READ_CALL_LOG
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                permissionsList.add(Manifest.permission.READ_CALL_LOG)
-            }
-
-            if (ContextCompat.checkSelfPermission(
-                    requireActivity(), Manifest.permission.READ_CONTACTS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                permissionsList.add(Manifest.permission.READ_CONTACTS)
-            }
-
-            if (permissionsList.isNotEmpty()) {
-                permissionLauncher.launch(permissionsList.toTypedArray())
-            }
-        } else {
-            checkOverlayPermission()
-            allPermissionGranted()
-            Toast.makeText(requireActivity(), "Already granted", Toast.LENGTH_SHORT).show()
-        }
-    }
-
 
     private fun initView() {
         binding.onClickHandler = this
@@ -194,8 +94,6 @@ class KeypadFragment : Fragment(), OnClickHandler {
             isFocusable = true
             isFocusableInTouchMode = true
         }
-
-        allPermissionGranted()
 
         adapter = SuggestionAdapter(onClick = { model ->
             binding.edtDisplayNumber.setText(model.number)
@@ -233,11 +131,7 @@ class KeypadFragment : Fragment(), OnClickHandler {
 
             val result = adapter.filter(query)
 
-            if (result.isEmpty()) {
-                binding.rvSuggestions.isVisible = false
-            } else {
-                binding.rvSuggestions.isVisible = true
-            }
+            binding.rvSuggestions.isVisible = result.isNotEmpty()
             binding.llOptionsSuggestions.isVisible = true
         }
 
@@ -246,8 +140,6 @@ class KeypadFragment : Fragment(), OnClickHandler {
             true
         }
         setupDialPad()
-
-        allPermissionGranted()
 
         try {
             toneGenerator = ToneGenerator(AudioManager.STREAM_DTMF, 80)
@@ -312,7 +204,8 @@ class KeypadFragment : Fragment(), OnClickHandler {
             if (speedDial != null && speedDial.contactNumber.isNotEmpty()) {
                 Common.actionCall(speedDial.contactNumber, requireActivity())
             } else {
-                Toast.makeText(requireContext(), "No speed dial set for $slot", Toast.LENGTH_SHORT)
+                Toast.makeText(requireContext(),
+                    getString(R.string.no_speed_dial_set_for, slot), Toast.LENGTH_SHORT)
                     .show()
             }
         }
@@ -337,53 +230,9 @@ class KeypadFragment : Fragment(), OnClickHandler {
         binding.buttonDelete.visibility = View.INVISIBLE
     }
 
-    fun allPermissionGranted() {
-       /* if (PermissionManager.hasPermissions(requireActivity()) && Settings.canDrawOverlays(
-                requireActivity()
-            )
-        ) {
-            binding.llDefaultUi.visibility = View.GONE
-            binding.llKeypadUi.visibility = View.VISIBLE
-        } else {
-            binding.llDefaultUi.visibility = View.VISIBLE
-            binding.llKeypadUi.visibility = View.GONE
-        }*/
-
-        binding.llDefaultUi.visibility = View.GONE
-        binding.llKeypadUi.visibility = View.VISIBLE
-    }
-
-    fun openDefaultAppDialog(context: Context) {
-        try {
-            if (Build.VERSION.SDK_INT >= 29) {
-                val roleManager = context.getSystemService(Context.ROLE_SERVICE) as RoleManager
-                val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
-                defaultDialerLauncher.launch(intent)
-            } else {
-                val telecomManager =
-                    context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-                if (context.packageName != telecomManager.defaultDialerPackage) {
-                    val intent = Intent("android.telecom.action.CHANGE_DEFAULT_DIALER").apply {
-                        putExtra(
-                            "android.telecom.extra.CHANGE_DEFAULT_DIALER_PACKAGE_NAME",
-                            context.packageName
-                        )
-                    }
-                    defaultDialerLauncher.launch(intent)
-                }
-            }
-        } catch (e: Exception) {
-            // Handle exception if needed
-        }
-    }
-
 
     override fun onClick(view: View) {
         when (view.id) {
-            binding.cvSetDefaultApp.id -> {
-                openDefaultAppDialog(requireContext())
-            }
-
             binding.buttonCall.id -> {
                 val number = binding.edtDisplayNumber.text.toString()
 
@@ -391,7 +240,7 @@ class KeypadFragment : Fragment(), OnClickHandler {
                     if (NewCallManager.isNumberActive(number)) {
                         Toast.makeText(
                             requireActivity(),
-                            "Number already in a call",
+                            requireActivity().getString(R.string.number_already_in_a_call),
                             Toast.LENGTH_SHORT
                         ).show()
                         return
@@ -475,67 +324,6 @@ class KeypadFragment : Fragment(), OnClickHandler {
             }
         }
     }
-
-    /*fun actionCall(phoneNumber: String, context: Context) {
-        if (phoneNumber.isEmpty()) return
-
-        val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
-            ?: return
-
-        val callUri = Uri.fromParts("tel", phoneNumber, null)
-        val callBundle = Bundle().apply {
-            putBoolean("android.telecom.extra.START_CALL_WITH_SPEAKERPHONE", false)
-        }
-
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.CALL_PHONE
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-
-            val subscriptionManager =
-                context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
-            val activeSimList = subscriptionManager?.activeSubscriptionInfoList
-
-            if (!activeSimList.isNullOrEmpty() && activeSimList.size > 1) {
-
-                val simNames = Array(activeSimList.size) { i ->
-                    "SIM ${i + 1}"
-                }
-
-                val builder = MaterialAlertDialogBuilder(context)
-
-                builder.setTitle("Select SIM")
-                    .setItems(simNames) { _, which ->
-
-                        val selectedSim = activeSimList[which]
-
-                        val callBundle2 = Bundle().apply {
-                            putParcelable(
-                                TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
-                                Common.getHandleForSubId(
-                                    selectedSim.subscriptionId,
-                                    context
-                                )
-                            )
-                        }
-
-                        val callUri2 = Uri.fromParts("tel", phoneNumber, null)
-                        telecomManager.placeCall(callUri2, callBundle2)
-                    }
-
-                val dialog = builder.create()
-                dialog.show()
-
-                dialog.getButton(Dialog.BUTTON_POSITIVE)?.setTextColor(Color.RED)
-
-            } else {
-                // Single SIM
-                telecomManager.placeCall(callUri, callBundle)
-            }
-
-        }
-    }*/
 
     override fun onDestroy() {
         super.onDestroy()

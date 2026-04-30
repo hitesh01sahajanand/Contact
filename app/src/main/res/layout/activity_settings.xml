@@ -215,7 +215,7 @@
                                 android:layout_marginStart="@dimen/_10sdp"
                                 android:layout_weight="1"
                                 android:gravity="center_vertical"
-                                android:text="@string/light_mode"
+                                android:text="@string/light_mode_app"
                                 android:textColor="@color/setting_grey_color" />
 
                             <ImageView
@@ -223,7 +223,7 @@
                                 android:layout_height="@dimen/_16sdp"
                                 android:rotation="180"
                                 android:src="@drawable/ic_back_arrow"
-                                android:tint="@color/black_color" />
+                                app:tint="@color/black_color" />
 
                         </LinearLayout>
 

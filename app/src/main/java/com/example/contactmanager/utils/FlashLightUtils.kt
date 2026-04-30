@@ -6,7 +6,8 @@ import android.os.Handler
 import android.os.Looper
 
 class FlashLightUtils(context: Context) {
-    private var cameraManager: CameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+    private var cameraManager: CameraManager =
+        context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
     private var cameraId: String? = null
     private var isFlashOn = false
     private val handler = Handler(Looper.getMainLooper())

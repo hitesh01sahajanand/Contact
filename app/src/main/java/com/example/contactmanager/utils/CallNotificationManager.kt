@@ -147,7 +147,11 @@ class CallNotificationManager(private val context: Context) {
     }
 
     fun showMissedCallNotification(number: String, name: String?) {
-        val newName = if (Common.getContactName(context,number).isEmpty()) name else  Common.getContactName(context, number)
+        val newName =
+            if (Common.getContactName(context, number).isEmpty()) name else Common.getContactName(
+                context,
+                number
+            )
 
         val activityIntent = Intent(context, CallActivity::class.java).apply {
             // Probably should go to Call Log or Home Activity, but keeping it simple

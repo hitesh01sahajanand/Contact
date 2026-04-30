@@ -70,8 +70,6 @@ class SuggestionAdapter(private val onClick: (ContactModel) -> Unit) :
                 tvName.text = itemData.displayName
                 tvNumber.text = itemData.number
 
-//                binding.ivCall.isVisible = true
-
                 if (itemData.userThumbnail.isNullOrEmpty()) {
                     binding.tvContactName.isVisible = true
                     binding.ivContactPhoto.isVisible = false

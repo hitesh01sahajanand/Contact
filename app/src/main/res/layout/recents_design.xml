@@ -47,14 +47,14 @@
 
                 <CheckBox
                     android:id="@+id/cb_select"
-                    style="@style/TextStyle.Medium"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:backgroundTint="@color/grey_color"
+                    android:layout_width="@dimen/_20sdp"
+                    android:layout_height="@dimen/_20sdp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/selector_check_box"
+                    android:button="@null"
+                    android:clickable="false"
                     android:gravity="center_vertical"
                     android:visibility="gone" />
-
 
             </androidx.cardview.widget.CardView>
 
