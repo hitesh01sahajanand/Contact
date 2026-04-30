@@ -3,6 +3,7 @@ package com.example.contactmanager.adapters
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.contactmanager.databinding.AccountsDesignBinding
@@ -44,8 +45,13 @@ class AllAccountAdapter(private val onClick: (AccountModel) -> Unit) :
     class AccountHolder(private val binding: AccountsDesignBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun setData(itemData: AccountModel) {
-            binding.tvIdName.text = itemData.name
-            val color = Common.profileColors[position % Common.profileColors.size]
+            if (itemData.count == 0) {
+                binding.tvIdName.text = itemData.name
+            } else {
+                binding.tvIdName.text = "${itemData.name} (${itemData.count})"
+            }
+
+            val color = Common.profileColors[adapterPosition % Common.profileColors.size]
             binding.cvProfile.setCardBackgroundColor(
                 ContextCompat.getColor(binding.root.context, color)
             )

@@ -29,17 +29,21 @@ class ContactViewModel @Inject constructor(
             super.onChange(selfChange)
             handler.removeCallbacksAndMessages(null)
             handler.postDelayed({
-                loadContacts()
-            }, 1000)
+                loadContacts(showLoader = false)
+            }, 300)
         }
     }
 
     init {
-        context.contentResolver.registerContentObserver(
-            ContactsContract.Contacts.CONTENT_URI,
-            true,
-            observer
-        )
+        try {
+            context.contentResolver.registerContentObserver(
+                ContactsContract.Contacts.CONTENT_URI,
+                true,
+                observer
+            )
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+        }
     }
 
     override fun onCleared() {
@@ -50,35 +54,61 @@ class ContactViewModel @Inject constructor(
     private var _allContactList = MutableLiveData<List<ContactListItem>>()
     val allContactList: LiveData<List<ContactListItem>> = _allContactList
 
+    private var _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean> = _isLoading
+
+    private var _accountCounts = MutableLiveData<Map<String, Int>>()
+    val accountCounts: LiveData<Map<String, Int>> = _accountCounts
+
     var currentSelectedAccount: String = "All Accounts"
 
-    fun loadContacts() {
+    fun loadContacts(showLoader: Boolean = true) {
         when (currentSelectedAccount) {
-            "All Accounts" -> loadAllContacts()
-            "Device Only" -> getContactsByDevice()
-            else -> getContactsByAccountWithHeaders(currentSelectedAccount)
+            "All Accounts" -> loadAllContacts(showLoader)
+            "Device Only" -> getContactsByDevice(showLoader)
+            else -> getContactsByAccountWithHeaders(currentSelectedAccount, showLoader)
         }
     }
 
-    fun loadAllContacts() {
+    fun loadAllContacts(showLoader: Boolean = true) {
+        if (showLoader) _isLoading.postValue(true)
         viewModelScope.launch(Dispatchers.IO) {
             val data = repository.getContactsByAccountWithHeaders()
             _allContactList.postValue(data)
+            if (showLoader) _isLoading.postValue(false)
         }
     }
 
-    fun getContactsByAccountWithHeaders(accountName: String) {
+    fun getContactsByAccountWithHeaders(accountName: String, showLoader: Boolean = true) {
+        if (showLoader) _isLoading.postValue(true)
         viewModelScope.launch(Dispatchers.IO) {
             val data = repository.getContactsByGoogleAccount(accountName)
             _allContactList.postValue(data)
+            if (showLoader) _isLoading.postValue(false)
         }
     }
 
-    fun getContactsByDevice() {
+    fun getContactsByDevice(showLoader: Boolean = true) {
+        if (showLoader) _isLoading.postValue(true)
         viewModelScope.launch(Dispatchers.IO) {
             val data = repository.getContactsByDevice()
             _allContactList.postValue(data)
+            if (showLoader) _isLoading.postValue(false)
         }
     }
+    /*fun getContactCount(account: String): String {
+        val list = when (account) {
+            "All Accounts" -> repository.getContactsByAccountWithHeaders()
+            "Device Only" -> repository.getContactsByDevice()
+            else -> repository.getContactsByGoogleAccount(account)
+        }
+        return list.filterIsInstance<ContactListItem.Contact>().size.toString()
+    }*/
 
+    fun fetchAccountCounts(isMerge: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val counts = repository.getAccountContactCounts(isMerge)
+            _accountCounts.postValue(counts)
+        }
+    }
 }

@@ -153,7 +153,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
         }
 
         val sortedList = contactMap.values
-            .filter { !it.displayName.isNullOrBlank() || !it.number.isNullOrBlank() }
+            .filter { (!it.displayName.isNullOrBlank() || !it.number.isNullOrBlank()) && !it.contactId.isNullOrEmpty() }
             .sortedWith { c1, c2 ->
                 val name1 = c1.displayName?.trim() ?: ""
                 val name2 = c2.displayName?.trim() ?: ""
@@ -351,7 +351,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
         }
 
         val sortedList = contactMap.values
-            .filter { !it.displayName.isNullOrBlank() || !it.number.isNullOrBlank() }
+            .filter { (!it.displayName.isNullOrBlank() || !it.number.isNullOrBlank()) && !it.contactId.isNullOrEmpty() }
             .sortedWith { c1, c2 ->
                 val name1 = c1.displayName?.trim() ?: ""
                 val name2 = c2.displayName?.trim() ?: ""
@@ -567,7 +567,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
         }
 
         val sortedList = contactMap.values
-            .filter { !it.displayName.isNullOrBlank() || !it.number.isNullOrBlank() }
+            .filter { (!it.displayName.isNullOrBlank() || !it.number.isNullOrBlank()) && !it.contactId.isNullOrEmpty() }
             .sortedWith { c1, c2 ->
                 val name1 = c1.displayName?.trim() ?: ""
                 val name2 = c2.displayName?.trim() ?: ""
@@ -697,5 +697,98 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
             }
         }
         return list
+    }
+
+
+    fun getAccountContactCounts(isMerge: Boolean): Map<String, Int> {
+        val counts = mutableMapOf<String, Int>()
+        val resolver = context.contentResolver
+
+        // 1. Get the set of all "visible" Contact IDs from the Contacts table.
+        // This automatically excludes the User Profile and non-aggregated raw contacts.
+        val visibleContactIds = mutableSetOf<String>()
+        try {
+            resolver.query(
+                ContactsContract.Contacts.CONTENT_URI,
+                arrayOf(ContactsContract.Contacts._ID),
+                null, null, null
+            )?.use { cursor ->
+                val idIdx = cursor.getColumnIndex(ContactsContract.Contacts._ID)
+                while (cursor.moveToNext()) {
+                    visibleContactIds.add(cursor.getLong(idIdx).toString())
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        val allContacts = mutableSetOf<String>()
+        val deviceContacts = mutableSetOf<String>()
+        val accountContactsMap = mutableMapOf<String, MutableSet<String>>()
+
+        try {
+            val cursor = resolver.query(
+                ContactsContract.RawContacts.CONTENT_URI,
+                arrayOf(
+                    ContactsContract.RawContacts.CONTACT_ID,
+                    ContactsContract.RawContacts.ACCOUNT_NAME,
+                    ContactsContract.RawContacts.ACCOUNT_TYPE,
+                    ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY
+                ),
+                "${ContactsContract.RawContacts.DELETED} = 0",
+                null,
+                null
+            )
+
+            cursor?.use {
+                val contactIdIndex = it.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID)
+                val accountNameIndex = it.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_NAME)
+                val accountTypeIndex = it.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE)
+                val displayNameIndex = it.getColumnIndex(ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY)
+
+                while (it.moveToNext()) {
+                    val contactId = it.getString(contactIdIndex) ?: ""
+                    
+                    // ONLY count if the contact_id exists in the visible Contacts table
+                    if (contactId.isEmpty() || !visibleContactIds.contains(contactId)) continue
+
+                    val accountName = it.getString(accountNameIndex) ?: ""
+                    val accountType = it.getString(accountTypeIndex) ?: ""
+                    val displayName = it.getString(displayNameIndex) ?: ""
+
+                    val identifier = if (isMerge) {
+                        if (displayName.isEmpty()) contactId else displayName
+                    } else {
+                        contactId
+                    }
+
+                    allContacts.add(identifier)
+
+                    val isGoogle = accountType == "com.google"
+                    val isWhatsApp = accountType == "com.whatsapp" || accountType.contains("whatsapp", ignoreCase = true)
+                    val isTelegram = accountType == "org.telegram.messenger" || accountType.contains("telegram", ignoreCase = true)
+                    val isEmail = accountName.contains("@") && accountType.contains("exchange", ignoreCase = true)
+
+                    if (!isGoogle && !isWhatsApp && !isTelegram && !isEmail) {
+                        deviceContacts.add(identifier)
+                    }
+
+                    if (isGoogle && accountName.isNotEmpty()) {
+                        val set = accountContactsMap.getOrPut(accountName) { mutableSetOf() }
+                        set.add(identifier)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        counts["All Accounts"] = allContacts.size
+        counts["Device Only"] = deviceContacts.size
+        accountContactsMap.forEach { (email, set) ->
+            counts[email] = set.size
+        }
+
+        return counts
     }
 }

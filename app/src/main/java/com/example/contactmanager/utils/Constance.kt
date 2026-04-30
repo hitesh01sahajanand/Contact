@@ -12,12 +12,13 @@ object Constance {
     const val PREF_NAME = "my_app_prefs"
     const val IS_LOG_IN = "isLogIn"
     const val NUMBER = "Number"
+    const val SIM_PREFERENCE = "sim_preference"
 
     const val CALL_DISCONNECTED = "CALL_DISCONNECTED"
     const val ADD_TO_FAVORITE = "Add to favorite"
     const val REMOVE_TO_FAVORITE = "Remove to favorite"
 
-    const val LOAD_DATA_COUNT = 100
+    const val LOAD_DATA_COUNT = 200
 
     const val IS_DIALER = "isDialer"
     const val ACTION_CALL = "action_call"

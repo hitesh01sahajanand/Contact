@@ -1,17 +1,23 @@
 package com.example.contactmanager.activities.settings
 
+import android.Manifest
 import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.telecom.TelecomManager
+import android.telephony.SubscriptionManager
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -29,6 +35,7 @@ import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager.isDefaultDialer
 import com.example.contactmanager.utils.SharedPreferenceManager
 import com.example.contactmanager.utils.ThemeManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class SettingsActivity : AppCompatActivity(), OnClickHandler {
     private lateinit var binding: ActivitySettingsBinding
@@ -142,6 +149,32 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             binding.tvThemeType.text = getString(R.string.set_default)
         }
 
+        updateSimPrefUI()
+    }
+
+    private fun updateSimPrefUI() {
+        val simPref = SharedPreferenceManager.getInt(this, Constance.SIM_PREFERENCE, -1)
+        if (simPref == -1) {
+            binding.tvSimPref.text = "Ask every time"
+        } else {
+            if (ActivityCompat.checkSelfPermission(
+                    this, Manifest.permission.CALL_PHONE
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                val subscriptionManager =
+                    getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+                val activeSimList = subscriptionManager?.activeSubscriptionInfoList
+                val selectedSim = activeSimList?.find { it.subscriptionId == simPref }
+                if (selectedSim != null) {
+                    binding.tvSimPref.text = selectedSim.carrierName
+                } else {
+                    binding.tvSimPref.text = "Ask every time"
+                    SharedPreferenceManager.putInt(this, Constance.SIM_PREFERENCE, -1)
+                }
+            } else {
+                binding.tvSimPref.text = "Ask every time"
+            }
+        }
     }
 
     fun openDefaultAppDialog(context: Context) {
@@ -220,12 +253,74 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             }
 
             binding.llSimPref.id -> {
-                val intent = Intent(Settings.ACTION_NETWORK_OPERATOR_SETTINGS)
-                startActivity(intent)
+                if (ActivityCompat.checkSelfPermission(
+                        this, Manifest.permission.CALL_PHONE
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    val subscriptionManager =
+                        getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+                    val activeSimList = subscriptionManager?.activeSubscriptionInfoList
+
+                    if (activeSimList.isNullOrEmpty()) {
+                        Toast.makeText(this, "No SIM cards found", Toast.LENGTH_SHORT).show()
+                        return
+                    }
+
+                    val simNames = Array(activeSimList.size + 1) { i ->
+                        if (i == 0) "Always ask"
+                        else "SIM $i (${activeSimList[i - 1].carrierName})"
+                    }
+
+                    val simPref = SharedPreferenceManager.getInt(this, Constance.SIM_PREFERENCE, -1)
+                    var selectedIndex = if (simPref == -1) 0 else {
+                        val index = activeSimList.indexOfFirst { it.subscriptionId == simPref }
+                        if (index != -1) index + 1 else 0
+                    }
+
+                    val builder = MaterialAlertDialogBuilder(this)
+
+                    builder.setTitle("Select SIM")
+
+                    builder.setSingleChoiceItems(simNames, selectedIndex) { _, which ->
+                        selectedIndex = which
+                    }
+
+                    builder.setPositiveButton("Set") { dialog, _ ->
+                        if (selectedIndex == 0) {
+                            SharedPreferenceManager.putInt(this, Constance.SIM_PREFERENCE, -1)
+                        } else {
+                            val selectedSim = activeSimList[selectedIndex - 1]
+                            SharedPreferenceManager.putInt(
+                                this,
+                                Constance.SIM_PREFERENCE,
+                                selectedSim.subscriptionId
+                            )
+                        }
+                        updateSimPrefUI()
+                        dialog.dismiss()
+                    }
+
+                    builder.setNegativeButton("Cancel") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+
+                    builder.show()
+                }
             }
 
             binding.llChangeRingtone.id -> {
-                startActivity(Intent(this, SetRingtoneActivity::class.java))
+                if (Settings.System.canWrite(this)) {
+                    startActivity(Intent(this, SetRingtoneActivity::class.java))
+                } else {
+                    val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
+                    intent.data = "package:$packageName".toUri()
+                    startActivity(intent)
+                    Toast.makeText(
+                        this,
+                        getString(R.string.please_allow_modify_system_settings_to_change_ringtone),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
 
             binding.llShare.id -> {

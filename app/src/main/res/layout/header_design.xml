@@ -36,6 +36,7 @@
             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
             android:visibility="gone"
             app:cardBackgroundColor="@color/white"
+            android:foreground="?attr/selectableItemBackground"
             app:cardCornerRadius="@dimen/_10sdp"
             app:cardElevation="0dp">
 
@@ -56,6 +57,7 @@
             android:layout_marginEnd="@dimen/_10sdp"
             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
             android:visibility="gone"
+            android:foreground="?attr/selectableItemBackground"
             app:cardBackgroundColor="@color/white"
             app:cardCornerRadius="@dimen/_10sdp"
             app:cardElevation="0dp">
@@ -77,6 +79,7 @@
             android:layout_marginEnd="@dimen/_10sdp"
             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
             android:visibility="gone"
+            android:foreground="?attr/selectableItemBackground"
             app:cardBackgroundColor="@color/white"
             app:cardCornerRadius="@dimen/_10sdp"
             app:cardElevation="0dp">

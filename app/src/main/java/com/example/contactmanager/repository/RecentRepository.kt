@@ -341,4 +341,21 @@ class RecentRepository @Inject constructor(@param:ApplicationContext private val
         return list
     }
 
+    fun deleteCallHistory(callIds: List<Long>) {
+        if (callIds.isEmpty()) return
+        try {
+            val selection = "${CallLog.Calls._ID} IN (${callIds.joinToString(",")})"
+            context.contentResolver.delete(CallLog.Calls.CONTENT_URI, selection, null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun deleteAllCallHistory() {
+        try {
+            context.contentResolver.delete(CallLog.Calls.CONTENT_URI, null, null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }

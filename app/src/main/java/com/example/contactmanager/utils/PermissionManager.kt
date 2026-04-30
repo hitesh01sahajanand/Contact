@@ -2,16 +2,24 @@ package com.example.contactmanager.utils
 
 import android.Manifest
 import android.app.Activity
+import android.app.Dialog
 import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.telecom.TelecomManager
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
+import com.example.contactmanager.databinding.AlertDialogDesignBinding
+import com.example.contactmanager.databinding.PermissionDialogDesignBinding
 
 object PermissionManager {
 
@@ -90,5 +98,78 @@ object PermissionManager {
         }
     }
 
+    fun openPermissionDialog(context: Context, onClick: () -> Unit) {
+        val dialog = Dialog(context)
+        val alertBinding = PermissionDialogDesignBinding.inflate(LayoutInflater.from(context))
 
+        dialog.setContentView(alertBinding.root)
+
+        // Optional: transparent background (important)
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+        dialog.setCancelable(false)
+
+        val margin = (30 * context.resources.displayMetrics.density).toInt()
+
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+
+        dialog.window?.setLayout(
+            screenWidth - (margin * 3),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        val hasContactPermission = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.READ_CONTACTS
+        ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+            context, Manifest.permission.WRITE_CONTACTS
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val hasCallLogPermission = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.READ_CALL_LOG
+        ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+            context, Manifest.permission.WRITE_CALL_LOG
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val hasOverlayPermission = hasOverlayPermission(context)
+
+        alertBinding.llContact.visibility =
+            if (hasContactPermission) android.view.View.GONE else android.view.View.VISIBLE
+        alertBinding.llCallLog.visibility =
+            if (hasCallLogPermission) android.view.View.GONE else android.view.View.VISIBLE
+        alertBinding.llDisplayOverOtherApps.visibility =
+            if (hasOverlayPermission) android.view.View.GONE else android.view.View.VISIBLE
+
+        alertBinding.tvContinue.setOnClickListener {
+            dialog.dismiss()
+            onClick()
+        }
+
+        dialog.show()
+    }
+
+    fun hasOverlayPermission(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
+
+        if (Settings.canDrawOverlays(context)) return true
+
+        return try {
+            val appOpsManager = context.getSystemService(Context.APP_OPS_SERVICE) as android.app.AppOpsManager
+            val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                appOpsManager.unsafeCheckOpNoThrow(
+                    android.app.AppOpsManager.OPSTR_SYSTEM_ALERT_WINDOW,
+                    android.os.Process.myUid(),
+                    context.packageName
+                )
+            } else {
+                appOpsManager.checkOpNoThrow(
+                    android.app.AppOpsManager.OPSTR_SYSTEM_ALERT_WINDOW,
+                    android.os.Process.myUid(),
+                    context.packageName
+                )
+            }
+            mode == android.app.AppOpsManager.MODE_ALLOWED
+        } catch (e: Exception) {
+            false
+        }
+    }
 }

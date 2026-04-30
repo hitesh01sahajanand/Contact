@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ContactManager</string>
+    <string name="app_name">Contact App</string>
     <string name="permission_access">ऐप की पूरी कार्यक्षमता सुनिश्चित करने के लिए आवश्यक अनुमतियाँ सक्षम करें।</string>
     <string name="calls">कॉल्स</string>
     <string name="notifications">सूचनाएं</string>

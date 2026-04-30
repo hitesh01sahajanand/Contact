@@ -1,13 +1,23 @@
 package com.example.contactmanager.activities.permissions
 
 import android.Manifest
+import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.telecom.TelecomManager
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.TextPaint
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
+import android.text.style.ForegroundColorSpan
 import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -43,6 +53,22 @@ class PermissionActivity : AppCompatActivity(), OnClickHandler {
         intView()
     }
 
+
+    private val defaultDialerLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+
+            when (result.resultCode) {
+                RESULT_OK -> {
+//                    checkOverlayPermission()
+                    goNextActivity()
+                }
+
+                RESULT_CANCELED -> {
+                    goNextActivity()
+                }
+            }
+        }
+
     private val permissionLauncherCallLog =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
 
@@ -50,7 +76,7 @@ class PermissionActivity : AppCompatActivity(), OnClickHandler {
 
             if (allGranted) {
                 goNextActivity()
-            }else{
+            } else {
                 val permanentlyDenied = isPermissionPermanentlyDenied()
 
                 if (permanentlyDenied) {
@@ -64,18 +90,104 @@ class PermissionActivity : AppCompatActivity(), OnClickHandler {
     private fun intView() {
         binding.onClickHandler = this
 
-        binding.llNotification.isVisible = isNotificationPermissionRequired()
+        binding.lottiPermission.setAnimation(R.raw.permission_light)
+        binding.lottiPermission.playAnimation()
+
+        binding.lottiPermissionBtn.setAnimation(R.raw.permission_btn)
+        binding.lottiPermissionBtn.playAnimation()
+
+        manageTextViews()
+
+//        binding.llNotification.isVisible = isNotificationPermissionRequired()
+    }
+
+    fun manageTextViews() {
+
+        val text = getString(R.string.we_don_t_collect_personal)
+        val spannable = SpannableString(text)
+
+        val termsStart = text.indexOf("Terms of Service")
+        val termsEnd = termsStart + "Terms of Service".length
+
+        val termsClickable = object : ClickableSpan() {
+            override fun onClick(widget: View) {
+                Toast.makeText(widget.context, "Terms clicked", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun updateDrawState(ds: TextPaint) {
+                super.updateDrawState(ds)
+                ds.color = ContextCompat.getColor(this@PermissionActivity, R.color.main_color)
+                ds.isUnderlineText = true
+            }
+        }
+
+        spannable.setSpan(termsClickable, termsStart, termsEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+        val privacyStart = text.indexOf("Privacy Policy")
+        val privacyEnd = privacyStart + "Privacy Policy".length
+
+        val privacyClickable = object : ClickableSpan() {
+            override fun onClick(widget: View) {
+                Toast.makeText(widget.context, "Privacy clicked", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun updateDrawState(ds: TextPaint) {
+                super.updateDrawState(ds)
+                ds.color = ContextCompat.getColor(this@PermissionActivity, R.color.main_color)
+                ds.isUnderlineText = true
+            }
+        }
+
+        spannable.setSpan(
+            privacyClickable,
+            privacyStart,
+            privacyEnd,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+
+        binding.tvPrivacyPolicy.text = spannable
+        binding.tvPrivacyPolicy.movementMethod = LinkMovementMethod.getInstance()
+        binding.tvPrivacyPolicy.highlightColor = Color.TRANSPARENT
     }
 
     override fun onClick(view: View) {
         when (view.id) {
-            binding.cvAllowAccess.id -> {
-                if (PermissionManager.hasRequiredPermissions(this)) {
+            binding.lottiPermissionBtn.id -> {
+                /*if (PermissionManager.hasRequiredPermissions(this)) {
                     goNextActivity()
                 } else {
                     requestRequiredPermissions()
+                }*/
+                openDefaultAppDialog(this)
+            }
+
+            binding.tvCancel.id -> {
+                goNextActivity()
+            }
+        }
+    }
+
+    fun openDefaultAppDialog(context: Context) {
+        try {
+            if (Build.VERSION.SDK_INT >= 29) {
+                val roleManager = context.getSystemService(ROLE_SERVICE) as RoleManager
+                val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
+                defaultDialerLauncher.launch(intent)
+            } else {
+                val telecomManager =
+                    context.getSystemService(TELECOM_SERVICE) as TelecomManager
+                if (context.packageName != telecomManager.defaultDialerPackage) {
+                    val intent = Intent("android.telecom.action.CHANGE_DEFAULT_DIALER").apply {
+                        putExtra(
+                            "android.telecom.extra.CHANGE_DEFAULT_DIALER_PACKAGE_NAME",
+                            context.packageName
+                        )
+                    }
+                    defaultDialerLauncher.launch(intent)
                 }
             }
+        } catch (e: Exception) {
+            // Handle exception if needed
         }
     }
 

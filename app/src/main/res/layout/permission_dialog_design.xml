@@ -20,95 +20,101 @@
             android:orientation="vertical">
 
             <TextView
+                style="@style/TextStyle.Large"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Permissions"
                 android:textColor="@color/black"
-                android:textSize="@dimen/_14sdp"
                 android:textStyle="bold" />
 
             <LinearLayout
+                android:id="@+id/ll_call_log"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/_10sdp"
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/TextStyle.MediumSemiBold"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Call Logs"
                     android:textColor="@color/black"
-                    android:textSize="@dimen/_12sdp"
                     android:textStyle="normal" />
 
                 <TextView
+                    style="@style/TextStyle.Small"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."
-                    android:textColor="@color/cardview_dark_background"
-                    android:textSize="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_5sdp"
+                    android:text="Lorem Ipsum is simply dummy text of the printing and typesetting industry. "
+                    android:textColor="@color/grey_color"
                     android:textStyle="normal" />
 
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/ll_contact"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/_10sdp"
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/TextStyle.MediumSemiBold"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Contacts"
                     android:textColor="@color/black"
-                    android:textSize="@dimen/_12sdp"
                     android:textStyle="normal" />
 
                 <TextView
+                    style="@style/TextStyle.Small"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."
-                    android:textColor="@color/cardview_dark_background"
-                    android:textSize="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_5sdp"
+                    android:text="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s."
+                    android:textColor="@color/grey_color"
                     android:textStyle="normal" />
 
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/ll_display_over_other_apps"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/_10sdp"
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/TextStyle.MediumSemiBold"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Display Over other apps"
                     android:textColor="@color/black"
-                    android:textSize="@dimen/_12sdp"
                     android:textStyle="normal" />
 
                 <TextView
+                    style="@style/TextStyle.Small"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s."
-                    android:textColor="@color/cardview_dark_background"
-                    android:textSize="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_5sdp"
+                    android:text="Lorem Ipsum is simply dummy text of the printing and typesetting industry."
+                    android:textColor="@color/grey_color"
                     android:textStyle="normal" />
 
             </LinearLayout>
 
             <TextView
                 android:id="@+id/tv_continue"
-                android:layout_width="match_parent"
+                style="@style/TextStyle.MediumSemiBold"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
                 android:layout_marginTop="@dimen/_10sdp"
                 android:gravity="end"
                 android:text="Continue"
                 android:textColor="@color/blue_color"
-                android:textSize="@dimen/_12sdp"
                 android:textStyle="bold" />
 
         </LinearLayout>

@@ -112,8 +112,13 @@ class HistoryActivity : AppCompatActivity(), OnClickHandler {
             binding.llTag.id -> {
                 lifecycleScope.launch(Dispatchers.Main) {
                     val tag = recentViewModel.getTag(number)
+
                     Common.saveTag(this@HistoryActivity, tag, onItemClick = { tag ->
                         recentViewModel.saveTag(number, tag)
+                        // Reload history to show the tag
+                        Handler(mainLooper).postDelayed({
+                            viewModel.getNumberToHistory(number, 0, 1000)
+                        }, 500)
                     })
                 }
             }
@@ -148,22 +153,24 @@ class HistoryActivity : AppCompatActivity(), OnClickHandler {
             }
 
             binding.llDelete.id -> {
-                Common.alertDialog(
-                    this,
-                    getString(R.string.delete_history),
-                    getString(R.string.are_you_sure_you_want_to_delete_all_history),
-                    getString(R.string.delete),
-                    onItemClick = {
-                        viewModel.deleteCallHistoryForNumber(number)
-                        Toast.makeText(
-                            this,
-                            getString(R.string.history_deleted),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        Handler(mainLooper).postDelayed({
-                            viewModel.getNumberToHistory(number, 0, 1000)
-                        }, 1000)
-                    })
+                if (adapter.itemCount != 0) {
+                    Common.alertDialog(
+                        this,
+                        getString(R.string.delete_history),
+                        getString(R.string.are_you_sure_you_want_to_delete_all_history),
+                        getString(R.string.delete),
+                        onItemClick = {
+                            viewModel.deleteCallHistoryForNumber(number)
+                            Toast.makeText(
+                                this,
+                                getString(R.string.history_deleted),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            Handler(mainLooper).postDelayed({
+                                viewModel.getNumberToHistory(number, 0, 1000)
+                            }, 1000)
+                        })
+                }
             }
         }
     }

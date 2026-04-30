@@ -10,11 +10,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.contactmanager.R
@@ -52,16 +54,21 @@ class RecentsFragment : Fragment(), OnClickHandler {
     }
 
     override fun onResume() {
+
         super.onResume()
         if (PermissionManager.hasPermissions(requireActivity())) {
-            viewModel.loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
+            if (allList.isEmpty()) {
+                viewModel.loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
+            }
         }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
         if (!hidden && PermissionManager.hasPermissions(requireActivity())) {
-            viewModel.loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
+            if (allList.isEmpty()) {
+                viewModel.loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
+            }
         }
     }
 
@@ -158,31 +165,58 @@ class RecentsFragment : Fragment(), OnClickHandler {
 
         binding.rvRecents.adapter = adapter
         binding.rvRecents.layoutManager = LinearLayoutManager(requireActivity())
+
         val itemTouchHelper = adapter.getItemTouchHelper(requireActivity())
         itemTouchHelper.attachToRecyclerView(binding.rvRecents)
+
+        val onBackPressedCallback = object : OnBackPressedCallback(false) {
+            override fun handleOnBackPressed() {
+                adapter.clearSelection()
+            }
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            onBackPressedCallback
+        )
+
+        adapter.onSelectionModeChanged = { isSelectionMode ->
+            onBackPressedCallback.isEnabled = isSelectionMode
+            binding.llAllSelection.isVisible = isSelectionMode
+            binding.inHeader.root.isVisible = !isSelectionMode
+            /*binding.inHeader.root.isVisible = !isSelectionMode
+            binding.cvSearch.isVisible = !isSelectionMode*/
+            if (!isSelectionMode) {
+                binding.cbSelectAll.isChecked = false
+            }
+        }
+
+        binding.cbSelectAll.setOnClickListener {
+            if (binding.cbSelectAll.isChecked) {
+                adapter.selectAll()
+            } else {
+                adapter.deselectAll()
+            }
+        }
+
+        binding.tvDoneSelection.setOnClickListener {
+            val selected = adapter.getSelectedEntries()
+            if (selected.isNotEmpty()) {
+                viewModel.deleteHistory(selected)
+                adapter.clearSelection()
+            } else {
+                adapter.clearSelection()
+            }
+        }
 
         viewModel.allRecentCallHistory.observe(viewLifecycleOwner) { recentList ->
             allList.clear()
             allList.addAll(recentList)
             updateAdapterList()
-
-            // Update visibility only after the first load is complete
-           /* if (viewModel.isLoadingFirstTime.value != true) {
-                binding.llHistorySpaceHolder.isVisible = recentList.isEmpty()
-                binding.rvRecents.isVisible = recentList.isNotEmpty()
-            }*/
+            updateVisibility()
         }
 
         viewModel.isLoadingFirstTime.observe(viewLifecycleOwner) { isLoading ->
-            binding.pbLoading.isVisible = isLoading
-            if (isLoading) {
-                binding.llHistorySpaceHolder.isVisible = false
-                binding.rvRecents.isVisible = false
-            } else {
-                val isEmpty = allList.isEmpty()
-                binding.llHistorySpaceHolder.isVisible = isEmpty
-                binding.rvRecents.isVisible = !isEmpty
-            }
+            updateVisibility()
         }
 
         viewModel.isNextPageLoading.observe(viewLifecycleOwner) { isLoading ->
@@ -211,8 +245,7 @@ class RecentsFragment : Fragment(), OnClickHandler {
         binding.edtSearch.addTextChangedListener { editable ->
             val query = editable.toString()
             adapter.filter(query)
-            binding.llHistorySpaceHolder.isVisible = adapter.getCurrentList().isEmpty()
-            binding.rvRecents.isVisible = adapter.getCurrentList().isNotEmpty()
+            updateVisibility()
         }
 
         binding.edtSearch.setOnEditorActionListener { v, actionId, _ ->
@@ -241,10 +274,14 @@ class RecentsFragment : Fragment(), OnClickHandler {
                     clearHistory,
                     settings,
                     option1Click = {
-
-                        /*val intent = Intent(requireContext(), CallActivity::class.java)
-                        intent.putExtra("isNew", true)
-                        requireActivity().startActivity(intent)*/
+                        Common.alertDialog(
+                            context = requireActivity(),
+                            title = requireActivity().getString(R.string.clear_history),
+                            description = requireActivity().getString(R.string.clear_history_desc),
+                            btnOkay = requireActivity().getString(R.string.clear),
+                            onItemClick = {
+                                viewModel.clearAllHistory()
+                            })
                     },
                     option2Click = {
                         requireActivity().startActivity(
@@ -262,6 +299,20 @@ class RecentsFragment : Fragment(), OnClickHandler {
                     updateAdapterList()
                 })
             }
+        }
+    }
+
+    private fun updateVisibility() {
+        val isLoading = viewModel.isLoadingFirstTime.value ?: false
+        val isEmpty = adapter.getCurrentList().isEmpty()
+
+        binding.pbLoading.isVisible = isLoading
+        if (isLoading) {
+            binding.llHistorySpaceHolder.isVisible = false
+            binding.rvRecents.isVisible = false
+        } else {
+            binding.llHistorySpaceHolder.isVisible = isEmpty
+            binding.rvRecents.isVisible = !isEmpty
         }
     }
 

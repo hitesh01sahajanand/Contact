@@ -23,7 +23,8 @@
                 android:layout_width="@dimen/_18sdp"
                 android:layout_height="@dimen/_18sdp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_play" />
+                android:src="@drawable/ic_play"
+                android:tint="@color/black_color" />
 
             <TextView
                 android:id="@+id/tv_ringtone_name"

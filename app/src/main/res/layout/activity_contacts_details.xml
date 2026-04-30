@@ -335,7 +335,7 @@
                     android:layout_height="@dimen/_20sdp"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_more"
-                    android:tint="@color/black_color" />
+                    app:tint="@color/black_color" />
 
                 <TextView
                     style="@style/TextStyle.Regular"

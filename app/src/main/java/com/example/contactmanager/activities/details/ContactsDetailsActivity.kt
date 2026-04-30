@@ -9,8 +9,12 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.provider.ContactsContract
+import android.provider.Settings
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,7 +30,10 @@ import com.bumptech.glide.Glide
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.history.HistoryActivity
 import com.example.contactmanager.activities.newContact.NewContactActivity
+import com.example.contactmanager.activities.setRingtone.SetRingtoneActivity
 import com.example.contactmanager.databinding.ActivityContactsDetailsBinding
+import com.example.contactmanager.databinding.MoreDetailDesignBinding
+import com.example.contactmanager.databinding.PopUpMenuDesignBinding
 import com.example.contactmanager.models.CallLogEntry
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
@@ -34,6 +41,7 @@ import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.SendData
 import com.example.contactmanager.viewmodels.ContactDetailsViewModel
 import com.example.contactmanager.viewmodels.FavoriteViewModel
+import com.example.contactmanager.viewmodels.RecentViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -41,6 +49,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
     private lateinit var binding: ActivityContactsDetailsBinding
     private val viewModel: ContactDetailsViewModel by viewModels()
     private val favoriteViewModel: FavoriteViewModel by viewModels()
+    private val recentViewModel: RecentViewModel by viewModels()
     private var contactDetail: CallLogEntry? = null
     private var contactId: String? = null
 
@@ -79,7 +88,11 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             if (!it.stringPhotoUri.isNullOrEmpty()) {
                 Glide.with(this)
                     .load(it.stringPhotoUri)
-                    .signature(com.bumptech.glide.signature.ObjectKey(System.currentTimeMillis().toString()))
+                    .signature(
+                        com.bumptech.glide.signature.ObjectKey(
+                            System.currentTimeMillis().toString()
+                        )
+                    )
                     .into(binding.ivContactPhoto)
             } else {
                 binding.ivContactPhoto.setImageBitmap(Common.generateAvatar(name ?: ""))
@@ -177,12 +190,110 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
 
             binding.llShare.id -> {
                 contactDetail?.let {
-//                    shareContact(this, it.contactId)
                     Common.shareContact(this, it.stringNumber)
                 }
             }
 
             binding.llMore.id -> {
+
+                val popUpBinding = MoreDetailDesignBinding.inflate(
+                    LayoutInflater.from(this),
+                    null,
+                    false
+                )
+
+
+                val popupWindow = PopupWindow(
+                    popUpBinding.root,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    true
+                )
+
+                popupWindow.elevation = 10f
+
+                popUpBinding.root.measure(
+                    View.MeasureSpec.UNSPECIFIED,
+                    View.MeasureSpec.UNSPECIFIED
+                )
+
+                val popupWidth = popUpBinding.root.measuredWidth
+                val popupHeight = popUpBinding.root.measuredHeight
+                val margin = (12 * resources.displayMetrics.density).toInt()
+                val xOffset = binding.llMore.width - popupWidth - margin
+                val yOffset = -binding.llMore.height - popupHeight
+                popupWindow.showAsDropDown(
+                    binding.llMore,
+                    xOffset,
+                    yOffset
+                )
+
+                popUpBinding.tvDelete.setOnClickListener {
+                    contactDetail?.let { model ->
+                        model.contactId?.let { id ->
+                            Common.alertDialog(
+                                context = this,
+                                title = getString(R.string.delete_contact),
+                                description = getString(R.string.are_you_sure_you_want_to_delete_this_contact),
+                                btnOkay = getString(R.string.delete),
+                                onItemClick = {
+                                    viewModel.deleteContact(id)
+                                    finish()
+                                }
+                            )
+                        }
+                    }
+                    popupWindow.dismiss()
+                }
+
+                contactDetail?.let {
+                    val isBlockNumber = Common.isNumberBlocked(this, it.stringNumber)
+                    popUpBinding.tvBlock.text =
+                        if (isBlockNumber) getString(R.string.unblock) else getString(R.string.block)
+                }
+
+                popUpBinding.tvBlock.setOnClickListener {
+                    contactDetail?.let { model ->
+                        if (Common.isNumberBlocked(this, model.stringNumber)) {
+                            Common.alertDialog(
+                                context = this,
+                                title = getString(R.string.unblock_contact),
+                                description = getString(R.string.you_will_be_able_to_receive_call),
+                                btnOkay = getString(R.string.unblock),
+                                onItemClick = {
+                                    recentViewModel.unblockNumber(model.stringNumber)
+                                    popUpBinding.tvBlock.text = getString(R.string.block)
+                                })
+                        } else {
+                            Common.alertDialog(
+                                context = this,
+                                title = getString(R.string.block_contact),
+                                description = getString(R.string.you_will_be_able_to_receive_call),
+                                btnOkay = getString(R.string.block),
+                                onItemClick = {
+                                    recentViewModel.blockNumber(model.stringNumber)
+                                    popUpBinding.tvBlock.text = getString(R.string.unblock)
+                                })
+                        }
+                    }
+                    popupWindow.dismiss()
+                }
+
+                popUpBinding.tvChangeRingtone.setOnClickListener {
+                    if (Settings.System.canWrite(this)) {
+                        startActivity(Intent(this, SetRingtoneActivity::class.java))
+                    } else {
+                        val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
+                        intent.data = "package:$packageName".toUri()
+                        startActivity(intent)
+                        Toast.makeText(
+                            this,
+                            getString(R.string.please_allow_modify_system_settings_to_change_ringtone),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                    popupWindow.dismiss()
+                }
 
             }
 

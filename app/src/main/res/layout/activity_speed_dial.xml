@@ -15,8 +15,8 @@
         android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         android:background="@color/bg_color"
+        android:orientation="vertical"
         tools:context=".activities.speedDial.SpeedDialActivity">
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -113,7 +113,8 @@
                             <ImageView
                                 android:layout_width="@dimen/_15sdp"
                                 android:layout_height="@dimen/_15sdp"
-                                android:src="@drawable/ic_add" />
+                                android:src="@drawable/ic_add"
+                                android:tint="@color/black_color" />
 
                             <TextView
                                 style="@style/TextStyle.Medium"
@@ -203,7 +204,8 @@
                             <ImageView
                                 android:layout_width="@dimen/_15sdp"
                                 android:layout_height="@dimen/_15sdp"
-                                android:src="@drawable/ic_add" />
+                                android:src="@drawable/ic_add"
+                                android:tint="@color/black_color" />
 
                             <TextView
                                 style="@style/TextStyle.Medium"
@@ -295,7 +297,8 @@
                             <ImageView
                                 android:layout_width="@dimen/_15sdp"
                                 android:layout_height="@dimen/_15sdp"
-                                android:src="@drawable/ic_add" />
+                                android:src="@drawable/ic_add"
+                                android:tint="@color/black_color" />
 
                             <TextView
                                 style="@style/TextStyle.Medium"
@@ -387,7 +390,8 @@
                             <ImageView
                                 android:layout_width="@dimen/_15sdp"
                                 android:layout_height="@dimen/_15sdp"
-                                android:src="@drawable/ic_add" />
+                                android:src="@drawable/ic_add"
+                                android:tint="@color/black_color" />
 
                             <TextView
                                 style="@style/TextStyle.Medium"
@@ -479,7 +483,8 @@
                             <ImageView
                                 android:layout_width="@dimen/_15sdp"
                                 android:layout_height="@dimen/_15sdp"
-                                android:src="@drawable/ic_add" />
+                                android:src="@drawable/ic_add"
+                                android:tint="@color/black_color" />
 
                             <TextView
                                 style="@style/TextStyle.Medium"
@@ -571,7 +576,8 @@
                             <ImageView
                                 android:layout_width="@dimen/_15sdp"
                                 android:layout_height="@dimen/_15sdp"
-                                android:src="@drawable/ic_add" />
+                                android:src="@drawable/ic_add"
+                                android:tint="@color/black_color" />
 
                             <TextView
                                 style="@style/TextStyle.Medium"
@@ -663,7 +669,8 @@
                             <ImageView
                                 android:layout_width="@dimen/_15sdp"
                                 android:layout_height="@dimen/_15sdp"
-                                android:src="@drawable/ic_add" />
+                                android:src="@drawable/ic_add"
+                                android:tint="@color/black_color" />
 
                             <TextView
                                 style="@style/TextStyle.Medium"
@@ -755,7 +762,8 @@
                             <ImageView
                                 android:layout_width="@dimen/_15sdp"
                                 android:layout_height="@dimen/_15sdp"
-                                android:src="@drawable/ic_add" />
+                                android:src="@drawable/ic_add"
+                                android:tint="@color/black_color" />
 
                             <TextView
                                 style="@style/TextStyle.Medium"
@@ -847,7 +855,8 @@
                             <ImageView
                                 android:layout_width="@dimen/_15sdp"
                                 android:layout_height="@dimen/_15sdp"
-                                android:src="@drawable/ic_add" />
+                                android:src="@drawable/ic_add"
+                                android:tint="@color/black_color" />
 
                             <TextView
                                 style="@style/TextStyle.Medium"

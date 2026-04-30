@@ -53,12 +53,30 @@ class RecentViewModel @Inject constructor(
     }
 
     init {
-        context.contentResolver.registerContentObserver(
-            CallLog.Calls.CONTENT_URI,
-            true,
-            observer
-        )
+        try {
+            context.contentResolver.registerContentObserver(
+                CallLog.Calls.CONTENT_URI,
+                true,
+                observer
+            )
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+        }
         observeBlockedNumbers()
+        observeTags()
+    }
+
+    private fun observeTags() {
+        viewModelScope.launch {
+            tagRepository.getAllTags().collect {
+                entriesMutex.withLock {
+                    if (allRawEntries.isNotEmpty()) {
+                        val processedData = processRawCallLogs(allRawEntries)
+                        _allRecentCallHistory.postValue(processedData)
+                    }
+                }
+            }
+        }
     }
 
     private fun observeBlockedNumbers() {
@@ -91,7 +109,7 @@ class RecentViewModel @Inject constructor(
     private var _isNextPageLoading = MutableLiveData<Boolean>()
     val isNextPageLoading: LiveData<Boolean> = _isNextPageLoading
 
-    private var _isLoadingFirstTime = MutableLiveData<Boolean>()
+    private var _isLoadingFirstTime = MutableLiveData(true)
     val isLoadingFirstTime: LiveData<Boolean> = _isLoadingFirstTime
 
     private val colorList = listOf(
@@ -109,7 +127,9 @@ class RecentViewModel @Inject constructor(
         if (offset == 0) {
             currentOffset = 0
             isLastPage = false
-            _isLoadingFirstTime.postValue(true)
+            if (_allRecentCallHistory.value.isNullOrEmpty()) {
+                _isLoadingFirstTime.postValue(true)
+            }
         }
 
         if (offset > 0) {
@@ -166,17 +186,19 @@ class RecentViewModel @Inject constructor(
         }
     }
 
-    suspend fun getTag(phoneNumber: String): String {
-        return tagRepository.getTag(phoneNumber)!!
+    suspend fun getTag(phoneNumber: String): String? {
+        return tagRepository.getTag(phoneNumber)
     }
 
-    fun blockNumber(phoneNumber: String) {
+    fun blockNumber(phoneNumber: String?) {
+        if (phoneNumber.isNullOrEmpty()) return
         viewModelScope.launch(Dispatchers.IO) {
             blockRepository.blockNumber(phoneNumber)
         }
     }
 
-    fun unblockNumber(phoneNumber: String) {
+    fun unblockNumber(phoneNumber: String?) {
+        if (phoneNumber.isNullOrEmpty()) return
         viewModelScope.launch(Dispatchers.IO) {
             blockRepository.unblockNumber(phoneNumber)
         }
@@ -291,5 +313,22 @@ class RecentViewModel @Inject constructor(
             }
         }
         processedList
+    }
+
+    fun deleteHistory(selectedEntries: List<CallLogEntry>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val allIdsToDelete = selectedEntries.flatMap { it.callIds }
+            repository.deleteCallHistory(allIdsToDelete)
+            // Reload after deletion
+            loadAllRecentsHistory(0, currentOffset.coerceAtLeast(Constance.LOAD_DATA_COUNT))
+        }
+    }
+
+    fun clearAllHistory() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteAllCallHistory()
+            // Reload after deletion
+            loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
+        }
     }
 }

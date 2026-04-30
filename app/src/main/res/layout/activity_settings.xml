@@ -475,12 +475,20 @@
                             android:text="@string/sim_preference"
                             android:textColor="@color/black_color" />
 
+                        <TextView
+                            android:id="@+id/tv_sim_pref"
+                            style="@style/TextStyle.Small"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Always ask"
+                            android:textColor="@color/setting_grey_color" />
+
                         <ImageView
                             android:layout_width="@dimen/_16sdp"
                             android:layout_height="@dimen/_16sdp"
                             android:rotation="180"
                             android:src="@drawable/ic_back_arrow"
-                            android:tint="@color/black_color" />
+                            app:tint="@color/black_color" />
 
                     </LinearLayout>
 

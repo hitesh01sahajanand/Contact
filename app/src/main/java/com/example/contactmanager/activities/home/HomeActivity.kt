@@ -1,18 +1,26 @@
 package com.example.contactmanager.activities.home
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.ImageViewCompat
@@ -24,9 +32,8 @@ import com.example.contactmanager.fragments.contacts.ContactsFragment
 import com.example.contactmanager.fragments.favorites.FavoritesFragment
 import com.example.contactmanager.fragments.keypad.KeypadFragment
 import com.example.contactmanager.fragments.recents.RecentsFragment
-import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
-import com.example.contactmanager.utils.PermissionManager.isDefaultDialer
+import com.example.contactmanager.utils.PermissionManager
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -39,11 +46,69 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
     private lateinit var activeFragment: Fragment
 
     private var doubleBackToExitPressedOnce = false
-    private var isDefaultDialerApp = false
     private var selectedTab: View? = null
+    private var isViewInitialized = false
+    private var isFromPermissionRequest = false
+
+    private val contactPermissions = arrayOf(
+        Manifest.permission.READ_CONTACTS,
+        Manifest.permission.WRITE_CONTACTS,
+        Manifest.permission.READ_CALL_LOG,
+        Manifest.permission.WRITE_CALL_LOG
+    )
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        isFromPermissionRequest = true
+        if (permissions.all { it.value }) {
+            checkPermissions(showCustomDialog = false)
+        } else {
+            // Check if any of the denied permissions are permanently denied (user clicked "Don't ask again")
+            val isPermanentlyDenied = contactPermissions.any {
+                ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED &&
+                        !ActivityCompat.shouldShowRequestPermissionRationale(this, it)
+            }
+
+            if (isPermanentlyDenied) {
+                Toast.makeText(
+                    this,
+                    "Permissions are required. Please enable them in settings.",
+                    Toast.LENGTH_LONG
+                ).show()
+                openAppSettings()
+            } else {
+                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun openAppSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", packageName, null)
+        }
+        startActivity(intent)
+    }
+
+    private val overlayPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        isFromPermissionRequest = true
+        checkPermissions(showCustomDialog = false)
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // If permissions are missing, remove any restored fragments to prevent them from
+        // initializing ViewModels that might access ContentProviders and cause crashes.
+        if (!PermissionManager.hasPermissions(this)) {
+            supportFragmentManager.fragments.forEach { fragment ->
+                supportFragmentManager.beginTransaction().remove(fragment).commitNow()
+            }
+        }
+
         enableEdgeToEdge()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_home)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -51,20 +116,71 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        initView()
+
+        // initView() is now called from checkPermissions() after all permissions are granted
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (!isFromPermissionRequest) {
+            checkPermissions(showCustomDialog = true)
+        }
+        isFromPermissionRequest = false
+    }
+
+    private fun checkPermissions(showCustomDialog: Boolean) {
+        val missingPermissions = contactPermissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (missingPermissions.isNotEmpty()) {
+            binding.llContainer.visibility = View.INVISIBLE
+            if (showCustomDialog) {
+                PermissionManager.openPermissionDialog(this) {
+                    isFromPermissionRequest = true
+                    requestPermissionLauncher.launch(contactPermissions)
+                }
+            } else {
+                isFromPermissionRequest = true
+                requestPermissionLauncher.launch(contactPermissions)
+            }
+        } else if (!PermissionManager.hasOverlayPermission(this)) {
+            binding.llContainer.visibility = View.INVISIBLE
+            if (showCustomDialog) {
+                PermissionManager.openPermissionDialog(this) {
+                    isFromPermissionRequest = true
+                    val intent = Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:$packageName")
+                    )
+                    overlayPermissionLauncher.launch(intent)
+                }
+            } else {
+                isFromPermissionRequest = true
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:$packageName")
+                )
+                overlayPermissionLauncher.launch(intent)
+            }
+        } else {
+            binding.llContainer.visibility = View.VISIBLE
+            initView()
+        }
+    }
+
+
     private fun initView() {
+        if (isViewInitialized) return
+        isViewInitialized = true
+
         binding.onClickHandler = this
-        isDefaultDialerApp = isDefaultDialer(this)
 
         setupFragments()
         handleBackPress()
     }
 
     private fun setupFragments() {
-
-        val isDialer = intent.getBooleanExtra(Constance.IS_DIALER, false)
 
         favoritesFragment = FavoritesFragment()
         recentsFragment = RecentsFragment()
@@ -73,29 +189,33 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
 
         val transaction = supportFragmentManager.beginTransaction()
 
-        transaction.add(binding.llContainer.id, recentsFragment).hide(recentsFragment)
-        transaction.add(binding.llContainer.id, contactsFragment).hide(contactsFragment)
-        transaction.add(binding.llContainer.id, favoritesFragment).hide(favoritesFragment)
-        transaction.add(binding.llContainer.id, keypadFragment).hide(keypadFragment)
-
-        if (isDefaultDialerApp) {
-            transaction.show(recentsFragment)
-            activeFragment = recentsFragment
-            updateTabUI(binding.llRecents)
-        } else {
-            transaction.show(keypadFragment)
-            activeFragment = keypadFragment
-            updateTabUI(binding.llKeypad)
-        }
-
-        if (isDialer) {
-            transaction.show(keypadFragment)
-            activeFragment = keypadFragment
-            updateTabUI(binding.llKeypad)
-        }
-
+        transaction.add(binding.llContainer.id, recentsFragment)
+        activeFragment = recentsFragment
+        updateTabUI(binding.llRecents)
         transaction.commit()
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            val lazyTransaction = supportFragmentManager.beginTransaction()
+            if (activeFragment != recentsFragment) lazyTransaction.add(
+                binding.llContainer.id,
+                recentsFragment
+            ).hide(recentsFragment)
+            if (activeFragment != contactsFragment) lazyTransaction.add(
+                binding.llContainer.id,
+                contactsFragment
+            ).hide(contactsFragment)
+            if (activeFragment != favoritesFragment) lazyTransaction.add(
+                binding.llContainer.id,
+                favoritesFragment
+            ).hide(favoritesFragment)
+            if (activeFragment != keypadFragment) lazyTransaction.add(
+                binding.llContainer.id,
+                keypadFragment
+            ).hide(keypadFragment)
+            lazyTransaction.commitAllowingStateLoss()
+        }, 500)
     }
+
 
     private fun updateTabUI(selected: View) {
 
@@ -103,8 +223,7 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
             binding.llFavorite,
             binding.llRecents,
             binding.llContacts,
-            binding.llKeypad,
-//            binding.llSettings
+            binding.llKeypad
         )
 
         tabs.forEach { tab ->
@@ -138,12 +257,6 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
-        isDefaultDialerApp = isDefaultDialer(this)
-
-        if (!isDefaultDialerApp && view.id != binding.llKeypad.id) {
-            Toast.makeText(this, "Set as default app first", Toast.LENGTH_SHORT).show()
-            return
-        }
 
         when (view.id) {
             binding.llFavorite.id -> {

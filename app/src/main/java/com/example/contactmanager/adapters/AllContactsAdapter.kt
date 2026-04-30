@@ -91,7 +91,7 @@ class AllContactsAdapter(
     fun addAll(newList: List<ContactListItem>) {
         contactList.clear()
         contactList.addAll(newList)
-        
+
         // Store initial favorite status for all contacts (unique by ID)
         // and re-apply pending changes
         newList.filterIsInstance<ContactListItem.Contact>().forEach { contactItem ->
@@ -100,14 +100,14 @@ class AllContactsAdapter(
                 if (!initialFavoriteStatus.containsKey(id)) {
                     initialFavoriteStatus[id] = contactItem.data.isFavourite
                 }
-                
+
                 // Re-apply pending change if it exists
                 if (pendingChanges.containsKey(id)) {
                     contactItem.data.isFavourite = pendingChanges[id]!!
                 }
             }
         }
-        
+
         applyFilter()
     }
 
@@ -167,6 +167,8 @@ class AllContactsAdapter(
     fun getCurrentList(): List<ContactListItem> {
         return filteredList
     }
+
+
 
     fun getVisibleFavoriteContacts(): List<String> {
         return contactList
@@ -298,13 +300,13 @@ class AllContactsAdapter(
 
                     // Toggle in filtered list (UI)
                     val newFavStatus = if (data.isFavourite == 1) 0 else 1
-                    
+
                     // Track this change
                     pendingChanges[contactId] = newFavStatus
-                    
+
                     // 🔥 Update ALL instances in the master list and collect their positions for UI refresh
                     val positionsToRefresh = mutableListOf<Int>()
-                    
+
                     // First, find all positions in the filtered list that need refreshing
                     filteredList.forEachIndexed { index, item ->
                         if (item is ContactListItem.Contact && item.data.contactId == contactId) {

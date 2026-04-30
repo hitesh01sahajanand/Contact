@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.database.Cursor
+import android.net.Uri
 import android.provider.CallLog
 import android.provider.ContactsContract
 import androidx.core.content.ContextCompat
@@ -12,8 +13,13 @@ import com.example.contactmanager.utils.Common
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Date
 import javax.inject.Inject
+import javax.inject.Singleton
 
-class ContactDetailsRepository @Inject constructor(@param:ApplicationContext private val context: Context) {
+@Singleton
+class ContactDetailsRepository @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+    private val tagRepository: TagRepository
+) {
 
     fun getCallHistoryForNumber(
         number: String,
@@ -91,12 +97,21 @@ class ContactDetailsRepository @Inject constructor(@param:ApplicationContext pri
                             intType = type
                         ).apply {
                             resetCallIds(id)
+                            // If name is null/empty, try to fetch from tags
+                            if (stringCallName.isNullOrEmpty()) {
+                                val cleaned = Common.cleanNumber(numberDb ?: "")
+                                kotlinx.coroutines.runBlocking {
+                                    val tag = tagRepository.getTag(cleaned)
+                                    if (!tag.isNullOrEmpty()) {
+                                        stringCallName = tag
+                                    }
+                                }
+                            }
                         }
                     )
 
                 } while (cursor.moveToNext())
             }
-
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
@@ -238,5 +253,13 @@ class ContactDetailsRepository @Inject constructor(@param:ApplicationContext pri
             null
         }
     }
-
+    fun deleteContact(contactId: String) {
+        try {
+            val contentResolver = context.contentResolver
+            val uri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI, contactId)
+            contentResolver.delete(uri, null, null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }

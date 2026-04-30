@@ -48,6 +48,8 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import android.media.AudioManager
 import android.media.ToneGenerator
+import com.example.contactmanager.activities.settings.SettingsActivity
+import com.example.contactmanager.activities.speedDial.SpeedDialActivity
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.SharedPreferenceManager
 
@@ -130,23 +132,13 @@ class KeypadFragment : Fragment(), OnClickHandler {
 
             when (result.resultCode) {
                 RESULT_OK -> {
-                    checkOverlayPermission()/* PermissionDialog.showDefaultDialerDialog(requireActivity(), onclick = { int ->
-                         checkAndRequestPermissions()
- //                        Toast.makeText(requireActivity(), "Success", Toast.LENGTH_SHORT).show()
-                     })*/
-//                    "User accepted request to become default dialer"
+                    checkOverlayPermission()
                 }
 
                 RESULT_CANCELED -> {
-//                    "User declined request to become default dialer"
-                }
 
-                else -> {
-//                    "Unexpected result code ${result.resultCode}"
                 }
             }
-
-//            Toast.makeText(requireActivity(), message, Toast.LENGTH_SHORT).show()
         }
 
     private fun checkOverlayPermission() {
@@ -318,9 +310,10 @@ class KeypadFragment : Fragment(), OnClickHandler {
         lifecycleScope.launch {
             val speedDial = speedDialViewModel.getSpeedDialBySlot(slot)
             if (speedDial != null && speedDial.contactNumber.isNotEmpty()) {
-                actionCall(speedDial.contactNumber, requireActivity())
+                Common.actionCall(speedDial.contactNumber, requireActivity())
             } else {
-                Toast.makeText(requireContext(), "No speed dial set for $slot", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "No speed dial set for $slot", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
     }
@@ -345,18 +338,19 @@ class KeypadFragment : Fragment(), OnClickHandler {
     }
 
     fun allPermissionGranted() {
-        if (PermissionManager.hasPermissions(requireActivity()) && Settings.canDrawOverlays(
+       /* if (PermissionManager.hasPermissions(requireActivity()) && Settings.canDrawOverlays(
                 requireActivity()
-            ) && isDefaultDialer(requireActivity())
+            )
         ) {
-            Log.e("TAG", "allPermissionGranted: false")
             binding.llDefaultUi.visibility = View.GONE
             binding.llKeypadUi.visibility = View.VISIBLE
         } else {
-            Log.e("TAG", "allPermissionGranted: true")
             binding.llDefaultUi.visibility = View.VISIBLE
             binding.llKeypadUi.visibility = View.GONE
-        }
+        }*/
+
+        binding.llDefaultUi.visibility = View.GONE
+        binding.llKeypadUi.visibility = View.VISIBLE
     }
 
     fun openDefaultAppDialog(context: Context) {
@@ -402,7 +396,7 @@ class KeypadFragment : Fragment(), OnClickHandler {
                         ).show()
                         return
                     }
-                    actionCall(number, requireActivity())
+                    Common.actionCall(number, requireActivity())
                 }
             }
 
@@ -419,10 +413,20 @@ class KeypadFragment : Fragment(), OnClickHandler {
                     speedDial,
                     settings,
                     option1Click = {
-                        Toast.makeText(requireActivity(), speedDial, Toast.LENGTH_SHORT).show()
+                        requireActivity().startActivity(
+                            Intent(
+                                requireActivity(),
+                                SpeedDialActivity::class.java
+                            )
+                        )
                     },
                     option2Click = {
-                        Toast.makeText(requireActivity(), settings, Toast.LENGTH_SHORT).show()
+                        requireActivity().startActivity(
+                            Intent(
+                                requireActivity(),
+                                SettingsActivity::class.java
+                            )
+                        )
                     })
             }
 
@@ -432,14 +436,47 @@ class KeypadFragment : Fragment(), OnClickHandler {
                     intent.putExtra("Number", binding.edtDisplayNumber.text.toString())
                     requireActivity().startActivity(intent)
                 } else {
-                    Toast.makeText(requireActivity(), "enter number", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireActivity(),
+                        requireActivity().getString(R.string.enter_number),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
+            }
 
+            binding.llVideoCall.id -> {
+                if (binding.edtDisplayNumber.text.isNotEmpty()) {
+                    Common.showVideoAppChooser(
+                        requireActivity(),
+                        binding.edtDisplayNumber.text.toString()
+                    )
+                } else {
+                    Toast.makeText(
+                        requireActivity(),
+                        requireActivity().getString(R.string.enter_number),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+
+            binding.llSendMessage.id -> {
+                if (binding.edtDisplayNumber.text.isNotEmpty()) {
+                    Common.showMessageAppChooser(
+                        requireActivity(),
+                        binding.edtDisplayNumber.text.toString()
+                    )
+                } else {
+                    Toast.makeText(
+                        requireActivity(),
+                        requireActivity().getString(R.string.enter_number),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
     }
 
-    fun actionCall(phoneNumber: String, context: Context) {
+    /*fun actionCall(phoneNumber: String, context: Context) {
         if (phoneNumber.isEmpty()) return
 
         val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
@@ -456,58 +493,49 @@ class KeypadFragment : Fragment(), OnClickHandler {
             ) == PackageManager.PERMISSION_GRANTED
         ) {
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val subscriptionManager =
+                context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+            val activeSimList = subscriptionManager?.activeSubscriptionInfoList
 
-                val subscriptionManager =
-                    context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
-                val activeSimList = subscriptionManager?.activeSubscriptionInfoList
+            if (!activeSimList.isNullOrEmpty() && activeSimList.size > 1) {
 
-                if (!activeSimList.isNullOrEmpty() && activeSimList.size > 1) {
+                val simNames = Array(activeSimList.size) { i ->
+                    "SIM ${i + 1}"
+                }
 
-                    val simNames = Array(activeSimList.size) { i ->
-                        "SIM ${i + 1}"
-                    }
+                val builder = MaterialAlertDialogBuilder(context)
 
-                    val builder = MaterialAlertDialogBuilder(context)
+                builder.setTitle("Select SIM")
+                    .setItems(simNames) { _, which ->
 
-                    builder.setTitle("Select SIM")
-                        .setItems(simNames) { _, which ->
+                        val selectedSim = activeSimList[which]
 
-                            val selectedSim = activeSimList[which]
-
-                            val callBundle2 = Bundle().apply {
-                                putParcelable(
-                                    TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
-                                    Common.getHandleForSubId(
-                                        selectedSim.subscriptionId,
-                                        context
-                                    )
+                        val callBundle2 = Bundle().apply {
+                            putParcelable(
+                                TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
+                                Common.getHandleForSubId(
+                                    selectedSim.subscriptionId,
+                                    context
                                 )
-                            }
-
-                            val callUri2 = Uri.fromParts("tel", phoneNumber, null)
-                            telecomManager.placeCall(callUri2, callBundle2)
+                            )
                         }
 
-                    val dialog = builder.create()
-                    dialog.show()
+                        val callUri2 = Uri.fromParts("tel", phoneNumber, null)
+                        telecomManager.placeCall(callUri2, callBundle2)
+                    }
 
-                    dialog.getButton(Dialog.BUTTON_POSITIVE)?.setTextColor(Color.RED)
+                val dialog = builder.create()
+                dialog.show()
 
-                } else {
-                    // Single SIM
-                    telecomManager.placeCall(callUri, callBundle)
-                }
+                dialog.getButton(Dialog.BUTTON_POSITIVE)?.setTextColor(Color.RED)
 
             } else {
-                // Pre-Marshmallow
-                val intent = Intent(Intent.ACTION_CALL).apply {
-                    data = "tel:${phoneNumber}".toUri()
-                }
-                context.startActivity(intent)
+                // Single SIM
+                telecomManager.placeCall(callUri, callBundle)
             }
+
         }
-    }
+    }*/
 
     override fun onDestroy() {
         super.onDestroy()

@@ -51,6 +51,16 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        if (!Settings.System.canWrite(this)) {
+            val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
+            intent.data = Uri.parse("package:$packageName")
+            startActivity(intent)
+            Toast.makeText(this, "Please allow 'Modify system settings' to use this feature", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+
         enableEdgeToEdge()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_set_ringtone)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -79,8 +89,16 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
     private fun loadSystemRingtones() {
         val manager = RingtoneManager(this)
         manager.setType(RingtoneManager.TYPE_RINGTONE)
-        val cursor = manager.cursor
-        val currentUri = RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
+        val cursor = try {
+            manager.cursor
+        } catch (e: SecurityException) {
+            null
+        } ?: return
+        val currentUri = try {
+            RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
+        } catch (e: SecurityException) {
+            null
+        }
         ringtoneList.clear()
         while (cursor.moveToNext()) {
             val title = cursor.getString(RingtoneManager.TITLE_COLUMN_INDEX)
@@ -123,7 +141,11 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
     }
 
     private fun displayCurrentRingtone() {
-        val currentUri = RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
+        val currentUri = try {
+            RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
+        } catch (e: SecurityException) {
+            null
+        }
         val name = if (currentUri != null) {
             // Try ContentResolver (correct for MediaStore-inserted URIs and custom files)
             val fromCr = runCatching {
@@ -140,7 +162,11 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
             }.getOrNull()
             // Fallback: RingtoneManager title (works for built-in system ringtones)
             fromCr?.takeIf { it.isNotBlank() }
-                ?: RingtoneManager.getRingtone(this, currentUri)?.getTitle(this)
+                ?: try {
+                    RingtoneManager.getRingtone(this, currentUri)?.getTitle(this)
+                } catch (e: SecurityException) {
+                    null
+                }
                 ?: "Default"
         } else "Default"
         binding.tvRingtoneName.text = name
@@ -151,8 +177,31 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
      * media:// URI and shows correct metadata, then set as default ringtone.
      */
     private fun setCustomRingtone(uri: Uri, displayName: String) {
+        // 1. Try to stage the file to MediaStore first.
+        // This creates a persistent URI that we can use even after returning from the settings screen,
+        // as raw picker URIs often lose permission when navigating to Settings.
+        var stagedUri: Uri? = null
+        try {
+            val values = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+                put(MediaStore.MediaColumns.MIME_TYPE, "audio/mpeg")
+                put(MediaStore.Audio.Media.IS_RINGTONE, true)
+                put(MediaStore.Audio.Media.IS_MUSIC, false)
+            }
+            stagedUri = contentResolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values)
+            if (stagedUri != null) {
+                contentResolver.openOutputStream(stagedUri)?.use { out ->
+                    contentResolver.openInputStream(uri)?.use { input -> input.copyTo(out) }
+                }
+            }
+        } catch (e: Exception) {
+            // If staging fails, we'll attempt to use the original URI as a fallback
+        }
+
+        val ringtoneUri = stagedUri ?: uri
+
         if (!Settings.System.canWrite(this)) {
-            pendingRingtoneUri = uri
+            pendingRingtoneUri = ringtoneUri
             val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
             intent.data = Uri.parse("package:$packageName")
             startActivity(intent)
@@ -161,27 +210,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
         }
 
         try {
-            val values = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
-                put(MediaStore.MediaColumns.MIME_TYPE, "audio/mpeg")
-                /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    put(MediaStore.MediaColumns.IS_RINGTONE, true)
-                }*/
-                put(MediaStore.Audio.Media.IS_RINGTONE, true)
-                put(MediaStore.Audio.Media.IS_MUSIC, false)
-            }
-
-            val insertUri = contentResolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values)
-            if (insertUri != null) {
-                contentResolver.openOutputStream(insertUri)?.use { out ->
-                    contentResolver.openInputStream(uri)?.use { input -> input.copyTo(out) }
-                }
-                RingtoneManager.setActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE, insertUri)
-            } else {
-                // Fallback: set content URI directly
-                RingtoneManager.setActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE, uri)
-            }
-
+            RingtoneManager.setActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE, ringtoneUri)
             Toast.makeText(this, "Ringtone set: $displayName", Toast.LENGTH_SHORT).show()
             pendingRingtoneUri = null
             // Reload list — custom ringtone won't match any system ringtone, so selection clears
@@ -189,8 +218,16 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
             adapter.clearSelection()
             selectedRingtone = null
             displayCurrentRingtone()
+        } catch (e: SecurityException) {
+            // Even if canWrite() returned true, we might hit this on some devices
+            pendingRingtoneUri = ringtoneUri
+            val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
+            intent.data = Uri.parse("package:$packageName")
+            startActivity(intent)
+            Toast.makeText(this, "Please ensure 'Modify system settings' is enabled", Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
             Toast.makeText(this, "Failed to set ringtone: ${e.message}", Toast.LENGTH_SHORT).show()
+            pendingRingtoneUri = null
         }
     }
 
@@ -244,9 +281,12 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
         }
 
         stopAllPlayback()
-        val currentUri = RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
-            ?: run {
-                Toast.makeText(this, "No ringtone found", Toast.LENGTH_SHORT).show()
+        val currentUri = try {
+            RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
+        } catch (e: SecurityException) {
+            null
+        } ?: run {
+                Toast.makeText(this, "No ringtone found or permission missing", Toast.LENGTH_SHORT).show()
                 return
             }
 
@@ -307,8 +347,15 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
             Toast.makeText(this, "Ringtone set successfully", Toast.LENGTH_SHORT).show()
             pendingRingtoneUri = null
             displayCurrentRingtone()
+        } catch (e: SecurityException) {
+            pendingRingtoneUri = uri
+            val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
+            intent.data = Uri.parse("package:$packageName")
+            startActivity(intent)
+            Toast.makeText(this, "Please ensure 'Modify system settings' is enabled", Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
             Toast.makeText(this, "Failed to set ringtone: ${e.message}", Toast.LENGTH_SHORT).show()
+            pendingRingtoneUri = null
         }
     }
 
@@ -316,14 +363,14 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
         super.onResume()
         pendingRingtoneUri?.let { pending ->
             if (Settings.System.canWrite(this)) {
-                // Distinguish custom file URIs from system ringtone URIs
-                val isCustomFile = pending.scheme == "content" &&
-                        pending.authority?.contains("media") == false
-                if (isCustomFile) {
+                // If the URI is already from MediaStore (system or staged), set it directly.
+                // Otherwise, treat it as a custom file that might need staging.
+                val isStagedOrSystem = pending.authority == "media"
+                if (isStagedOrSystem) {
+                    setSystemRingtone(pending)
+                } else {
                     val name = getDisplayNameFromUri(pending)
                     setCustomRingtone(pending, name)
-                } else {
-                    setSystemRingtone(pending)
                 }
             }
         }
@@ -337,9 +384,13 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                     Toast.makeText(this, "Please select a ringtone", Toast.LENGTH_SHORT).show()
                     return
                 }
-                val currentDefault = RingtoneManager.getActualDefaultRingtoneUri(
-                    this, RingtoneManager.TYPE_RINGTONE
-                )
+                val currentDefault = try {
+                    RingtoneManager.getActualDefaultRingtoneUri(
+                        this, RingtoneManager.TYPE_RINGTONE
+                    )
+                } catch (e: SecurityException) {
+                    null
+                }
                 if (selected.uri.toString() == currentDefault?.toString()) {
                     Toast.makeText(this, "This ringtone is already set", Toast.LENGTH_SHORT).show()
                     return

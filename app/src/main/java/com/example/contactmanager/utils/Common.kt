@@ -118,7 +118,9 @@ object Common {
         }
     }
 
-    fun isNumberBlocked(context: Context, number: String): Boolean {
+    fun isNumberBlocked(context: Context, number: String?): Boolean {
+        if (number.isNullOrEmpty()) return false
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
                 return android.provider.BlockedNumberContract.isBlocked(context, number)
@@ -965,53 +967,70 @@ object Common {
             ) == PackageManager.PERMISSION_GRANTED
         ) {
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val subscriptionManager =
+                context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+            val activeSimList = subscriptionManager?.activeSubscriptionInfoList
+            val simPref = SharedPreferenceManager.getInt(context, Constance.SIM_PREFERENCE, -1)
 
-                val subscriptionManager =
-                    context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
-                val activeSimList = subscriptionManager?.activeSubscriptionInfoList
-
-                if (!activeSimList.isNullOrEmpty() && activeSimList.size > 1) {
-
-                    val simNames = Array(activeSimList.size) { i ->
-                        "SIM ${i + 1}"
-                    }
-
-                    val builder = MaterialAlertDialogBuilder(context)
-
-                    builder.setTitle("Select SIM").setItems(simNames) { _, which ->
-
-                        val selectedSim = activeSimList[which]
-
-                        val callBundle2 = Bundle().apply {
+            if (!activeSimList.isNullOrEmpty() && activeSimList.size > 1) {
+                if (simPref != -1) {
+                    val preferredSim = activeSimList.find { it.subscriptionId == simPref }
+                    if (preferredSim != null) {
+                        val callBundlePref = Bundle().apply {
                             putParcelable(
                                 TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
-                                Common.getHandleForSubId(
-                                    selectedSim.subscriptionId, context
-                                )
+                                getHandleForSubId(preferredSim.subscriptionId, context)
                             )
                         }
+                        telecomManager.placeCall(callUri, callBundlePref)
+                        return
+                    }
+                }
 
-                        val callUri2 = Uri.fromParts("tel", number, null)
-                        telecomManager.placeCall(callUri2, callBundle2)
+                val simNames = Array(activeSimList.size) { i ->
+                    "SIM ${i + 1} (${activeSimList[i].carrierName})"
+                }
+
+                val builder = MaterialAlertDialogBuilder(context)
+
+                builder.setTitle("Select SIM").setItems(simNames) { _, which ->
+
+                    val selectedSim = activeSimList[which]
+
+                    val callBundle2 = Bundle().apply {
+                        putParcelable(
+                            TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
+                            getHandleForSubId(
+                                selectedSim.subscriptionId, context
+                            )
+                        )
                     }
 
-                    val dialog = builder.create()
-                    dialog.show()
-
-                    dialog.getButton(Dialog.BUTTON_POSITIVE)?.setTextColor(Color.RED)
-
-                } else {
-                    // Single SIM
-                    telecomManager.placeCall(callUri, callBundle)
+                    val callUri2 = Uri.fromParts("tel", number, null)
+                    telecomManager.placeCall(callUri2, callBundle2)
                 }
+
+                val dialog = builder.create()
+                dialog.show()
+
+                dialog.getButton(Dialog.BUTTON_POSITIVE)?.setTextColor(Color.RED)
 
             } else {
-                // Pre-Marshmallow
-                val intent = Intent(Intent.ACTION_CALL).apply {
-                    data = "tel:$number".toUri()
+                // Single SIM or SIM preference not set/matched
+                if (!activeSimList.isNullOrEmpty() && simPref != -1) {
+                    val preferredSim = activeSimList.find { it.subscriptionId == simPref }
+                    if (preferredSim != null) {
+                        val callBundlePref = Bundle().apply {
+                            putParcelable(
+                                TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
+                                getHandleForSubId(preferredSim.subscriptionId, context)
+                            )
+                        }
+                        telecomManager.placeCall(callUri, callBundlePref)
+                        return
+                    }
                 }
-                context.startActivity(intent)
+                telecomManager.placeCall(callUri, callBundle)
             }
         }
     }
@@ -1314,8 +1333,9 @@ object Common {
 
         // Optional: transparent background (important)
         dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+        dialog.setCancelable(false)
 
-        val margin = (10 * context.resources.displayMetrics.density).toInt()
+        val margin = (30 * context.resources.displayMetrics.density).toInt()
 
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels

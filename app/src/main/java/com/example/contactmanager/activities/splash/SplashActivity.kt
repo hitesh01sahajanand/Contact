@@ -1,11 +1,18 @@
 package com.example.contactmanager.activities.splash
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.ActivityOptions
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
@@ -19,6 +26,12 @@ import com.example.contactmanager.utils.SharedPreferenceManager
 @SuppressLint("CustomSplashScreen")
 class SplashActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        proceedToNext()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,17 +46,52 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun initView() {
-        Handler(mainLooper).postDelayed({
-            val isLogIN = SharedPreferenceManager.getBoolean(this, Constance.IS_LOG_IN)
+        binding.lavSplashLogo.setAnimation(R.raw.splash_logo)
+        binding.lavSplashLogo.addAnimatorListener(object :
+            android.animation.Animator.AnimatorListener {
+            override fun onAnimationStart(animation: android.animation.Animator) {}
 
-            if (!isLogIN) {
-                startActivity(Intent(this, PermissionActivity::class.java))
-                finish()
-            } else {
-                startActivity(Intent(this, HomeActivity::class.java))
-                finishAffinity()
+            override fun onAnimationEnd(animation: android.animation.Animator) {
+                checkNotificationPermission()
             }
-        }, 1000)
 
+            override fun onAnimationCancel(animation: android.animation.Animator) {}
+
+            override fun onAnimationRepeat(animation: android.animation.Animator) {}
+        })
+        binding.lavSplashLogo.playAnimation()
+    }
+
+    private fun checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                proceedToNext()
+            } else {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        } else {
+            proceedToNext()
+        }
+    }
+
+    private fun proceedToNext() {
+        val isLogIN = SharedPreferenceManager.getBoolean(this, Constance.IS_LOG_IN)
+        val options = ActivityOptions.makeCustomAnimation(
+            this,
+            android.R.anim.fade_in,
+            android.R.anim.fade_out
+        )
+
+        if (!isLogIN) {
+            startActivity(Intent(this, PermissionActivity::class.java))
+            finish()
+        } else {
+            startActivity(Intent(this, HomeActivity::class.java), options.toBundle())
+            finish()
+        }
     }
 }

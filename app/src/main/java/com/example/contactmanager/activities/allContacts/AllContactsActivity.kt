@@ -99,16 +99,8 @@ class AllContactsActivity : AppCompatActivity(), OnClickHandler {
         when (view.id) {
             binding.tvDone.id -> {
                 val changedContacts = allContactsAdapter.getChangedContacts()
-                android.util.Log.d(
-                    "AllContactsActivity", "Saving ${changedContacts.size} changed contacts"
-                )
                 if (changedContacts.isNotEmpty()) {
                     viewModel.updateFavoriteStatus(changedContacts)
-                    android.widget.Toast.makeText(
-                        this,
-                        "Updating ${changedContacts.size} favorites...",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
                 }
                 finish()
             }

@@ -36,9 +36,13 @@ class RingtonePlayer(private val context: Context) {
                 return
             }
 
-            val ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(
-                context, RingtoneManager.TYPE_RINGTONE
-            ) ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+            val ringtoneUri = try {
+                RingtoneManager.getActualDefaultRingtoneUri(
+                    context, RingtoneManager.TYPE_RINGTONE
+                )
+            } catch (e: SecurityException) {
+                null
+            } ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
 
             val mp = MediaPlayer()
 

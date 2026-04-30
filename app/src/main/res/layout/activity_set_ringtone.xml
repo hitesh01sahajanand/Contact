@@ -142,7 +142,8 @@
                         android:layout_width="@dimen/_18sdp"
                         android:layout_height="@dimen/_18sdp"
                         android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                        android:src="@drawable/ic_play" />
+                        android:src="@drawable/ic_play"
+                        android:tint="@color/black_color" />
 
                     <LinearLayout
                         android:layout_width="match_parent"

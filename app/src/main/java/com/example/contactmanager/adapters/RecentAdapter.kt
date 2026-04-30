@@ -2,13 +2,10 @@ package com.example.contactmanager.adapters
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
-import android.transition.ChangeBounds
-import android.transition.Fade
-import android.transition.TransitionManager
-import android.transition.TransitionSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -38,6 +35,11 @@ class RecentAdapter(
     }
 
     private var expandedPosition = -1
+    var isSelectionMode = false
+    private val selectedEntries = mutableSetOf<CallLogEntry>()
+
+    var onSelectionModeChanged: ((Boolean) -> Unit)? = null
+    var onSelectionCountChanged: ((Int) -> Unit)? = null
 
     private val originalList = ArrayList<CallHistoryListItems>()
     private var filteredList = ArrayList<CallHistoryListItems>()
@@ -99,13 +101,11 @@ class RecentAdapter(
     }
 
     // 🔹 Submit list
-    fun submitList(list: List<CallHistoryListItems>) {
-        originalList.clear()
-        originalList.addAll(list)
-
+    fun submitList(newList: List<CallHistoryListItems>) {
         filteredList.clear()
-        filteredList.addAll(list)
-
+        filteredList.addAll(newList)
+        originalList.clear()
+        originalList.addAll(newList)
         notifyDataSetChanged()
     }
 
@@ -241,7 +241,14 @@ class RecentAdapter(
                 else -> R.drawable.bg_middle
             }
 
+            val isSelected = isSelectionMode && selectedEntries.contains(data)
             binding.llMainView.setBackgroundResource(backgroundRes)
+            if (isSelected) {
+                binding.llMainView.backgroundTintList =
+                    ColorStateList.valueOf(ContextCompat.getColor(context, R.color.border_color))
+            } else {
+                binding.llMainView.backgroundTintList = null
+            }
 
             val params = binding.root.layoutParams as RecyclerView.LayoutParams
             val vertical = context.resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._10sdp)
@@ -257,35 +264,62 @@ class RecentAdapter(
 
             binding.root.layoutParams = params
 
-            binding.llMainView.setOnClickListener {
-                val previousPosition = expandedPosition
-                expandedPosition = if (isExpanded) -1 else position
+            binding.cbSelect.isVisible = isSelectionMode
+            binding.ivCollapseCallType.isVisible = !isSelectionMode
+            binding.cbSelect.isChecked = selectedEntries.contains(data)
+            binding.cbSelect.isClickable = false
+            binding.cbSelect.isFocusable = false
+            binding.cbSelect.background = null
 
-                val transition = TransitionSet()
-                    .addTransition(Fade())
-                    .addTransition(ChangeBounds())
-                    .setDuration(250)
-
-                TransitionManager.beginDelayedTransition(binding.llMainView, transition)
-
-                // Notify all affected items
-                val itemsToNotify = mutableSetOf<Int>()
-                if (previousPosition != -1) {
-                    itemsToNotify.add(previousPosition)
-                    itemsToNotify.add(previousPosition - 1)
-                    itemsToNotify.add(previousPosition + 1)
+            binding.llMainView.setOnLongClickListener {
+                if (!isSelectionMode) {
+                    isSelectionMode = true
+                    expandedPosition = -1
+                    selectedEntries.add(data)
+                    onSelectionModeChanged?.invoke(true)
+                    onSelectionCountChanged?.invoke(selectedEntries.size)
+                    notifyDataSetChanged()
                 }
-                itemsToNotify.add(position)
-                itemsToNotify.add(position - 1)
-                itemsToNotify.add(position + 1)
+                true
+            }
 
-                itemsToNotify.forEach { pos ->
-                    if (pos in 0 until itemCount) {
-                        notifyItemChanged(pos)
+            binding.llMainView.setOnClickListener {
+                if (isSelectionMode) {
+                    if (selectedEntries.contains(data)) {
+                        selectedEntries.remove(data)
+                    } else {
+                        selectedEntries.add(data)
+                    }
+                    onSelectionCountChanged?.invoke(selectedEntries.size)
+                    notifyItemChanged(position)
+
+                    if (selectedEntries.isEmpty()) {
+                        isSelectionMode = false
+                        onSelectionModeChanged?.invoke(false)
+                        notifyDataSetChanged()
+                    }
+                } else {
+                    val previousPosition = expandedPosition
+                    expandedPosition = if (isExpanded) -1 else position
+
+                    // Notify all affected items
+                    val itemsToNotify = mutableSetOf<Int>()
+                    if (previousPosition != -1) {
+                        itemsToNotify.add(previousPosition)
+                        itemsToNotify.add(previousPosition - 1)
+                        itemsToNotify.add(previousPosition + 1)
+                    }
+                    itemsToNotify.add(position)
+                    itemsToNotify.add(position - 1)
+                    itemsToNotify.add(position + 1)
+
+                    itemsToNotify.forEach { pos ->
+                        if (pos in 0 until itemCount) {
+                            notifyItemChanged(pos)
+                        }
                     }
                 }
             }
-
 
             binding.run {
 
@@ -511,5 +545,36 @@ class RecentAdapter(
             }
         }
         return ItemTouchHelper(swipeCallback)
+    }
+
+    fun selectAll() {
+        filteredList.forEach {
+            if (it is CallHistoryListItems.Contact) {
+                selectedEntries.add(it.data)
+            }
+        }
+        onSelectionCountChanged?.invoke(selectedEntries.size)
+        notifyDataSetChanged()
+    }
+
+    fun deselectAll() {
+        selectedEntries.clear()
+        onSelectionCountChanged?.invoke(0)
+        notifyDataSetChanged()
+    }
+
+    fun clearSelection() {
+        isSelectionMode = false
+        selectedEntries.clear()
+        onSelectionModeChanged?.invoke(false)
+        notifyDataSetChanged()
+    }
+
+    fun getSelectedEntries(): List<CallLogEntry> {
+        return selectedEntries.toList()
+    }
+
+    fun getContactCount(): Int {
+        return filteredList.count { it is CallHistoryListItems.Contact }
     }
 }

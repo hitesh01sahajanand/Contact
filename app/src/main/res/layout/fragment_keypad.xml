@@ -96,7 +96,7 @@
             android:orientation="vertical"
             android:visibility="visible">
 
-            <ScrollView
+            <androidx.core.widget.NestedScrollView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_above="@+id/keyboard">
@@ -119,7 +119,7 @@
                         android:orientation="vertical"
                         android:paddingHorizontal="@dimen/_10sdp"
                         android:paddingVertical="@dimen/_5sdp"
-                        android:visibility="gone">
+                        android:visibility="visible">
 
                         <LinearLayout
                             android:id="@+id/ll_create_new_contact"
@@ -129,7 +129,7 @@
                             android:gravity="center_vertical"
                             android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
                             android:orientation="horizontal"
-                            android:paddingVertical="@dimen/_8sdp">
+                            android:paddingVertical="@dimen/_6sdp">
 
                             <ImageView
                                 android:layout_width="@dimen/_35sdp"
@@ -142,8 +142,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="@dimen/_10sdp"
                                 android:text="@string/create_new_contact"
-                                android:textColor="@color/black_color"
-                                android:textSize="@dimen/_11sdp" />
+                                android:textColor="@color/black_color" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -152,8 +151,9 @@
                             android:layout_height="wrap_content"
                             android:foreground="?android:attr/selectableItemBackground"
                             android:gravity="center_vertical"
+                            android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
                             android:orientation="horizontal"
-                            android:paddingVertical="@dimen/_8sdp">
+                            android:paddingVertical="@dimen/_6sdp">
 
                             <ImageView
                                 android:layout_width="@dimen/_35sdp"
@@ -166,8 +166,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="@dimen/_10sdp"
                                 android:text="@string/video_call"
-                                android:textColor="@color/black_color"
-                                android:textSize="@dimen/_11sdp" />
+                                android:textColor="@color/black_color" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -176,8 +175,9 @@
                             android:layout_height="wrap_content"
                             android:foreground="?android:attr/selectableItemBackground"
                             android:gravity="center_vertical"
+                            android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
                             android:orientation="horizontal"
-                            android:paddingVertical="@dimen/_8sdp">
+                            android:paddingVertical="@dimen/_6sdp">
 
                             <ImageView
                                 android:layout_width="@dimen/_35sdp"
@@ -189,14 +189,14 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="@dimen/_10sdp"
-                                android:text="Send a message"
+                                android:text="@string/send_message"
                                 android:textColor="@color/black_color"
                                 android:textSize="@dimen/_11sdp" />
                         </LinearLayout>
 
                     </LinearLayout>
                 </LinearLayout>
-            </ScrollView>
+            </androidx.core.widget.NestedScrollView>
 
             <LinearLayout
                 android:id="@+id/keyboard"
@@ -206,7 +206,50 @@
                 android:background="@color/white"
                 android:orientation="vertical">
 
-                <LinearLayout
+
+                <FrameLayout
+                    android:id="@+id/displayArea"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_5sdp">
+
+
+                    <EditText
+                        android:id="@+id/edt_display_number"
+                        style="@style/TextStyle.Large"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@null"
+                        android:backgroundTint="@color/border_color"
+                        android:gravity="center"
+                        android:maxLength="15"
+                        android:paddingHorizontal="@dimen/_20sdp"
+                        android:paddingVertical="@dimen/_6sdp"
+                        android:singleLine="true"
+                        android:textColor="@color/black_color" />
+
+                    <LinearLayout
+                        android:id="@+id/buttonDelete"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="end|center_vertical"
+                        android:gravity="center"
+                        android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="@dimen/_5sdp">
+
+                        <ImageView
+                            android:layout_width="@dimen/_20sdp"
+                            android:layout_height="@dimen/_20sdp"
+                            android:layout_gravity="end|center_vertical"
+                            android:src="@drawable/ic_key_delete"
+                            android:tint="@color/black_color" />
+                    </LinearLayout>
+
+                </FrameLayout>
+
+                <!--<LinearLayout
                     android:id="@+id/displayArea"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -240,8 +283,8 @@
                         android:adjustViewBounds="true"
                         android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
                         android:src="@drawable/ic_key_delete"
-                        android:tint="@color/black_color" />
-                </LinearLayout>
+                        app:tint="@color/black_color" />
+                </LinearLayout>-->
 
                 <View
                     android:layout_width="match_parent"
@@ -275,7 +318,7 @@
                             <ImageView
                                 android:id="@+id/linear1"
                                 android:layout_width="@dimen/_90sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_height="@dimen/_48sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -292,7 +335,7 @@
                             <ImageView
                                 android:id="@+id/linear2"
                                 android:layout_width="@dimen/_90sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_height="@dimen/_48sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -309,7 +352,7 @@
                             <ImageView
                                 android:id="@+id/linear3"
                                 android:layout_width="@dimen/_90sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_height="@dimen/_48sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -337,7 +380,7 @@
                             <ImageView
                                 android:id="@+id/linear4"
                                 android:layout_width="@dimen/_90sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_height="@dimen/_48sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -354,7 +397,7 @@
                             <ImageView
                                 android:id="@+id/linear5"
                                 android:layout_width="@dimen/_90sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_height="@dimen/_48sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -371,7 +414,7 @@
                             <ImageView
                                 android:id="@+id/linear6"
                                 android:layout_width="@dimen/_90sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_height="@dimen/_48sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -397,7 +440,7 @@
                             <ImageView
                                 android:id="@+id/linear7"
                                 android:layout_width="@dimen/_90sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_height="@dimen/_48sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -416,7 +459,7 @@
                             <ImageView
                                 android:id="@+id/linear8"
                                 android:layout_width="@dimen/_90sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_height="@dimen/_48sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -433,7 +476,7 @@
                             <ImageView
                                 android:id="@+id/linear9"
                                 android:layout_width="@dimen/_90sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_height="@dimen/_48sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -459,7 +502,7 @@
                             <ImageView
                                 android:id="@+id/linear10"
                                 android:layout_width="@dimen/_90sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_height="@dimen/_48sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -476,7 +519,7 @@
                             <ImageView
                                 android:id="@+id/linear11"
                                 android:layout_width="@dimen/_90sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_height="@dimen/_48sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -493,7 +536,7 @@
                             <ImageView
                                 android:id="@+id/linear12"
                                 android:layout_width="@dimen/_90sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_height="@dimen/_48sdp"
                                 android:adjustViewBounds="true"
                                 android:clickable="true"
                                 android:foreground="@drawable/iv_effect_white_round3"
@@ -507,7 +550,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_marginHorizontal="@dimen/_10sdp"
-                    android:layout_marginTop="@dimen/_18sdp"
+                    android:layout_marginTop="@dimen/_16sdp"
                     android:layout_marginBottom="@dimen/_10sdp"
                     android:gravity="center"
                     android:orientation="horizontal">
@@ -521,7 +564,7 @@
                         <ImageView
                             android:id="@+id/buttonCall"
                             android:layout_width="@dimen/_80sdp"
-                            android:layout_height="@dimen/_50sdp"
+                            android:layout_height="@dimen/_48sdp"
                             android:adjustViewBounds="true"
                             android:clickable="true"
                             android:focusable="true"

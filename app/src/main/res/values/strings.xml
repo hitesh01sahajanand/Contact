@@ -3,7 +3,7 @@
     <string name="default_incoming_notification_channel_id" translatable="false">FCMaQ12Cfx@14_silent_v2</string>
 
 
-    <string name="app_name">ContactManager</string>
+    <string name="app_name">Contact App</string>
     <string name="permission_access">Enable required permissions to ensure full functionality ot the app.</string>
     <string name="calls">Calls</string>
     <string name="notifications">Notification</string>
@@ -20,7 +20,7 @@
     <string name="keypad">Keypad</string>
     <string name="phone">Phone</string>
     <string name="set_contacts_default">Set Contact as default</string>
-    <string name="set_default_app">Set default Contact App</string>
+    <string name="set_default_app">Set As Default App</string>
     <string name="default_app_desc">Phone can only make and receive calls if it\'s your default phone app.</string>
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
@@ -36,6 +36,8 @@
     <string name="create_a_new_group">Create a new Group</string>
     <string name="speed_dial_number">Speed Dial Number</string>
     <string name="clear_history">Clear History</string>
+    <string name="clear_history_desc">Are you sure you want to clear history?</string>
+    <string name="clear">Clear</string>
     <string name="sync_contact">Sync Contact</string>
     <string name="settings">Settings</string>
     <string name="call_assist">Call Assist</string>
@@ -136,6 +138,8 @@
     <string name="you_will_be_able_to_receive_call">You will be able to receive calls from this contact.</string>
     <string name="block_contact">Block Contact?</string>
     <string name="delete_history">Delete History</string>
+    <string name="delete_contact">Delete Contact?</string>
+    <string name="are_you_sure_you_want_to_delete_this_contact">Are you sure you want to delete this contact?</string>
     <string name="are_you_sure_you_want_to_delete_all_history">Are you sure you want to delete all history?</string>
 
     <string name="history_deleted">History deleted successfully</string>
@@ -149,4 +153,13 @@
     <string name="recent_ringtone">Recent Ringtone</string>
     <string name="default_">Default</string>
     <string name="select_ringtone">Select Ringtone</string>
+    <string name="please_allow_modify_system_settings_to_change_ringtone">Please allow \'Modify system settings\' to change ringtone</string>
+    <string name="select_all">Select all</string>
+    <string name="send_message">Send Message</string>
+    <string name="enter_number">enter number</string>
+    <string name="smart_contact_app_to_">Smart contact app to manage calls,\nnumbers, favorites easily</string>
+    <string name="call_search_and_save_contacts">Call, Search and Save Contacts</string>
+    <string name="sync_from_all_gmail_sim_amp_phone"><![CDATA[Sync from all Gmail, SIM & Phone]]></string>
+    <string name="we_don_t_collect_personal">We don’t collect personal or sensitive data.Your data stays private. Terms of Service and Privacy Policy</string>
+    <string name="to_make_receive_calls_set_this_app">To make receive calls. set this app as the\ndefault dialer or cancel to skip</string>
 </resources>

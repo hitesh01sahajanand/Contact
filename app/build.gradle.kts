@@ -80,4 +80,7 @@ dependencies {
     //for crop image
     implementation("com.github.yalantis:ucrop:2.2.2")
 
+    //load lotti file
+    implementation("com.airbnb.android:lottie:6.4.0")
+
 }

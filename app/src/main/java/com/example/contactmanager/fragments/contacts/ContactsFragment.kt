@@ -62,7 +62,10 @@ class ContactsFragment : Fragment(), OnClickHandler {
             allContactsAdapter.setMergeDuplicate(isMerge)
             updateAccountUI()
             allContactsAdapter.filter(binding.edtSearch.text.toString())
-            viewModel.loadContacts()
+            if (allContactsAdapter.itemCount == 0) {
+                viewModel.loadContacts(showLoader = false)
+            }
+            viewModel.fetchAccountCounts(isMerge)
         }
     }
 
@@ -77,7 +80,10 @@ class ContactsFragment : Fragment(), OnClickHandler {
             allContactsAdapter.setMergeDuplicate(isMerge)
             updateAccountUI()
             allContactsAdapter.filter(binding.edtSearch.text.toString())
-            viewModel.loadContacts()
+            if (allContactsAdapter.itemCount == 0) {
+                viewModel.loadContacts(showLoader = false)
+            }
+            viewModel.fetchAccountCounts(isMerge)
         }
     }
 
@@ -143,11 +149,19 @@ class ContactsFragment : Fragment(), OnClickHandler {
         })
         binding.rvAllContacts.adapter = allContactsAdapter
         binding.rvAllContacts.layoutManager = LinearLayoutManager(requireActivity())
-        updateAccountUI()
 
         viewModel.allContactList.observe(viewLifecycleOwner) { allContacts ->
             allContactsAdapter.addAll(allContacts)
+            updateAccountUI()
             binding.llContactSpaceHolder.isVisible = allContactsAdapter.itemCount == 0
+        }
+
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            binding.pbLoading.isVisible = isLoading
+            binding.clContacts.isVisible = !isLoading
+            if (isLoading) {
+                binding.llContactSpaceHolder.isVisible = false
+            }
         }
 
         val letters = ('A'..'Z') + "#"
@@ -214,10 +228,6 @@ class ContactsFragment : Fragment(), OnClickHandler {
 
     override fun onClick(view: View) {
         when (view.id) {
-            /* binding.tvList.id -> {
-                 val intent = Intent(requireActivity(), AllAccountsActivity::class.java)
-                 accountLauncher.launch(intent)
-             }*/
 
             binding.inHeader.cvMore.id -> {
                 val syncContact = requireActivity().getString(R.string.sync_contact)
@@ -228,7 +238,7 @@ class ContactsFragment : Fragment(), OnClickHandler {
                     syncContact,
                     settings,
                     option1Click = {
-                        Toast.makeText(requireActivity(), syncContact, Toast.LENGTH_SHORT).show()
+                        viewModel.loadContacts()
                     },
                     option2Click = {
                         requireActivity().startActivity(
@@ -247,8 +257,22 @@ class ContactsFragment : Fragment(), OnClickHandler {
 
             binding.cvAccounts.id -> {
                 val accountList = mutableListOf<AccountModel>()
-                accountList.add(AccountModel("All", "All Accounts"))
-                accountList.add(AccountModel("Device", "Device Only"))
+                val counts = viewModel.accountCounts.value ?: emptyMap()
+
+                accountList.add(
+                    AccountModel(
+                        "All",
+                        "All Accounts",
+                        count = counts["All Accounts"] ?: 0
+                    )
+                )
+                accountList.add(
+                    AccountModel(
+                        "Device",
+                        "Device Only",
+                        count = counts["Device Only"] ?: 0
+                    )
+                )
 
                 val existingEmails = mutableSetOf<String>()
                 val cursor = requireActivity().contentResolver.query(
@@ -270,7 +294,13 @@ class ContactsFragment : Fragment(), OnClickHandler {
 
                 for (email in existingEmails) {
                     val name = email.substringBefore("@")
-                    accountList.add(AccountModel(name, email))
+                    accountList.add(
+                        AccountModel(
+                            name,
+                            email,
+                            count = counts[email] ?: 0
+                        )
+                    )
                 }
 
                 Common.contactPopUpMenu(
@@ -281,8 +311,6 @@ class ContactsFragment : Fragment(), OnClickHandler {
                     val selectedName = accountList.find { it.email == email }?.name ?: "All"
                     val tvTitle = binding.cvAccounts.findViewById<TextView>(R.id.tv_title)
                     tvTitle?.text = selectedName
-
-                    Log.e("TAG", "onClick: $selectedName")
 
                     viewModel.currentSelectedAccount = email
                     viewModel.loadContacts()
