@@ -80,7 +80,7 @@ class RingtonesAdapter(
                 rbSelection.isChecked = ringtone.isSelected
 
                 if (ringtone.isPlaying) {
-                    ivPlay.setImageResource(R.drawable.ic_fav)
+                    ivPlay.setImageResource(R.drawable.ic_pause)
                 } else {
                     ivPlay.setImageResource(R.drawable.ic_play)
                 }

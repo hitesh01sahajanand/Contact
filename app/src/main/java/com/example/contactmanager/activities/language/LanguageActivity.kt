@@ -3,6 +3,7 @@ package com.example.contactmanager.activities.language
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -56,11 +57,10 @@ class LanguageActivity : AppCompatActivity(), OnClickHandler {
         binding.onClickHandler = this
 
         val currentLangCode = LanguageManager.getCurrentLanguage()
-        languageList.forEach {
-            it.isSelected = it.code == currentLangCode
-        }
-        if (languageList.none { it.isSelected }) {
-            languageList.firstOrNull()?.isSelected = true
+        if (!currentLangCode.isNullOrEmpty()) {
+            languageList.forEach {
+                it.isSelected = it.code == currentLangCode
+            }
         }
 
         adapter = LanguageAdapter(languageList)
@@ -72,7 +72,17 @@ class LanguageActivity : AppCompatActivity(), OnClickHandler {
     override fun onClick(view: View) {
         when (view.id) {
             binding.cvDone.id -> {
-                val selectedLanguage = adapter.getSelectedLanguage()
+                val selectedLanguage = if (adapter.getSelectedPosition() != -1) {
+                    adapter.getSelectedLanguage()
+                } else {
+                    null
+                }
+
+                if (selectedLanguage == null) {
+                    // Optionally show a toast or message
+                    Toast.makeText(this, "Please select language", Toast.LENGTH_SHORT).show()
+                    return
+                }
 
                 LanguageManager.setLanguage(selectedLanguage.code)
 

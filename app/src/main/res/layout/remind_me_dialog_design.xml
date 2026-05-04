@@ -14,7 +14,7 @@
         android:orientation="vertical"
         android:padding="@dimen/_10sdp">
 
-
+        <!-- Title -->
         <TextView
             style="@style/TextStyle.Medium"
             android:layout_width="wrap_content"
@@ -25,30 +25,170 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <!-- Time Picker -->
-        <TimePicker
-            android:id="@+id/time_picker"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:timePickerMode="spinner" />
-
-        <!-- Set Button -->
+        <!-- In 5 min -->
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cv_set_reminder"
+            android:id="@+id/cv_remind_5min"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardBackgroundColor="@color/black_color"
+            android:layout_marginTop="6dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="10dp"
+            app:strokeColor="@color/border_color"
+            app:strokeWidth="0.5dp">
+
+            <TextView
+                style="@style/TextStyle.Medium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:padding="@dimen/_10sdp"
+                android:text="In 5 min"
+                android:textColor="@color/black_color" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- In 10 min -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cv_remind_10min"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="10dp"
+            app:strokeColor="@color/border_color"
+            app:strokeWidth="0.5dp">
+
+            <TextView
+                style="@style/TextStyle.Medium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:padding="@dimen/_10sdp"
+                android:text="In 10 min"
+                android:textColor="@color/black_color" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- In 20 min -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cv_remind_20min"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="10dp"
+            app:strokeColor="@color/border_color"
+            app:strokeWidth="0.5dp">
+
+            <TextView
+                style="@style/TextStyle.Medium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:padding="@dimen/_10sdp"
+                android:text="In 20 min"
+                android:textColor="@color/black_color" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- In 30 min -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cv_remind_30min"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="10dp"
+            app:strokeColor="@color/border_color"
+            app:strokeWidth="0.5dp">
+
+            <TextView
+                style="@style/TextStyle.Medium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:padding="@dimen/_10sdp"
+                android:text="In 30 min"
+                android:textColor="@color/black_color" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- In 40 min -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cv_remind_40min"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="10dp"
+            app:strokeColor="@color/border_color"
+            app:strokeWidth="0.5dp">
+
+            <TextView
+                style="@style/TextStyle.Medium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:padding="@dimen/_10sdp"
+                android:text="In 40 min"
+                android:textColor="@color/black_color" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- In 50 min -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cv_remind_50min"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="10dp"
+            app:strokeColor="@color/border_color"
+            app:strokeWidth="0.5dp">
+
+            <TextView
+                style="@style/TextStyle.Medium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:padding="@dimen/_10sdp"
+                android:text="In 50 min"
+                android:textColor="@color/black_color" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- In 1 hour -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cv_remind_1hour"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="10dp"
+            app:strokeColor="@color/border_color"
+            app:strokeWidth="0.5dp">
+
+            <TextView
+                style="@style/TextStyle.Medium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:padding="@dimen/_10sdp"
+                android:text="In 1 hour"
+                android:textColor="@color/black_color" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Cancel Button -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cv_cancel_reminder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:cardBackgroundColor="@color/main_color"
             app:cardCornerRadius="12dp">
 
             <TextView
-                android:id="@+id/tv_set_reminder"
+                android:id="@+id/tv_cancel_reminder"
                 style="@style/TextStyle.Medium"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:padding="@dimen/_10sdp"
-                android:text="@string/set_reminder"
+                android:text="Cancel"
                 android:textColor="@color/white"
                 android:textStyle="bold" />
         </com.google.android.material.card.MaterialCardView>

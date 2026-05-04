@@ -5,7 +5,9 @@ import android.content.Intent
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.provider.Settings
@@ -48,9 +50,45 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                 }
 
                 val displayName = getDisplayNameFromUri(contentUri)
+                    .takeIf { it.isNotBlank() } ?: getString(R.string.custom_ringtone)
                 setCustomRingtone(contentUri, displayName)
             }
         }
+
+    private val requestAudioPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                displayCurrentRingtone()
+                loadSystemRingtones()
+            } else {
+                Toast.makeText(
+                    this,
+                    "Permission required to read ringtone details",
+                    Toast.LENGTH_SHORT
+                ).show()
+                binding.tvRingtoneName.text = "Default"
+            }
+        }
+
+    private fun checkAndRequestAudioPermission(): Boolean {
+        val permission =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                android.Manifest.permission.READ_MEDIA_AUDIO
+            } else {
+                android.Manifest.permission.READ_EXTERNAL_STORAGE
+            }
+
+        return if (androidx.core.content.ContextCompat.checkSelfPermission(
+                this,
+                permission
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            true
+        } else {
+            requestAudioPermissionLauncher.launch(permission)
+            false
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -145,7 +183,8 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                     }
                 }
         }
-        return getString(R.string.custom_ringtone)
+        // Final fallback — must never return null or blank
+        return getString(R.string.custom_ringtone).takeIf { it.isNotBlank() } ?: "Custom Ringtone"
     }
 
     private fun displayCurrentRingtone() {
@@ -155,63 +194,146 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
             Log.e("TAG", "displayCurrentRingtone: ${e.message}")
             null
         }
-        val name = if (currentUri != null) {
-            // Try ContentResolver (correct for MediaStore-inserted URIs and custom files)
-            val fromCr = runCatching {
-                contentResolver.query(
-                    currentUri,
-                    arrayOf(MediaStore.Audio.Media.TITLE),
-                    null, null, null
-                )?.use { c ->
-                    if (c.moveToFirst()) {
-                        val idx = c.getColumnIndex(MediaStore.Audio.Media.TITLE)
-                        if (idx >= 0) c.getString(idx) else null
-                    } else null
-                }
-            }.getOrNull()
-            // Fallback: RingtoneManager title (works for built-in system ringtones)
-            fromCr?.takeIf { it.isNotBlank() }
-                ?: try {
-                    RingtoneManager.getRingtone(this, currentUri)?.getTitle(this)
-                } catch (e: SecurityException) {
-                    Log.e("TAG", "displayCurrentRingtone: ${e.message}")
-                    null
-                }
-                ?: "Default"
-        } else "Default"
-        binding.tvRingtoneName.text = name
-    }
 
-    /**
-     * Copy the user-picked audio file into MediaStore so it gets a stable
-     * media:// URI and shows correct metadata, then set as default ringtone.
-     */
-    private fun setCustomRingtone(uri: Uri, displayName: String) {
-        // 1. Try to stage the file to MediaStore first.
-        // This creates a persistent URI that we can use even after returning from the settings screen,
-        // as raw picker URIs often lose permission when navigating to Settings.
-        var stagedUri: Uri? = null
-        try {
-            val values = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
-                put(MediaStore.MediaColumns.MIME_TYPE, "audio/mpeg")
-                put(MediaStore.Audio.Media.IS_RINGTONE, true)
-                put(MediaStore.Audio.Media.IS_MUSIC, false)
-            }
-            stagedUri = contentResolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values)
-            if (stagedUri != null) {
-                contentResolver.openOutputStream(stagedUri)?.use { out ->
-                    contentResolver.openInputStream(uri)?.use { input -> input.copyTo(out) }
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("TAG", "setCustomRingtone: ${e.message}")
+        if (currentUri == null) {
+            binding.tvRingtoneName.text = "Default"
+            return
         }
 
-        val ringtoneUri = stagedUri ?: uri
+        val hasUriPermission = checkUriPermission(
+            currentUri,
+            android.os.Process.myPid(),
+            android.os.Process.myUid(),
+            Intent.FLAG_GRANT_READ_URI_PERMISSION
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+        var name: String? = null
+        if (hasUriPermission || currentUri.authority != "media") {
+            name = queryNameFromContentResolver(currentUri)
+        } else {
+            if (checkAndRequestAudioPermission()) {
+                name = queryNameFromContentResolver(currentUri)
+            } else {
+                return // Permission requested, UI will update in callback
+            }
+        }
+
+        // Fallback: RingtoneManager title
+        if (name.isNullOrBlank()) {
+            name = try {
+                RingtoneManager.getRingtone(this, currentUri)?.getTitle(this)
+            } catch (e: SecurityException) {
+                Log.e("TAG", "displayCurrentRingtone: ${e.message}")
+                null
+            }
+        }
+
+        binding.tvRingtoneName.text = name?.takeIf { it.isNotBlank() } ?: "Default"
+    }
+
+    private fun queryNameFromContentResolver(uri: Uri): String? {
+        return try {
+            contentResolver.query(
+                uri,
+                arrayOf(MediaStore.Audio.Media.TITLE),
+                null, null, null
+            )?.use { c ->
+                if (c.moveToFirst()) {
+                    val idx = c.getColumnIndex(MediaStore.Audio.Media.TITLE)
+                    if (idx >= 0) c.getString(idx) else null
+                } else null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun setCustomRingtone(uri: Uri, displayName: String) {
+
+        val safeName = displayName.trim().takeIf { it.isNotBlank() }
+            ?: getString(R.string.custom_ringtone).takeIf { it.isNotBlank() }
+            ?: "Custom Ringtone"
+
+        val mimeType = contentResolver.getType(uri)
+            ?.takeIf { it.isNotBlank() }
+            ?: "audio/mpeg"
+
+        var stagedUri: Uri? = null
+
+        try {
+            val values = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, safeName)
+                put(MediaStore.MediaColumns.TITLE, safeName) // ✅ FIX (important)
+                put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+
+                put(MediaStore.Audio.Media.IS_RINGTONE, true)
+                put(MediaStore.Audio.Media.IS_MUSIC, false)
+                put(MediaStore.Audio.Media.IS_NOTIFICATION, false)
+                put(MediaStore.Audio.Media.IS_ALARM, false)
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_RINGTONES) // ✅ FIX
+                    put(MediaStore.MediaColumns.IS_PENDING, 1) // ✅ FIX
+                }
+            }
+
+            val insertedUri = contentResolver.insert(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values
+            )
+
+            if (insertedUri != null) {
+                var bytesCopied = 0L
+
+                try {
+                    contentResolver.openOutputStream(insertedUri)?.use { out ->
+                        contentResolver.openInputStream(uri)?.use { input ->
+                            bytesCopied = input.copyTo(out)
+                        }
+                    }
+                } catch (copyEx: Exception) {
+                    Log.e("SetRingtone", "copy failed: ${copyEx.message}")
+                }
+
+                if (bytesCopied > 0L) {
+
+                    // ✅ Mark file as complete (VERY IMPORTANT)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        val updateValues = ContentValues().apply {
+                            put(MediaStore.MediaColumns.IS_PENDING, 0)
+                        }
+                        contentResolver.update(insertedUri, updateValues, null, null)
+                    }
+
+                    stagedUri = insertedUri
+
+                } else {
+                    contentResolver.delete(insertedUri, null, null)
+                    Log.e("SetRingtone", "0 bytes copied, deleted")
+                }
+            }
+
+        } catch (e: Exception) {
+            Log.e("SetRingtone", "MediaStore insert failed: ${e.message}")
+        }
+
+        if (stagedUri == null) {
+            Toast.makeText(
+                this,
+                "Could not prepare the audio file. Please try a different file.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        // ✅ Extra safety check
+        val ringtone = RingtoneManager.getRingtone(this, stagedUri)
+        if (ringtone == null) {
+            Toast.makeText(this, "Invalid ringtone file", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         if (!Settings.System.canWrite(this)) {
-            pendingRingtoneUri = ringtoneUri
+            pendingRingtoneUri = stagedUri
             val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
             intent.data = "package:$packageName".toUri()
             startActivity(intent)
@@ -227,27 +349,33 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
             RingtoneManager.setActualDefaultRingtoneUri(
                 this,
                 RingtoneManager.TYPE_RINGTONE,
-                ringtoneUri
+                stagedUri
             )
-            Toast.makeText(this, "Ringtone set: $displayName", Toast.LENGTH_SHORT).show()
+
+            Toast.makeText(this, "Ringtone set: $safeName", Toast.LENGTH_SHORT).show()
+
             pendingRingtoneUri = null
-            // Reload list — custom ringtone won't match any system ringtone, so selection clears
             loadSystemRingtones()
             adapter.clearSelection()
             selectedRingtone = null
             displayCurrentRingtone()
+
         } catch (e: SecurityException) {
-            Log.e("TAG", "setCustomRingtone: ${e.message}")
-            pendingRingtoneUri = ringtoneUri
+            Log.e("SetRingtone", "Permission error: ${e.message}")
+
+            pendingRingtoneUri = stagedUri
             val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
             intent.data = "package:$packageName".toUri()
             startActivity(intent)
+
             Toast.makeText(
                 this,
                 getString(R.string.please_ensure_modify_system_settings_is_enabled),
                 Toast.LENGTH_LONG
             ).show()
+
         } catch (e: Exception) {
+            Log.e("SetRingtone", "Error: ${e.message}")
             Toast.makeText(this, "Failed to set ringtone: ${e.message}", Toast.LENGTH_SHORT).show()
             pendingRingtoneUri = null
         }
@@ -260,24 +388,42 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                 model.isPlaying = false
                 binding.ivPlay.setImageResource(R.drawable.ic_play)
             } else {
-                mediaPlayer?.start()
-                model.isPlaying = true
+                try {
+                    mediaPlayer?.start()
+                    model.isPlaying = true
+                } catch (e: Exception) {
+                    Log.e("TAG", "handlePlayPause start: ${e.message}")
+                }
             }
             adapter.notifyPlayStateChanged(position)
         } else {
             stopAllPlayback()
             mediaPlayer?.release()
-            mediaPlayer = MediaPlayer.create(this, model.uri)
-            mediaPlayer?.start()
-            model.isPlaying = true
-            currentPlayingPosition = position
-            adapter.notifyPlayStateChanged(position)
+            try {
+                mediaPlayer = MediaPlayer.create(this, model.uri)
+                if (mediaPlayer != null) {
+                    mediaPlayer?.start()
+                    model.isPlaying = true
+                    currentPlayingPosition = position
+                    adapter.notifyPlayStateChanged(position)
 
-            mediaPlayer?.setOnCompletionListener {
-                model.isPlaying = false
-                adapter.notifyPlayStateChanged(position)
-                currentPlayingPosition = -1
-                binding.ivPlay.setImageResource(R.drawable.ic_play)
+                    mediaPlayer?.setOnCompletionListener {
+                        model.isPlaying = false
+                        adapter.notifyPlayStateChanged(position)
+                        currentPlayingPosition = -1
+                        binding.ivPlay.setImageResource(R.drawable.ic_play)
+                    }
+                } else {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.cannot_play_ringtone),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            } catch (e: Exception) {
+                Log.e("TAG", "handlePlayPause: ${e.message}")
+                Toast.makeText(this, getString(R.string.cannot_play_ringtone), Toast.LENGTH_SHORT)
+                    .show()
             }
         }
     }
@@ -337,7 +483,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
             mp.start()
             mediaPlayer = mp
             currentPlayingPosition = -2
-            binding.ivPlay.setImageResource(R.drawable.ic_fav)
+            binding.ivPlay.setImageResource(R.drawable.ic_pause)
 
             mp.setOnCompletionListener {
                 binding.ivPlay.setImageResource(R.drawable.ic_play)
@@ -351,7 +497,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                 mediaPlayer = MediaPlayer.create(this, currentUri)
                 mediaPlayer?.start()
                 currentPlayingPosition = -2
-                binding.ivPlay.setImageResource(R.drawable.ic_fav)
+                binding.ivPlay.setImageResource(R.drawable.ic_pause)
                 mediaPlayer?.setOnCompletionListener {
                     binding.ivPlay.setImageResource(R.drawable.ic_play)
                     currentPlayingPosition = -1
@@ -394,6 +540,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                 Toast.LENGTH_LONG
             ).show()
         } catch (e: Exception) {
+            Log.e("TAG", "setSystemRingtone:ggfg ${e.message}")
             Toast.makeText(this, "Failed to set ringtone: ${e.message}", Toast.LENGTH_SHORT).show()
             pendingRingtoneUri = null
         }
@@ -403,15 +550,10 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
         super.onResume()
         pendingRingtoneUri?.let { pending ->
             if (Settings.System.canWrite(this)) {
-                // If the URI is already from MediaStore (system or staged), set it directly.
-                // Otherwise, treat it as a custom file that might need staging.
-                val isStagedOrSystem = pending.authority == "media"
-                if (isStagedOrSystem) {
-                    setSystemRingtone(pending)
-                } else {
-                    val name = getDisplayNameFromUri(pending)
-                    setCustomRingtone(pending, name)
-                }
+                // pendingRingtoneUri is always a stable MediaStore URI (authority == "media")
+                // because setCustomRingtone now only saves stagedUri (never the raw picker URI).
+                // So we can always call setSystemRingtone directly here.
+                setSystemRingtone(pending)
             }
         }
     }

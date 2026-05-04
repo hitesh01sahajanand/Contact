@@ -42,6 +42,21 @@ class RecentViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
+    private var currentOffset = 0
+    private var isLastPage = false
+    private var isLoading = false
+    private val entriesMutex = Mutex()
+    private val allRawEntries = ArrayList<CallLogEntry>()
+
+    private var _allRecentCallHistory = MutableLiveData<ArrayList<CallHistoryListItems>>()
+    val allRecentCallHistory: LiveData<ArrayList<CallHistoryListItems>> = _allRecentCallHistory
+
+    private var _isNextPageLoading = MutableLiveData<Boolean>()
+    val isNextPageLoading: LiveData<Boolean> = _isNextPageLoading
+
+    private var _isLoadingFirstTime = MutableLiveData(true)
+    val isLoadingFirstTime: LiveData<Boolean> = _isLoadingFirstTime
+
     private val handler = Handler(Looper.getMainLooper())
     private val observer = object : ContentObserver(handler) {
         override fun onChange(selfChange: Boolean) {
@@ -97,21 +112,6 @@ class RecentViewModel @Inject constructor(
         super.onCleared()
         context.contentResolver.unregisterContentObserver(observer)
     }
-
-    private var currentOffset = 0
-    private var isLastPage = false
-    private var isLoading = false
-    private val entriesMutex = Mutex()
-    private val allRawEntries = ArrayList<CallLogEntry>()
-
-    private var _allRecentCallHistory = MutableLiveData<ArrayList<CallHistoryListItems>>()
-    val allRecentCallHistory: LiveData<ArrayList<CallHistoryListItems>> = _allRecentCallHistory
-
-    private var _isNextPageLoading = MutableLiveData<Boolean>()
-    val isNextPageLoading: LiveData<Boolean> = _isNextPageLoading
-
-    private var _isLoadingFirstTime = MutableLiveData(true)
-    val isLoadingFirstTime: LiveData<Boolean> = _isLoadingFirstTime
 
     private val colorList = listOf(
         "#2173C2".toColorInt(),

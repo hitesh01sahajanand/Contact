@@ -50,7 +50,7 @@
     <string name="manage_create_contact_show_fields">Manage create contact show fields</string>
     <string name="show_a_call_confirmation">Show a call confirmation dialog before initiating a call</string>
     <string name="calling">Calling</string>
-    <string name="remind_me">Remind Me</string>
+    <string name="remind_me">Set Remind </string>
     <string name="message">Message</string>
     <string name="accept">Accept</string>
     <string name="decline">Decline</string>
@@ -196,7 +196,7 @@
     <string name="unable_to_open_default_app_settings">Unable to open default app settings</string>
     <string name="to_make_calls_and_manage_sim">To make calls and manage SIM preference, this app needs to be your default phone app.</string>
     <string name="call_anyway">Call Anyway</string>
-    <string name="to_manage_blocked_numbers">To manage blocked numbers and other call features, this app needs to be your default phone app.</string>
+    <string name="to_manage_blocked_numbers">To use this features, app needs to be your default phone app.</string>
     <string name="please_set_this_app_as_default_in_settings">Please set this app as default in settings</string>
     <string name="whatsapp_business_video_call_not_available">WhatsApp Business video call not available for this contact</string>
     <string name="meet_not_available">Meet not available</string>
@@ -209,5 +209,27 @@
     <string name="set_your_favorite_tag_to_contact">set your favorite tag to contact</string>
     <string name="enter_tag">enter tag</string>
     <string name="no_speed_dial_set_for">No speed dial set for %1$d</string>
+    <string name="device">Device</string>
+    <string name="export_contacts">Export Contacts</string>
+    <string name="include_contact_sources">Include Contact Sources</string>
+    <string name="filename_without_vcf">Filename (without .vcf)</string>
+    <string name="export">Export</string>
+    <string name="please_wait">Please wait...</string>
+    <string name="contacts_successfully_saved_to">Contacts successfully saved to:\n%1$s</string>
+    <string name="error_exporting_contacts">Error exporting contacts: %1$s</string>
+    <string name="no_contacts_found_to_export">No contacts found to export</string>
+    <string name="this_name_is_already_stored_please_choose_another">This name is already stored. Please choose another.</string>
+    <string name="enter_file_name">Enter file name</string>
+    <string name="no_accounts_selected">No accounts selected</string>
+    <string name="no_accounts_found">No accounts found</string>
+    <string name="select_account_for_import">Select Account for Import</string>
+    <string name="importing_contacts">Importing contacts...</string>
+    <string name="no_contacts_found_in_file">No contacts found in file</string>
+    <string name="contacts_imported_successfully">%1$d contacts imported successfully</string>
+    <string name="error_importing_contacts">Error importing contacts: %1$s</string>
+    <string name="import_">import</string>
+    <string name="permissions_required_to_export_contacts">Permissions required to export contacts</string>
+    <string name="permissions_required_to_import_contacts">Permissions required to import contacts</string>
+    <string name="export_contact_to_a_vcf_file">Export Contact to a .vcf File</string>
 
 </resources>

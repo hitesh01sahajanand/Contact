@@ -12,24 +12,13 @@ object LanguageManager {
         )
     }
 
-    fun getCurrentLanguage(): String {
+    fun getCurrentLanguage(): String? {
         val locales = AppCompatDelegate.getApplicationLocales()
         return if (!locales.isEmpty) {
             locales[0]?.language ?: "en"
         } else {
-            Locale.getDefault().language
+            null
+//            Locale.getDefault().language
         }
-    }
-
-    fun setEnglish() {
-        setLanguage("en")
-    }
-
-    fun setHindi() {
-        setLanguage("hi")
-    }
-
-    fun resetToSystemDefault() {
-        AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList())
     }
 }

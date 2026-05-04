@@ -24,13 +24,16 @@
             android:orientation="horizontal"
             android:padding="@dimen/_10sdp">
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cv_profile"
                 android:layout_width="@dimen/_34sdp"
                 android:layout_height="@dimen/_34sdp"
                 app:cardBackgroundColor="@color/color_1"
-                app:cardCornerRadius="@dimen/_40sdp"
-                app:cardElevation="0dp">
+                app:cardElevation="0dp"
+                app:cardPreventCornerOverlap="true"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
+                app:strokeColor="@android:color/transparent"
+                app:strokeWidth="1dp">
 
                 <ImageView
                     android:id="@+id/iv_contact_photo"
@@ -50,7 +53,7 @@
                     android:text=""
                     android:textColor="@color/white" />
 
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <LinearLayout
                 android:layout_width="0dp"

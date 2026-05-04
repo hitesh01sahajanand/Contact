@@ -51,7 +51,7 @@
                         android:orientation="vertical"
                         android:paddingHorizontal="@dimen/_10sdp"
                         android:paddingVertical="@dimen/_5sdp"
-                        android:visibility="visible">
+                        android:visibility="gone">
 
                         <LinearLayout
                             android:id="@+id/ll_create_new_contact"
@@ -154,7 +154,6 @@
                         android:background="@null"
                         android:backgroundTint="@color/border_color"
                         android:gravity="center"
-                        android:maxLength="15"
                         android:paddingHorizontal="@dimen/_20sdp"
                         android:paddingVertical="@dimen/_6sdp"
                         android:singleLine="true"

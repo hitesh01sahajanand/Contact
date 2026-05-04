@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -77,7 +78,7 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun proceedToNext() {
-        val isLogIN = SharedPreferenceManager.getBoolean(this, Constance.IS_LOG_IN)
+        val isLogIN = SharedPreferenceManager.getBoolean(this, Constance.IS_LOG_IN,false)
         val options = ActivityOptions.makeCustomAnimation(
             this,
             android.R.anim.fade_in,

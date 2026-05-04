@@ -2,6 +2,7 @@ package com.example.contactmanager.repository
 
 import android.content.Context
 import android.provider.ContactsContract
+import android.util.Log
 import com.example.contactmanager.models.ContactListItem
 import com.example.contactmanager.models.ContactModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -16,6 +17,20 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
         try {
             val resolver = context.contentResolver
 
+            // 🔹 0. Get all valid contact_id's
+            val validContactIds = mutableSetOf<Long>()
+            resolver.query(
+                ContactsContract.RawContacts.CONTENT_URI,
+                arrayOf(ContactsContract.RawContacts.CONTACT_ID),
+                "${ContactsContract.RawContacts.DELETED} = 0",
+                null,
+                null
+            )?.use { cursor ->
+                while (cursor.moveToNext()) {
+                    if (!cursor.isNull(0)) validContactIds.add(cursor.getLong(0))
+                }
+            }
+
             // 🔹 1. Get ALL Contacts
             resolver.query(
                 ContactsContract.Contacts.CONTENT_URI,
@@ -27,7 +42,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 ),
                 null,
                 null,
-                "display_name COLLATE NOCASE ASC"
+                "${ContactsContract.Contacts.SORT_KEY_PRIMARY} ASC"
             )?.use { cursor ->
                 val idIndex = cursor.getColumnIndex(ContactsContract.Contacts._ID)
                 val nameIndex =
@@ -36,19 +51,22 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 val starredIndex = cursor.getColumnIndex(ContactsContract.Contacts.STARRED)
 
                 while (cursor.moveToNext()) {
-                    val contactId = cursor.getLong(idIndex).toString()
-                    val displayName = cursor.getString(nameIndex) ?: ""
-                    val photoUri = cursor.getString(photoIndex)
-                    val starred = cursor.getInt(starredIndex)
+                    val contactIdLong = cursor.getLong(idIndex)
+                    if (contactIdLong in validContactIds) {
+                        val contactId = contactIdLong.toString()
+                        val displayName = cursor.getString(nameIndex) ?: ""
+                        val photoUri = cursor.getString(photoIndex)
+                        val starred = cursor.getInt(starredIndex)
 
-                    val contact = ContactModel().apply {
-                        this.contactId = contactId
-                        this.displayName = displayName
-                        this.userThumbnail = photoUri
-                        this.isFavourite = starred
-                        this.firstName = displayName
+                        val contact = ContactModel().apply {
+                            this.contactId = contactId
+                            this.displayName = displayName
+                            this.userThumbnail = photoUri
+                            this.isFavourite = starred
+                            this.firstName = displayName
+                        }
+                        contactMap[contactId] = contact
                     }
-                    contactMap[contactId] = contact
                 }
             }
 
@@ -221,7 +239,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 ),
                 null,
                 null,
-                "display_name COLLATE NOCASE ASC"
+                "${ContactsContract.Contacts.SORT_KEY_PRIMARY} ASC"
             )?.use { cursor ->
                 val idIndex = cursor.getColumnIndex(ContactsContract.Contacts._ID)
                 val nameIndex =
@@ -407,7 +425,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                     ContactsContract.RawContacts.ACCOUNT_NAME,
                     ContactsContract.RawContacts._ID
                 ),
-                null,
+                "${ContactsContract.RawContacts.DELETED} = 0",
                 null,
                 null
             )?.use { cursor ->
@@ -445,7 +463,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 ),
                 null,
                 null,
-                "display_name COLLATE NOCASE ASC"
+                "${ContactsContract.Contacts.SORT_KEY_PRIMARY} ASC"
             )?.use { cursor ->
                 val idIndex = cursor.getColumnIndex(ContactsContract.Contacts._ID)
                 val nameIndex =
@@ -477,8 +495,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 ContactsContract.Data.CONTENT_URI,
                 arrayOf(
                     ContactsContract.Data.CONTACT_ID,
-                    ContactsContract.CommonDataKinds.Phone.NUMBER,
-                    ContactsContract.Data.RAW_CONTACT_ID
+                    ContactsContract.CommonDataKinds.Phone.NUMBER
                 ),
                 "${ContactsContract.Data.MIMETYPE} = ?",
                 arrayOf(ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE),
@@ -487,26 +504,24 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 val idIndex = cursor.getColumnIndex(ContactsContract.Data.CONTACT_ID)
                 val numberIndex =
                     cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                val rawIdIndex = cursor.getColumnIndex(ContactsContract.Data.RAW_CONTACT_ID)
 
                 val contactsWithMultipleNumbers = mutableListOf<ContactModel>()
                 while (cursor.moveToNext()) {
                     if (cursor.isNull(idIndex)) continue
                     val contactId = cursor.getLong(idIndex)
                     val phoneNumber = cursor.getString(numberIndex) ?: continue
-                    val rawContactId =
-                        if (!cursor.isNull(rawIdIndex)) cursor.getLong(rawIdIndex) else null
 
-                    if (rawContactId != null && rawContactId in validRawContactIds) {
-                        contactMap[contactId.toString()]?.let { contact ->
-                            if (contact.number.isNullOrEmpty()) {
-                                contact.number = phoneNumber
-                            } else if (contact.number != phoneNumber) {
-                                val additionalContact = contact.copy().apply {
-                                    this.number = phoneNumber
-                                }
-                                contactsWithMultipleNumbers.add(additionalContact)
+                    // Use contactId (already filtered by validContactIds in step 1),
+                    // not rawContactId — phone data may belong to a merged raw contact
+                    // (e.g. Google) even when the contact itself is device-originated.
+                    contactMap[contactId.toString()]?.let { contact ->
+                        if (contact.number.isNullOrEmpty()) {
+                            contact.number = phoneNumber
+                        } else if (contact.number != phoneNumber) {
+                            val additionalContact = contact.copy().apply {
+                                this.number = phoneNumber
                             }
+                            contactsWithMultipleNumbers.add(additionalContact)
                         }
                     }
                 }
@@ -618,100 +633,116 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
         val counts = mutableMapOf<String, Int>()
         val resolver = context.contentResolver
 
-        // 1. Get the set of all "visible" Contact IDs from the Contacts table.
-        // This automatically excludes the User Profile and non-aggregated raw contacts.
-        val visibleContactIds = mutableSetOf<String>()
         try {
+            // ── Step 1: Build the "visible & listable" contact map ────────────
+            // Fetch displayName + HAS_PHONE_NUMBER so we can apply the exact
+            // same filter the real loaders use:
+            //   filter { (!displayName.isNullOrBlank() || !number.isNullOrBlank()) }
+            // Contacts that fail this filter are NOT shown in the list → exclude
+            // them from counts too.
+            data class ContactInfo(val displayName: String, val hasPhone: Boolean)
+            val contactInfo = mutableMapOf<Long, ContactInfo>()
+
             resolver.query(
                 ContactsContract.Contacts.CONTENT_URI,
-                arrayOf(ContactsContract.Contacts._ID),
+                arrayOf(
+                    ContactsContract.Contacts._ID,
+                    ContactsContract.Contacts.DISPLAY_NAME_PRIMARY,
+                    ContactsContract.Contacts.HAS_PHONE_NUMBER
+                ),
                 null, null, null
             )?.use { cursor ->
                 val idIdx = cursor.getColumnIndex(ContactsContract.Contacts._ID)
+                val nameIdx =
+                    cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)
+                val hasPhoneIdx =
+                    cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)
                 while (cursor.moveToNext()) {
-                    visibleContactIds.add(cursor.getLong(idIdx).toString())
+                    val id = cursor.getLong(idIdx)
+                    val name = cursor.getString(nameIdx) ?: ""
+                    val hasPhone = cursor.getInt(hasPhoneIdx) == 1
+                    // Same filter as the real loaders — skip contacts with no
+                    // display name AND no phone number (they never appear in list)
+                    if (name.isNotBlank() || hasPhone) {
+                        contactInfo[id] = ContactInfo(name, hasPhone)
+                    }
                 }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
 
-        val allContacts = mutableSetOf<String>()
-        val deviceContacts = mutableSetOf<String>()
-        val accountContactsMap = mutableMapOf<String, MutableSet<String>>()
+            // All Accounts — apply isMerge deduplication by display name
+            // isMerge=true  → same name contacts count as one (duplicates hidden)
+            // isMerge=false → every contact counted individually
+            counts["All Accounts"] = if (isMerge) {
+                contactInfo.entries
+                    .map { (id, info) -> info.displayName.ifEmpty { id.toString() } }
+                    .toSet().size
+            } else {
+                contactInfo.size
+            }
 
-        try {
-            val cursor = resolver.query(
+            // ── Step 2: Device Only + per-Google-account ──────────────────────
+            // Scan RawContacts — only 3 columns needed (fast)
+            val deviceIdentifiers = mutableSetOf<String>()
+            val googleAccountMap = mutableMapOf<String, MutableSet<String>>()
+
+            resolver.query(
                 ContactsContract.RawContacts.CONTENT_URI,
                 arrayOf(
                     ContactsContract.RawContacts.CONTACT_ID,
-                    ContactsContract.RawContacts.ACCOUNT_NAME,
                     ContactsContract.RawContacts.ACCOUNT_TYPE,
-                    ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY
+                    ContactsContract.RawContacts.ACCOUNT_NAME
                 ),
                 "${ContactsContract.RawContacts.DELETED} = 0",
-                null,
-                null
-            )
+                null, null
+            )?.use { cursor ->
+                val contactIdIdx =
+                    cursor.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID)
+                val typeIdx = cursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE)
+                val nameIdx = cursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_NAME)
 
-            cursor?.use {
-                val contactIdIndex = it.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID)
-                val accountNameIndex = it.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_NAME)
-                val accountTypeIndex = it.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE)
-                val displayNameIndex =
-                    it.getColumnIndex(ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY)
+                while (cursor.moveToNext()) {
+                    if (cursor.isNull(contactIdIdx)) continue
+                    val contactId = cursor.getLong(contactIdIdx)
 
-                while (it.moveToNext()) {
-                    val contactId = it.getString(contactIdIndex) ?: ""
+                    // Skip contacts that would be filtered out by the real loaders
+                    val info = contactInfo[contactId] ?: continue
 
-                    // ONLY count if the contact_id exists in the visible Contacts table
-                    if (contactId.isEmpty() || !visibleContactIds.contains(contactId)) continue
+                    val type = cursor.getString(typeIdx) ?: ""
+                    val accountName = cursor.getString(nameIdx) ?: ""
 
-                    val accountName = it.getString(accountNameIndex) ?: ""
-                    val accountType = it.getString(accountTypeIndex) ?: ""
-                    val displayName = it.getString(displayNameIndex) ?: ""
+                    // isMerge: same display name → one slot
+                    val identifier =
+                        if (isMerge) info.displayName.ifEmpty { contactId.toString() }
+                        else contactId.toString()
 
-                    val identifier = if (isMerge) {
-                        displayName.ifEmpty { contactId }
-                    } else {
-                        contactId
-                    }
-
-                    allContacts.add(identifier)
-
-                    val isGoogle = accountType == "com.google"
-                    val isWhatsApp = accountType == "com.whatsapp" || accountType.contains(
-                        "whatsapp",
-                        ignoreCase = true
-                    )
+                    val isGoogle = type == "com.google"
+                    val isWhatsApp =
+                        type == "com.whatsapp" || type.contains("whatsapp", ignoreCase = true)
                     val isTelegram =
-                        accountType == "org.telegram.messenger" || accountType.contains(
-                            "telegram",
-                            ignoreCase = true
+                        type == "org.telegram.messenger" || type.contains(
+                            "telegram", ignoreCase = true
                         )
-                    val isEmail = accountName.contains("@") && accountType.contains(
-                        "exchange",
-                        ignoreCase = true
-                    )
+                    val isEmail =
+                        accountName.contains("@") && type.contains("exchange", ignoreCase = true)
 
                     if (!isGoogle && !isWhatsApp && !isTelegram && !isEmail) {
-                        deviceContacts.add(identifier)
+                        deviceIdentifiers.add(identifier)
                     }
 
                     if (isGoogle && accountName.isNotEmpty()) {
-                        val set = accountContactsMap.getOrPut(accountName) { mutableSetOf() }
-                        set.add(identifier)
+                        googleAccountMap.getOrPut(accountName) { mutableSetOf() }
+                            .add(identifier)
                     }
                 }
             }
+
+            counts["Device Only"] = deviceIdentifiers.size
+            googleAccountMap.forEach { (email, set) -> counts[email] = set.size }
+
         } catch (e: Exception) {
             e.printStackTrace()
-        }
-
-        counts["All Accounts"] = allContacts.size
-        counts["Device Only"] = deviceContacts.size
-        accountContactsMap.forEach { (email, set) ->
-            counts[email] = set.size
+            counts.putIfAbsent("All Accounts", 0)
+            counts.putIfAbsent("Device Only", 0)
         }
 
         return counts

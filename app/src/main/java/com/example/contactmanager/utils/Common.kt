@@ -294,6 +294,7 @@ object Common {
             1 -> "Incoming"
             2 -> "Outgoing"
             3 -> "Missed"
+            5 -> "Rejected"
             else -> "Unknown"
         }
     }
@@ -304,6 +305,7 @@ object Common {
             1 -> context.getDrawable(R.drawable.ic_incoming_call)
             2 -> context.getDrawable(R.drawable.ic_outgoing_call)
             3 -> context.getDrawable(R.drawable.ic_miss_call)
+            5 -> context.getDrawable(R.drawable.ic_incoming_call)
 
             else -> context.getDrawable(R.drawable.ic_all_call)
         }
@@ -539,7 +541,7 @@ object Common {
 
         popupWindow.showAsDropDown(anchorView, 0, 20)
 
-        val adapter = AllAccountAdapter(onClick = { model ->
+        val adapter = AllAccountAdapter(isCountVisible = true, onClick = { model ->
             onItemClick(model.email)
             popupWindow.dismiss()
         })
@@ -757,6 +759,8 @@ object Common {
 
     fun showRemindMeDialog(
         context: Context,
+        contactName: String,
+        contactNumber: String,
         onReminderSet: () -> Unit = {}
     ) {
         val dialog = Dialog(context)
@@ -773,59 +777,38 @@ object Common {
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
 
-        // ✅ Set current time by default
-        val now = Calendar.getInstance()
-
-        binding.timePicker.hour = now.get(Calendar.HOUR_OF_DAY)
-        binding.timePicker.minute = now.get(Calendar.MINUTE)
-
-        // ✅ 12-hour format (AM/PM)
-        binding.timePicker.setIs24HourView(false)
-
-        // ⏰ Set Reminder Click
-        binding.cvSetReminder.setOnClickListener {
-
-            val hour: Int = binding.timePicker.hour
-            val minute: Int = binding.timePicker.minute
-
-            val selectedCal = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, hour)
-                set(Calendar.MINUTE, minute)
-                set(Calendar.SECOND, 0)
-            }
-
-            if (selectedCal.before(Calendar.getInstance())) {
-                Toast.makeText(context, "Please select future time", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            // ✅ Set reminder
-            setReminder(context, hour, minute)
-
+        // Helper to schedule reminder and dismiss
+        fun scheduleAndDismiss(delayMinutes: Int) {
+            setReminderAfterDelay(context, delayMinutes, contactName, contactNumber)
             onReminderSet()
             dialog.dismiss()
         }
 
+        binding.cvRemind5min.setOnClickListener { scheduleAndDismiss(5) }
+        binding.cvRemind10min.setOnClickListener { scheduleAndDismiss(10) }
+        binding.cvRemind20min.setOnClickListener { scheduleAndDismiss(20) }
+        binding.cvRemind30min.setOnClickListener { scheduleAndDismiss(30) }
+        binding.cvRemind40min.setOnClickListener { scheduleAndDismiss(40) }
+        binding.cvRemind50min.setOnClickListener { scheduleAndDismiss(50) }
+        binding.cvRemind1hour.setOnClickListener { scheduleAndDismiss(60) }
+
+        binding.cvCancelReminder.setOnClickListener { dialog.dismiss() }
+
         dialog.show()
     }
 
-    fun setReminder(context: Context, hour: Int, minute: Int) {
+    fun setReminderAfterDelay(
+        context: Context,
+        delayMinutes: Int,
+        contactName: String,
+        contactNumber: String
+    ) {
+        val triggerAtMillis = System.currentTimeMillis() + delayMinutes * 60 * 1000L
 
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
-            set(Calendar.SECOND, 0)
+        val intent = Intent(context, ReminderReceiver::class.java).apply {
+            putExtra("contactName", contactName)
+            putExtra("contactNumber", contactNumber)
         }
-
-        val now = Calendar.getInstance()
-
-        // ❗ Only today allowed
-        if (calendar.before(now)) {
-            Toast.makeText(context, "Please select future time", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val intent = Intent(context, ReminderReceiver::class.java)
 
         val pendingIntent = PendingIntent.getBroadcast(
             context,
@@ -837,20 +820,73 @@ object Common {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-
             if (!alarmManager.canScheduleExactAlarms()) {
-                // ❗ open settings safely
                 val intentSetting = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
                 intentSetting.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 context.startActivity(intentSetting)
-
                 Toast.makeText(context, "Please allow exact alarm permission", Toast.LENGTH_SHORT)
                     .show()
                 return
             }
         }
 
-        // ✅ Alarm set
+        // ✅ Schedule alarm relative to now
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            triggerAtMillis,
+            pendingIntent
+        )
+
+        Toast.makeText(
+            context,
+            "Reminder set for ${if (delayMinutes < 60) "$delayMinutes min" else "1 hour"}",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    @Deprecated(
+        "Use setReminderAfterDelay instead",
+        ReplaceWith("setReminderAfterDelay(context, delayMinutes, contactName, contactNumber)")
+    )
+    fun setReminder(
+        context: Context,
+        hour: Int,
+        minute: Int,
+        contactName: String,
+        contactNumber: String
+    ) {
+        // Kept for backward compatibility — not used by the new dialog
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
+            set(Calendar.SECOND, 0)
+        }
+        val now = Calendar.getInstance()
+        if (calendar.before(now)) {
+            Toast.makeText(context, "Please select future time", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val intent = Intent(context, ReminderReceiver::class.java).apply {
+            putExtra("contactName", contactName)
+            putExtra("contactNumber", contactNumber)
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            System.currentTimeMillis().toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!alarmManager.canScheduleExactAlarms()) {
+                val intentSetting = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                intentSetting.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                context.startActivity(intentSetting)
+                Toast.makeText(context, "Please allow exact alarm permission", Toast.LENGTH_SHORT)
+                    .show()
+                return
+            }
+        }
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
             calendar.timeInMillis,

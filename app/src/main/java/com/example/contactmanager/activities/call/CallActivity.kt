@@ -41,6 +41,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import android.media.ToneGenerator
+import android.view.MotionEvent
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.example.contactmanager.viewmodels.QuickResponseViewModel
@@ -55,6 +57,37 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
     private var isMoreExpanded = false
     private val quickResponseViewModel: QuickResponseViewModel by viewModels()
     private var quickMessages = emptyList<QuickResponseModel>()
+    private var toneGenerator: ToneGenerator? = null
+
+    private val keyMap = mapOf(
+        R.id.linear1 to '1',
+        R.id.linear2 to '2',
+        R.id.linear3 to '3',
+        R.id.linear4 to '4',
+        R.id.linear5 to '5',
+        R.id.linear6 to '6',
+        R.id.linear7 to '7',
+        R.id.linear8 to '8',
+        R.id.linear9 to '9',
+        R.id.linear10 to '*',
+        R.id.linear11 to '0',
+        R.id.linear12 to '#'
+    )
+
+    private val toneMap = mapOf(
+        R.id.linear1 to ToneGenerator.TONE_DTMF_1,
+        R.id.linear2 to ToneGenerator.TONE_DTMF_2,
+        R.id.linear3 to ToneGenerator.TONE_DTMF_3,
+        R.id.linear4 to ToneGenerator.TONE_DTMF_4,
+        R.id.linear5 to ToneGenerator.TONE_DTMF_5,
+        R.id.linear6 to ToneGenerator.TONE_DTMF_6,
+        R.id.linear7 to ToneGenerator.TONE_DTMF_7,
+        R.id.linear8 to ToneGenerator.TONE_DTMF_8,
+        R.id.linear9 to ToneGenerator.TONE_DTMF_9,
+        R.id.linear10 to ToneGenerator.TONE_DTMF_S,
+        R.id.linear11 to ToneGenerator.TONE_DTMF_0,
+        R.id.linear12 to ToneGenerator.TONE_DTMF_P
+    )
 
     companion object {
         fun getStartIntent(context: Context): Intent {
@@ -69,14 +102,14 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_call)
-        
+
         lifecycleScope.launch {
             quickResponseViewModel.initializeDefaultMessages()
             quickResponseViewModel.messages.collectLatest {
                 quickMessages = it
             }
         }
-        
+
         initView()
     }
 
@@ -86,6 +119,20 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         binding.inOutgoingCallLayout.onClickHandler = this
 
         makeFullScreenImmersive()
+
+        try {
+            toneGenerator = ToneGenerator(AudioManager.STREAM_DTMF, 80)
+        } catch (e: Exception) {
+            Log.e("CallActivity", "Exception while creating ToneGenerator: $e")
+        }
+
+        binding.inOutgoingCallLayout.edtDisplayNumber.apply {
+            showSoftInputOnFocus = false
+            isFocusable = true
+            isFocusableInTouchMode = true
+        }
+
+        setupDialPad()
 
         updateUI()
     }
@@ -112,6 +159,7 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
     override fun onDestroy() {
         super.onDestroy()
         removeProximitySensor()
+        toneGenerator?.release()
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
@@ -222,8 +270,10 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
             binding.inOutgoingCallLayout.llHoldNumber.isVisible = true
             val holdCall = phoneState.onHold
             val holdNumber = holdCall.details.handle?.schemeSpecificPart ?: "Unknown"
-            val holdName = Common.getDisplayName(this, holdNumber, holdCall.details.callerDisplayName)
-            binding.inOutgoingCallLayout.tvHoldNumber.text = "$holdName - ${getString(R.string.hold)}"
+            val holdName =
+                Common.getDisplayName(this, holdNumber, holdCall.details.callerDisplayName)
+            binding.inOutgoingCallLayout.tvHoldNumber.text =
+                "$holdName - ${getString(R.string.hold)}"
         } else {
             binding.inOutgoingCallLayout.llHoldNumber.isVisible = false
         }
@@ -273,14 +323,18 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                 NewCallManager.getConferenceCalls().joinToString(", ") { conferenceCall ->
                     val handleNumber =
                         conferenceCall.details.handle?.schemeSpecificPart ?: "Unknown"
-                    Common.getDisplayName(this, handleNumber, conferenceCall.details.callerDisplayName)
+                    Common.getDisplayName(
+                        this,
+                        handleNumber,
+                        conferenceCall.details.callerDisplayName
+                    )
                 }
             number = participants.ifEmpty { "Multiple Participants" }
         }
 
         when (state) {
             Call.STATE_RINGING -> {
-                Log.e("TAG", "updateUI: gggg $number $name", )
+                Log.e("TAG", "updateUI: gggg $number $name")
                 binding.inIncomingLayout.tvNumberName.text = name
                 binding.inIncomingLayout.tvCalling.text = getString(R.string.incoming_call)
 
@@ -340,10 +394,13 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
     override fun onClick(view: View) {
         when (view.id) {
             binding.inIncomingLayout.llRemindMe.id -> {
-                Common.showRemindMeDialog(this, onReminderSet = {
-                    Toast.makeText(this, getString(R.string.remind_me), Toast.LENGTH_SHORT).show()
-                })
+                val call = NewCallManager.getPrimaryCall()
+                val number = call?.details?.handle?.schemeSpecificPart ?: "Unknown"
+                val name = Common.getDisplayName(this, number, call?.details?.callerDisplayName)
 
+                Common.showRemindMeDialog(this, name, number, onReminderSet = {
+                    NewCallManager.reject()
+                })
             }
 
             binding.inIncomingLayout.llMessage.id -> {
@@ -394,17 +451,30 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                 updateUI()
             }
 
-            /*binding.inOutgoingCallLayout.llBluetooth.id -> {
-                val service = NewCallManager.inCallService ?: return
-                val isBluetooth = service.callAudioState.route == CallAudioState.ROUTE_BLUETOOTH
+            binding.inOutgoingCallLayout.llKeypad.id -> {
+                if (binding.inOutgoingCallLayout.llAllButtons.isVisible) {
+                    binding.inOutgoingCallLayout.llAllButtons.isVisible = false
+                    binding.inOutgoingCallLayout.ivRejectCall.isVisible = false
+                    binding.inOutgoingCallLayout.keyboard.isVisible = true
+                } else {
+                    binding.inOutgoingCallLayout.keyboard.isVisible = false
+                    binding.inOutgoingCallLayout.ivRejectCall.isVisible = true
+                    binding.inOutgoingCallLayout.llAllButtons.isVisible = true
+                }
+            }
 
-                service.setAudioRoute(
-                    if (isBluetooth)
-                        CallAudioState.ROUTE_WIRED_OR_EARPIECE
-                    else
-                        CallAudioState.ROUTE_BLUETOOTH
-                )
-            }*/
+            binding.inOutgoingCallLayout.llClose.id -> {
+                if (binding.inOutgoingCallLayout.llAllButtons.isVisible) {
+                    binding.inOutgoingCallLayout.llAllButtons.isVisible = false
+                    binding.inOutgoingCallLayout.ivRejectCall.isVisible = false
+                    binding.inOutgoingCallLayout.keyboard.isVisible = true
+                } else {
+                    binding.inOutgoingCallLayout.keyboard.isVisible = false
+                    binding.inOutgoingCallLayout.ivRejectCall.isVisible = true
+                    binding.inOutgoingCallLayout.llAllButtons.isVisible = true
+                }
+            }
+
 
             binding.inOutgoingCallLayout.llSpeaker.id -> {
                 val service = NewCallManager.inCallService ?: return
@@ -430,6 +500,60 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupDialPad() {
+        val buttons = listOf(
+            binding.inOutgoingCallLayout.linear1,
+            binding.inOutgoingCallLayout.linear2,
+            binding.inOutgoingCallLayout.linear3,
+            binding.inOutgoingCallLayout.linear4,
+            binding.inOutgoingCallLayout.linear5,
+            binding.inOutgoingCallLayout.linear6,
+            binding.inOutgoingCallLayout.linear7,
+            binding.inOutgoingCallLayout.linear8,
+            binding.inOutgoingCallLayout.linear9,
+            binding.inOutgoingCallLayout.linear10,
+            binding.inOutgoingCallLayout.linear11,
+            binding.inOutgoingCallLayout.linear12
+        )
+
+        buttons.forEach { view ->
+            view.setOnTouchListener { v, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        handleDialPadTouchDown(v.id)
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        handleDialPadTouchUp(v.id)
+                        v.performClick()
+                    }
+                }
+                false
+            }
+        }
+    }
+
+    private fun handleDialPadTouchDown(viewId: Int) {
+        val charValue = keyMap[viewId] ?: return
+        val call = NewCallManager.getPrimaryCall()
+        
+        call?.playDtmfTone(charValue)
+
+        val isDialPadSound = com.example.contactmanager.utils.SharedPreferenceManager.getBoolean(this, Constance.DIAL_PAD_SOUND, false)
+        if (isDialPadSound) {
+            toneMap[viewId]?.let { tone ->
+                toneGenerator?.startTone(tone, 150)
+            }
+        }
+
+        binding.inOutgoingCallLayout.edtDisplayNumber.append(charValue.toString())
+    }
+
+    private fun handleDialPadTouchUp(viewId: Int) {
+        val call = NewCallManager.getPrimaryCall()
+        call?.stopDtmfTone()
+    }
+
     fun onVideoCallClicked() {
         val call = NewCallManager.getPrimaryCall()
         val currentCall = call ?: return
@@ -451,8 +575,6 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
             action()
         }
     }
-
-
 
 
     private fun sendSMSMessage(msg: String) {
@@ -611,24 +733,29 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
 
     private fun updateProximitySensor() {
         val state = NewCallManager.getState()
-        val audioRoute = NewCallManager.inCallService?.callAudioState?.route ?: CallAudioState.ROUTE_EARPIECE
+        val audioRoute =
+            NewCallManager.inCallService?.callAudioState?.route ?: CallAudioState.ROUTE_EARPIECE
 
         // Check for both ROUTE_EARPIECE and the legacy/combined ROUTE_WIRED_OR_EARPIECE
-        val isEarpiece = audioRoute == CallAudioState.ROUTE_EARPIECE || 
-                        audioRoute == CallAudioState.ROUTE_WIRED_OR_EARPIECE
-        
+        val isEarpiece = audioRoute == CallAudioState.ROUTE_EARPIECE ||
+                audioRoute == CallAudioState.ROUTE_WIRED_OR_EARPIECE
+
         // However, if it's explicitly SPEKAER or BLUETOOTH, we definitely don't want proximity
         val isSpeaker = audioRoute == CallAudioState.ROUTE_SPEAKER
         val isBluetooth = audioRoute == CallAudioState.ROUTE_BLUETOOTH
-        
+
         val isVideo = NewCallManager.getPrimaryCall()?.details?.videoState?.let {
             it != android.telecom.VideoProfile.STATE_AUDIO_ONLY
         } ?: false
 
-        Log.d("CallActivity", "updateProximitySensor: state=$state, route=$audioRoute, isEarpiece=$isEarpiece, isSpeaker=$isSpeaker, isBluetooth=$isBluetooth, isVideo=$isVideo")
+        Log.d(
+            "CallActivity",
+            "updateProximitySensor: state=$state, route=$audioRoute, isEarpiece=$isEarpiece, isSpeaker=$isSpeaker, isBluetooth=$isBluetooth, isVideo=$isVideo"
+        )
 
-        val shouldActivate = (state == Call.STATE_ACTIVE || state == Call.STATE_DIALING || state == Call.STATE_CONNECTING)
-                && isEarpiece && !isSpeaker && !isBluetooth && !isVideo
+        val shouldActivate =
+            (state == Call.STATE_ACTIVE || state == Call.STATE_DIALING || state == Call.STATE_CONNECTING)
+                    && isEarpiece && !isSpeaker && !isBluetooth && !isVideo
 
         if (shouldActivate) {
             startProximitySensor()
@@ -675,7 +802,10 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                     )
                     Log.d("CallActivity", "Created proximity wake lock")
                 } else {
-                    Log.w("CallActivity", "Proximity screen off wake lock NOT supported on this device")
+                    Log.w(
+                        "CallActivity",
+                        "Proximity screen off wake lock NOT supported on this device"
+                    )
                 }
             }
 
@@ -698,8 +828,8 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
 
         val bottomSheet = BottomSheetDialog(this)
         val dialogBinding = ConferenceManagerBottomSheetBinding.inflate(
-                layoutInflater
-            )
+            layoutInflater
+        )
         bottomSheet.setContentView(dialogBinding.root)
 
         val adapter = ConferenceParticipantsAdapter(participants) { participant ->

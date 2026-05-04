@@ -2,6 +2,7 @@ package com.example.contactmanager.utils
 
 import android.Manifest
 import android.app.Activity
+import android.app.AppOpsManager
 import android.app.Dialog
 import android.app.role.RoleManager
 import android.content.Context
@@ -115,29 +116,55 @@ object PermissionManager {
         return dialog
     }
 
-    fun hasOverlayPermission(context: Context): Boolean {
 
+    fun hasOverlayPermission(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
+
+        // 1. Standard check
         if (Settings.canDrawOverlays(context)) return true
 
-        return try {
-            val appOpsManager =
-                context.getSystemService(Context.APP_OPS_SERVICE) as android.app.AppOpsManager
-            val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                appOpsManager.unsafeCheckOpNoThrow(
-                    android.app.AppOpsManager.OPSTR_SYSTEM_ALERT_WINDOW,
-                    android.os.Process.myUid(),
-                    context.packageName
-                )
-            } else {
-                appOpsManager.checkOpNoThrow(
-                    android.app.AppOpsManager.OPSTR_SYSTEM_ALERT_WINDOW,
-                    android.os.Process.myUid(),
-                    context.packageName
-                )
+        // 2. AppOps fallback
+        try {
+            val appOps = context.applicationContext.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+            val mode = appOps.checkOpNoThrow(
+                AppOpsManager.OPSTR_SYSTEM_ALERT_WINDOW,
+                android.os.Process.myUid(),
+                context.packageName
+            )
+            if (mode == AppOpsManager.MODE_ALLOWED) return true
+
+            // 3. Exception-based check for Android 8 (more aggressive)
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O_MR1) {
+                try {
+                    appOps.checkOp(
+                        AppOpsManager.OPSTR_SYSTEM_ALERT_WINDOW,
+                        android.os.Process.myUid(),
+                        context.packageName
+                    )
+                    return true
+                } catch (e: SecurityException) {
+                    // Permission truly denied
+                }
             }
-            mode == android.app.AppOpsManager.MODE_ALLOWED
-        } catch (e: Exception) {
-            false
-        }
+
+            // 4. Numeric fallback via reflection
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O_MR1) {
+                val method = appOps.javaClass.getMethod(
+                    "checkOpNoThrow",
+                    Int::class.javaPrimitiveType,
+                    Int::class.javaPrimitiveType,
+                    String::class.java
+                )
+                val reflectionMode = method.invoke(
+                    appOps,
+                    24, // OP_SYSTEM_ALERT_WINDOW
+                    android.os.Process.myUid(),
+                    context.packageName
+                ) as Int
+                return reflectionMode == AppOpsManager.MODE_ALLOWED
+            }
+        } catch (e: Exception) {}
+
+        return false
     }
 }

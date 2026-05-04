@@ -161,6 +161,7 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
                 }
             }
         } else if (!PermissionManager.hasOverlayPermission(this)) {
+
             binding.llContainer.visibility = View.INVISIBLE
             if (showCustomDialog) {
                 permissionDialog = PermissionManager.openPermissionDialog(this) {
@@ -195,6 +196,24 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
 
         setupFragments()
         handleBackPress()
+        handleIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (isViewInitialized) {
+            handleIntent(intent)
+        }
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        if (intent?.getStringExtra("open_tab") == "recents") {
+            if (::recentsFragment.isInitialized) {
+                switchFragments(recentsFragment)
+                updateTabUI(binding.llRecents)
+            }
+        }
     }
 
     private fun setupFragments() {

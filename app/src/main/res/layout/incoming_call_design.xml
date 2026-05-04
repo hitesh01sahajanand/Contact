@@ -18,15 +18,18 @@
         android:background="@color/white"
         android:visibility="visible">
 
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/cv_profile"
             android:layout_width="@dimen/_100sdp"
             android:layout_height="@dimen/_100sdp"
             android:layout_gravity="center"
             android:layout_marginTop="?actionBarSize"
             app:cardBackgroundColor="@color/color_1"
-            app:cardCornerRadius="@dimen/_120sdp"
             app:cardElevation="0dp"
+            app:cardPreventCornerOverlap="true"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
+            app:strokeColor="@android:color/transparent"
+            app:strokeWidth="1dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
@@ -44,7 +47,7 @@
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop" />
 
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
         <TextView
             android:id="@+id/tv_number_name"

@@ -2,16 +2,19 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_top_rounded"
+        android:gravity="center"
+        android:orientation="vertical"
         android:padding="@dimen/_10sdp">
 
         <androidx.cardview.widget.CardView
             android:id="@+id/view_line"
             android:layout_width="@dimen/_40sdp"
             android:layout_height="@dimen/_4sdp"
+            android:layout_gravity="center|center_horizontal"
             app:cardBackgroundColor="@color/bg_color"
             app:cardCornerRadius="@dimen/_10sdp"
             app:cardElevation="0dp"
@@ -24,6 +27,7 @@
             style="@style/TextStyle.MediumLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="start"
             android:layout_marginTop="@dimen/_10sdp"
             android:text="@string/video_call"
             android:textColor="@color/black_color"
@@ -33,7 +37,7 @@
         <TextView
             android:id="@+id/tv_subtitle"
             style="@style/TextStyle.Small"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/choose_your_preferred_app"
             android:textColor="@color/grey_color"
@@ -57,12 +61,12 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/_20sdp"
             android:gravity="center"
-            android:visibility="gone"
             android:orientation="horizontal"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tv_subtitle" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 </layout>

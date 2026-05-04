@@ -24,14 +24,17 @@
             android:padding="@dimen/_10sdp">
 
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cv_call_type"
                 android:layout_width="@dimen/_34sdp"
                 android:layout_height="@dimen/_34sdp"
                 android:animateLayoutChanges="true"
                 app:cardBackgroundColor="@color/bg_color"
-                app:cardCornerRadius="@dimen/_40sdp"
                 app:cardElevation="0dp"
+                app:cardPreventCornerOverlap="true"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
+                app:strokeColor="@android:color/transparent"
+                app:strokeWidth="1dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/ll_call_details"
                 app:layout_constraintStart_toStartOf="parent"
@@ -56,7 +59,7 @@
                     android:gravity="center_vertical"
                     android:visibility="gone" />
 
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <TextView
                 android:id="@+id/tv_collapse_name"
@@ -169,13 +172,16 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/ll_time_type" />
 
-                <androidx.cardview.widget.CardView
+                <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cv_expanded_profile"
                     android:layout_width="@dimen/_34sdp"
                     android:layout_height="@dimen/_34sdp"
                     android:layout_gravity="end"
-                    app:cardCornerRadius="@dimen/_40sdp"
                     app:cardElevation="0dp"
+                    app:cardPreventCornerOverlap="true"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
+                    app:strokeColor="@android:color/transparent"
+                    app:strokeWidth="1dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent">
 
@@ -207,7 +213,7 @@
                         android:text=""
                         android:textColor="@color/white" />
 
-                </androidx.cardview.widget.CardView>
+                </com.google.android.material.card.MaterialCardView>
 
 
                 <androidx.cardview.widget.CardView

@@ -1,26 +1,38 @@
 package com.example.contactmanager.activities.settings
 
 import android.Manifest
+import android.app.Dialog
 import android.app.role.RoleManager
+import android.content.ContentProviderOperation
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.ContactsContract
 import android.provider.Settings
 import android.telecom.TelecomManager
 import android.telephony.SubscriptionManager
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.blockNumbers.BlockNumbersActivity
 import com.example.contactmanager.activities.home.HomeActivity
@@ -28,7 +40,11 @@ import com.example.contactmanager.activities.language.LanguageActivity
 import com.example.contactmanager.activities.quickResponse.QuickResponseActivity
 import com.example.contactmanager.activities.setRingtone.SetRingtoneActivity
 import com.example.contactmanager.activities.speedDial.SpeedDialActivity
+import com.example.contactmanager.adapters.AvailableAccountsAdapter
 import com.example.contactmanager.databinding.ActivitySettingsBinding
+import com.example.contactmanager.databinding.ExportContactDialogBinding
+import com.example.contactmanager.models.AvailableAccountModel
+import com.example.contactmanager.models.VCardContact
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
@@ -36,9 +52,22 @@ import com.example.contactmanager.utils.PermissionManager.isDefaultDialer
 import com.example.contactmanager.utils.SharedPreferenceManager
 import com.example.contactmanager.utils.ThemeManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import android.accounts.AccountManager
+import android.telephony.SubscriptionInfo
+import android.media.MediaScannerConnection
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class SettingsActivity : AppCompatActivity(), OnClickHandler {
     private lateinit var binding: ActivitySettingsBinding
+    private var importFileUri: Uri? = null
+    private var availableAccounts = listOf<AvailableAccountModel>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -157,54 +186,6 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
         updateSimPrefUI()
     }
 
-    private fun updateSimPrefUI() {
-        val simPref = SharedPreferenceManager.getInt(this, Constance.SIM_PREFERENCE, -1)
-        if (simPref == -1) {
-            binding.tvSimPref.text = getString(R.string.ask_every_time)
-        } else {
-            if (ActivityCompat.checkSelfPermission(
-                    this, Manifest.permission.CALL_PHONE
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                val subscriptionManager =
-                    getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
-                val activeSimList = subscriptionManager?.activeSubscriptionInfoList
-                val selectedSim = activeSimList?.find { it.subscriptionId == simPref }
-                if (selectedSim != null) {
-                    binding.tvSimPref.text = selectedSim.carrierName
-                } else {
-                    binding.tvSimPref.text = getString(R.string.ask_every_time)
-                    SharedPreferenceManager.putInt(this, Constance.SIM_PREFERENCE, -1)
-                }
-            } else {
-                binding.tvSimPref.text = getString(R.string.ask_every_time)
-            }
-        }
-    }
-
-    fun openDefaultAppDialog(context: Context) {
-        try {
-            if (Build.VERSION.SDK_INT >= 29) {
-                val roleManager = context.getSystemService(ROLE_SERVICE) as RoleManager
-                val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
-                defaultDialerLauncher.launch(intent)
-            } else {
-                val telecomManager = context.getSystemService(TELECOM_SERVICE) as TelecomManager
-                if (context.packageName != telecomManager.defaultDialerPackage) {
-                    val intent = Intent("android.telecom.action.CHANGE_DEFAULT_DIALER").apply {
-                        putExtra(
-                            "android.telecom.extra.CHANGE_DEFAULT_DIALER_PACKAGE_NAME",
-                            context.packageName
-                        )
-                    }
-                    defaultDialerLauncher.launch(intent)
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("TAG", "openDefaultAppDialog: ${e.message}")
-        }
-    }
-
     override fun onClick(view: View) {
         when (view.id) {
             binding.ivBack.id -> {
@@ -258,62 +239,65 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             }
 
             binding.llSimPref.id -> {
-                if (ActivityCompat.checkSelfPermission(
-                        this, Manifest.permission.CALL_PHONE
-                    ) == PackageManager.PERMISSION_GRANTED
-                ) {
-                    val subscriptionManager =
-                        getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
-                    val activeSimList = subscriptionManager?.activeSubscriptionInfoList
+                Common.ensureDefaultDialer(this, onProceed = {
+                    if (ActivityCompat.checkSelfPermission(
+                            this, Manifest.permission.CALL_PHONE
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        val subscriptionManager =
+                            getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+                        val activeSimList = subscriptionManager?.activeSubscriptionInfoList
 
-                    if (activeSimList.isNullOrEmpty()) {
-                        Toast.makeText(
-                            this,
-                            getString(R.string.no_sim_cards_found), Toast.LENGTH_SHORT
-                        ).show()
-                        return
-                    }
-
-                    val simNames = Array(activeSimList.size + 1) { i ->
-                        if (i == 0) "Always ask"
-                        else "SIM $i (${activeSimList[i - 1].carrierName})"
-                    }
-
-                    val simPref = SharedPreferenceManager.getInt(this, Constance.SIM_PREFERENCE, -1)
-                    var selectedIndex = if (simPref == -1) 0 else {
-                        val index = activeSimList.indexOfFirst { it.subscriptionId == simPref }
-                        if (index != -1) index + 1 else 0
-                    }
-
-                    val builder = MaterialAlertDialogBuilder(this)
-
-                    builder.setTitle(getString(R.string.select_sim))
-
-                    builder.setSingleChoiceItems(simNames, selectedIndex) { _, which ->
-                        selectedIndex = which
-                    }
-
-                    builder.setPositiveButton(getString(R.string.set)) { dialog, _ ->
-                        if (selectedIndex == 0) {
-                            SharedPreferenceManager.putInt(this, Constance.SIM_PREFERENCE, -1)
-                        } else {
-                            val selectedSim = activeSimList[selectedIndex - 1]
-                            SharedPreferenceManager.putInt(
+                        if (activeSimList.isNullOrEmpty()) {
+                            Toast.makeText(
                                 this,
-                                Constance.SIM_PREFERENCE,
-                                selectedSim.subscriptionId
-                            )
+                                getString(R.string.no_sim_cards_found), Toast.LENGTH_SHORT
+                            ).show()
+                            return@ensureDefaultDialer
                         }
-                        updateSimPrefUI()
-                        dialog.dismiss()
-                    }
 
-                    builder.setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
-                        dialog.dismiss()
-                    }
+                        val simNames = Array(activeSimList.size + 1) { i ->
+                            if (i == 0) "Always ask"
+                            else "SIM $i (${activeSimList[i - 1].carrierName})"
+                        }
 
-                    builder.show()
-                }
+                        val simPref =
+                            SharedPreferenceManager.getInt(this, Constance.SIM_PREFERENCE, -1)
+                        var selectedIndex = if (simPref == -1) 0 else {
+                            val index = activeSimList.indexOfFirst { it.subscriptionId == simPref }
+                            if (index != -1) index + 1 else 0
+                        }
+
+                        val builder = MaterialAlertDialogBuilder(this)
+
+                        builder.setTitle(getString(R.string.select_sim))
+
+                        builder.setSingleChoiceItems(simNames, selectedIndex) { _, which ->
+                            selectedIndex = which
+                        }
+
+                        builder.setPositiveButton(getString(R.string.set)) { dialog, _ ->
+                            if (selectedIndex == 0) {
+                                SharedPreferenceManager.putInt(this, Constance.SIM_PREFERENCE, -1)
+                            } else {
+                                val selectedSim = activeSimList[selectedIndex - 1]
+                                SharedPreferenceManager.putInt(
+                                    this,
+                                    Constance.SIM_PREFERENCE,
+                                    selectedSim.subscriptionId
+                                )
+                            }
+                            updateSimPrefUI()
+                            dialog.dismiss()
+                        }
+
+                        builder.setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
+                            dialog.dismiss()
+                        }
+
+                        builder.show()
+                    }
+                })
             }
 
             binding.llChangeRingtone.id -> {
@@ -331,6 +315,35 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                 }
             }
 
+            binding.llExportContact.id -> {
+                val permissionsToRequest = mutableListOf(
+                    Manifest.permission.READ_CONTACTS
+                )
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
+                    permissionsToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                }
+                
+                // READ_PHONE_STATE is optional but recommended for SIM account names
+                val phoneStateGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED
+                if (!phoneStateGranted) {
+                    permissionsToRequest.add(Manifest.permission.READ_PHONE_STATE)
+                }
+
+                val ungrantedPermissions = permissionsToRequest.filter {
+                    ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+                }
+
+                if (ungrantedPermissions.isEmpty() || (ungrantedPermissions.size == 1 && ungrantedPermissions[0] == Manifest.permission.READ_PHONE_STATE)) {
+                    showExportContactsDialog()
+                } else {
+                    exportContactsPermissionLauncher.launch(ungrantedPermissions.toTypedArray())
+                }
+            }
+
+            binding.llImportContact.id -> {
+                importFileLauncher.launch(arrayOf("text/vcard", "text/x-vcard", "text/directory", "*/*"))
+            }
+
             binding.llShare.id -> {
 
             }
@@ -342,6 +355,745 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             binding.llPrivacyPolicy.id -> {
 
             }
+        }
+    }
+
+    private fun getAvailableAccounts(includeEmpty: Boolean = false): List<AvailableAccountModel> {
+        val accountsMap = mutableMapOf<String, AvailableAccountModel>()
+        val resolver = contentResolver
+
+        if (includeEmpty) {
+            // 1. Add Device / Phone account
+            accountsMap["device"] = AvailableAccountModel("", "", getString(R.string.device), 0)
+
+            // 2. Add SIM accounts using SubscriptionManager
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.READ_PHONE_STATE
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                val subscriptionManager =
+                    getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+                subscriptionManager?.activeSubscriptionInfoList?.forEachIndexed { index, info ->
+                    val simName = "SIM ${index + 1} (${info.displayName})"
+                    val key = "sim_${info.subscriptionId}"
+                    // SIM account names are often the slot index or carrier name
+                    accountsMap[key] =
+                        AvailableAccountModel(info.displayName.toString(), "sim", simName, 0)
+                }
+            }
+
+            // 3. Add Accounts from AccountManager (Google, etc.)
+            val accountManager = AccountManager.get(this)
+            accountManager.accounts.forEach { account ->
+                val type = account.type
+                val name = account.name
+                val isGoogle = type == "com.google"
+                val isWhatsApp = type.contains("whatsapp", ignoreCase = true)
+                val isTelegram = type.contains("telegram", ignoreCase = true)
+
+                if (isGoogle || isWhatsApp || isTelegram) {
+                    val key = "${name}_${type}"
+                    val displayName = when {
+                        isGoogle -> name
+                        isWhatsApp -> "WhatsApp ($name)"
+                        isTelegram -> "Telegram ($name)"
+                        else -> name
+                    }
+                    accountsMap[key] = AvailableAccountModel(name, type, displayName, 0)
+                }
+            }
+        }
+
+        try {
+            resolver.query(
+                ContactsContract.RawContacts.CONTENT_URI,
+                arrayOf(
+                    ContactsContract.RawContacts.ACCOUNT_NAME,
+                    ContactsContract.RawContacts.ACCOUNT_TYPE
+                ),
+                "${ContactsContract.RawContacts.DELETED} = 0",
+                null,
+                null
+            )?.use { cursor ->
+                while (cursor.moveToNext()) {
+                    val name = cursor.getString(0) ?: ""
+                    val type = cursor.getString(1) ?: ""
+
+                    val isGoogle = type == "com.google"
+                    val isWhatsApp = type.contains("whatsapp", ignoreCase = true)
+                    val isTelegram = type.contains("telegram", ignoreCase = true)
+                    val isEmail = name.contains("@") && type.contains("exchange", ignoreCase = true)
+                    val isSim = type.contains("sim", ignoreCase = true) || type.contains(
+                        "adn",
+                        ignoreCase = true
+                    )
+
+                    val isDevice = !isGoogle && !isWhatsApp && !isTelegram && !isEmail && !isSim
+
+                    if (isDevice) {
+                        val deviceModel = accountsMap.getOrPut("device") {
+                            AvailableAccountModel("", "", getString(R.string.device), 0)
+                        }
+                        deviceModel.count++
+                    } else if (isSim) {
+                        // Try to match existing SIM account or create new one
+                        // For SIMs, we often see multiple raw contacts with same type/name
+                        val key = if (name.isNotEmpty()) "sim_$name" else "sim_$type"
+                        val simModel = accountsMap.getOrPut(key) {
+                            AvailableAccountModel(
+                                name,
+                                type,
+                                "SIM ${name.ifEmpty { "" }}".trim(),
+                                0
+                            )
+                        }
+                        simModel.count++
+                    } else {
+                        val key = "${name}_${type}"
+                        val model = accountsMap.getOrPut(key) {
+                            val displayName = when {
+                                isGoogle -> name
+                                isWhatsApp -> "WhatsApp"
+                                isTelegram -> "Telegram"
+                                else -> name.ifEmpty { type }
+                            }
+                            AvailableAccountModel(name, type, displayName.trim(), 0)
+                        }
+                        model.count++
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        return accountsMap.values.toMutableList()
+    }
+
+    private fun showExportContactsDialog() {
+        val dialog = Dialog(this)
+        val accountBinding = ExportContactDialogBinding.inflate(LayoutInflater.from(this))
+        dialog.setContentView(accountBinding.root)
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+        dialog.setCancelable(false)
+
+        val margin = (15 * resources.displayMetrics.density).toInt()
+        val displayMetrics = resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+
+        dialog.window?.setLayout(
+            screenWidth - (margin * 3),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        // Show loader while fetching accounts
+        accountBinding.llExportContact.visibility = View.GONE
+        accountBinding.llLoader.visibility = View.VISIBLE
+        accountBinding.llExportSavedLocation.visibility = View.GONE
+
+        val availableAccountsAdapter = AvailableAccountsAdapter()
+        accountBinding.rvAvailableAccounts.adapter = availableAccountsAdapter
+        accountBinding.rvAvailableAccounts.layoutManager = LinearLayoutManager(this)
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            val accounts = getAvailableAccounts()
+            withContext(Dispatchers.Main) {
+                if (accounts.isEmpty()) {
+                    dialog.dismiss()
+                    Toast.makeText(this@SettingsActivity, getString(R.string.no_accounts_found), Toast.LENGTH_SHORT).show()
+                } else {
+                    availableAccounts = accounts
+                    availableAccountsAdapter.addAll(accounts)
+                    accountBinding.llLoader.visibility = View.GONE
+                    accountBinding.llExportContact.visibility = View.VISIBLE
+                }
+            }
+        }
+
+        val appName = getString(R.string.app_name).replace(" ", "_")
+        val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
+        val defaultName = "${appName}_${dateFormat.format(java.util.Date())}"
+        accountBinding.edtFileName.setText(defaultName)
+        accountBinding.edtFileName.setSelection(defaultName.length)
+
+        accountBinding.cvCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        accountBinding.ivClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        accountBinding.cvExport.setOnClickListener {
+            val selected = availableAccountsAdapter.getSelectedAccounts()
+            if (selected.isEmpty()) {
+                Toast.makeText(this, getString(R.string.no_accounts_selected), Toast.LENGTH_SHORT)
+                    .show()
+                return@setOnClickListener
+            }
+
+            val fileName = accountBinding.edtFileName.text.toString().trim()
+            if (fileName.isEmpty()) {
+                Toast.makeText(this, getString(R.string.enter_file_name), Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val finalFileName =
+                if (fileName.endsWith(".vcf", ignoreCase = true)) fileName else "$fileName.vcf"
+
+            val downloadsDir =
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            if (!downloadsDir.exists()) downloadsDir.mkdirs()
+            val file = File(downloadsDir, finalFileName)
+
+            if (file.exists()) {
+                Toast.makeText(
+                    this,
+                    getString(R.string.this_name_is_already_stored_please_choose_another),
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+
+            // Show loader within the same dialog
+            accountBinding.llExportContact.visibility = View.GONE
+            accountBinding.llLoader.visibility = View.VISIBLE
+
+            exportSelectedAccounts(selected, finalFileName, accountBinding, dialog)
+        }
+
+        accountBinding.cvOkay.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    private fun exportSelectedAccounts(
+        selectedAccounts: List<AvailableAccountModel>,
+        finalFileName: String,
+        accountBinding: ExportContactDialogBinding,
+        dialog: Dialog
+    ) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val validContactIds = mutableSetOf<Long>()
+                val resolver = contentResolver
+
+                resolver.query(
+                    ContactsContract.RawContacts.CONTENT_URI,
+                    arrayOf(
+                        ContactsContract.RawContacts.CONTACT_ID,
+                        ContactsContract.RawContacts.ACCOUNT_NAME,
+                        ContactsContract.RawContacts.ACCOUNT_TYPE
+                    ),
+                    "${ContactsContract.RawContacts.DELETED} = 0",
+                    null,
+                    null
+                )?.use { cursor ->
+                    while (cursor.moveToNext()) {
+                        if (cursor.isNull(0)) continue
+                        val contactId = cursor.getLong(0)
+                        val name = cursor.getString(1) ?: ""
+                        val type = cursor.getString(2) ?: ""
+
+                        val isGoogle = type == "com.google"
+                        val isWhatsApp = type.contains("whatsapp", ignoreCase = true)
+                        val isTelegram = type.contains("telegram", ignoreCase = true)
+                        val isEmail =
+                            name.contains("@") && type.contains("exchange", ignoreCase = true)
+                        val isSim = type.contains("sim", ignoreCase = true)
+
+                        val isDevice = !isGoogle && !isWhatsApp && !isTelegram && !isEmail && !isSim
+
+                        val matches = selectedAccounts.any { account ->
+                            if (account.accountName.isEmpty() && account.accountType.isEmpty()) {
+                                isDevice
+                            } else {
+                                account.accountName == name && account.accountType == type
+                            }
+                        }
+                        if (matches) {
+                            validContactIds.add(contactId)
+                        }
+                    }
+                }
+
+                val lookupKeys = mutableSetOf<String>()
+                if (validContactIds.isNotEmpty()) {
+                    resolver.query(
+                        ContactsContract.Contacts.CONTENT_URI,
+                        arrayOf(
+                            ContactsContract.Contacts.LOOKUP_KEY,
+                            ContactsContract.Contacts._ID
+                        ),
+                        "${ContactsContract.Contacts._ID} IN (${validContactIds.joinToString(",")})",
+                        null,
+                        null
+                    )?.use { cursor ->
+                        while (cursor.moveToNext()) {
+                            lookupKeys.add(cursor.getString(0))
+                        }
+                    }
+                }
+
+                if (lookupKeys.isEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        dialog.dismiss()
+                        Toast.makeText(
+                            this@SettingsActivity,
+                            getString(R.string.no_contacts_found_to_export),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    return@launch
+                }
+
+                val downloadsDir =
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                if (!downloadsDir.exists()) downloadsDir.mkdirs()
+                val file = File(downloadsDir, finalFileName)
+
+                FileOutputStream(file).use { output ->
+                    for (key in lookupKeys) {
+                        val uri = Uri.withAppendedPath(
+                            ContactsContract.Contacts.CONTENT_VCARD_URI,
+                            key
+                        )
+                        try {
+                            resolver.openAssetFileDescriptor(uri, "r")?.createInputStream()
+                                ?.use { input ->
+                                    input.copyTo(output)
+                                }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+
+                MediaScannerConnection.scanFile(
+                    this@SettingsActivity,
+                    arrayOf(file.absolutePath),
+                    null,
+                    null
+                )
+
+                withContext(Dispatchers.Main) {
+                    accountBinding.llLoader.visibility = View.GONE
+                    accountBinding.llExportSavedLocation.visibility = View.VISIBLE
+                    accountBinding.tvExportSavedLocation.text =
+                        getString(R.string.contacts_successfully_saved_to, file.absolutePath)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    dialog.dismiss()
+                    Toast.makeText(
+                        this@SettingsActivity,
+                        getString(R.string.error_exporting_contacts, e.message),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+
+    private val exportContactsPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            val readContactsGranted = (permissions[Manifest.permission.READ_CONTACTS]
+                ?: ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.READ_CONTACTS
+                )) == PackageManager.PERMISSION_GRANTED
+
+            val writeStorageGranted = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
+                (permissions[Manifest.permission.WRITE_EXTERNAL_STORAGE]
+                    ?: ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    )) == PackageManager.PERMISSION_GRANTED
+            } else true
+
+            if (readContactsGranted && writeStorageGranted) {
+                showExportContactsDialog()
+            } else {
+                Toast.makeText(
+                    this,
+                    getString(R.string.permissions_required_to_export_contacts), Toast.LENGTH_SHORT
+                )
+                    .show()
+            }
+        }
+
+    private val importFileLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                importFileUri = uri
+                val permissionsToRequest = mutableListOf(
+                    Manifest.permission.READ_CONTACTS,
+                    Manifest.permission.WRITE_CONTACTS,
+                    Manifest.permission.READ_PHONE_STATE
+                )
+                val ungrantedPermissions = permissionsToRequest.filter {
+                    ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+                }
+                if (ungrantedPermissions.isEmpty()) {
+                    showImportAccountSelectionDialog(uri)
+                } else {
+                    importContactsPermissionLauncher.launch(ungrantedPermissions.toTypedArray())
+                }
+            }
+        }
+
+    private val importContactsPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            val readContactsGranted = permissions[Manifest.permission.READ_CONTACTS] == true
+            val writeContactsGranted = permissions[Manifest.permission.WRITE_CONTACTS] == true
+            val readPhoneStateGranted = permissions[Manifest.permission.READ_PHONE_STATE] == true
+
+            if (readContactsGranted && writeContactsGranted && readPhoneStateGranted) {
+                importFileUri?.let { showImportAccountSelectionDialog(it) }
+            } else {
+                Toast.makeText(
+                    this,
+                    getString(R.string.permissions_required_to_import_contacts), Toast.LENGTH_SHORT
+                )
+                    .show()
+            }
+        }
+
+    private fun showImportAccountSelectionDialog(uri: Uri) {
+        val dialog = Dialog(this)
+        val accountBinding = ExportContactDialogBinding.inflate(LayoutInflater.from(this))
+        dialog.setContentView(accountBinding.root)
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+        dialog.setCancelable(false)
+
+        val margin = (15 * resources.displayMetrics.density).toInt()
+        val displayMetrics = resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+
+        dialog.window?.setLayout(
+            screenWidth - (margin * 3),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        // Show loader while fetching accounts
+        accountBinding.llExportContact.visibility = View.GONE
+        accountBinding.llLoader.visibility = View.VISIBLE
+        accountBinding.llExportSavedLocation.visibility = View.GONE
+
+        val availableAccountsAdapter = AvailableAccountsAdapter()
+        accountBinding.rvAvailableAccounts.adapter = availableAccountsAdapter
+        accountBinding.rvAvailableAccounts.layoutManager = LinearLayoutManager(this)
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            val accounts = getAvailableAccounts(includeEmpty = true)
+            withContext(Dispatchers.Main) {
+                if (accounts.isEmpty()) {
+                    dialog.dismiss()
+                    Toast.makeText(this@SettingsActivity, getString(R.string.no_accounts_found), Toast.LENGTH_SHORT).show()
+                } else {
+                    availableAccountsAdapter.addAll(accounts)
+                    accountBinding.llLoader.visibility = View.GONE
+                    accountBinding.llExportContact.visibility = View.VISIBLE
+                }
+            }
+        }
+
+        // Adjust for import
+        accountBinding.tvTitle.text = getString(R.string.select_account_for_import)
+        accountBinding.tvDone.text = getString(R.string.import_)
+        accountBinding.edtFileName.visibility = View.GONE
+
+        accountBinding.cvCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        accountBinding.ivClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        accountBinding.cvExport.setOnClickListener {
+            val selected = availableAccountsAdapter.getSelectedAccounts()
+            if (selected.isEmpty()) {
+                Toast.makeText(this, getString(R.string.no_accounts_selected), Toast.LENGTH_SHORT)
+                    .show()
+                return@setOnClickListener
+            }
+
+            // For import, we use the first selected account
+            val selectedAccount = selected[0]
+
+            // Switch to loader
+            accountBinding.llExportContact.visibility = View.GONE
+            accountBinding.llLoader.visibility = View.VISIBLE
+            accountBinding.tvExport.text = getString(R.string.importing_contacts)
+
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    val contacts = parseVCard(uri)
+                    if (contacts.isEmpty()) {
+                        withContext(Dispatchers.Main) {
+                            dialog.dismiss()
+                            Toast.makeText(
+                                this@SettingsActivity,
+                                getString(R.string.no_contacts_found_in_file),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        return@launch
+                    }
+
+                    saveContactsToAccount(contacts, selectedAccount)
+
+                    withContext(Dispatchers.Main) {
+                        dialog.dismiss()
+                        Toast.makeText(
+                            this@SettingsActivity,
+                            getString(R.string.contacts_imported_successfully, contacts.size),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    withContext(Dispatchers.Main) {
+                        dialog.dismiss()
+                        Toast.makeText(
+                            this@SettingsActivity,
+                            getString(R.string.error_importing_contacts, e.message),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun parseVCard(fileUri: Uri): List<VCardContact> {
+        val contacts = mutableListOf<VCardContact>()
+        try {
+            contentResolver.openInputStream(fileUri)?.bufferedReader()?.use { reader ->
+                var inVCard = false
+                var currentContact: VCardContact? = null
+
+                var line: String?
+                while (reader.readLine().also { line = it } != null) {
+                    var l = line!!.trim()
+
+                    while (l.endsWith("=") && l.contains("QUOTED-PRINTABLE", ignoreCase = true)) {
+                        l = l.dropLast(1)
+                        val nextLine = reader.readLine() ?: break
+                        l += nextLine.trim()
+                    }
+
+                    if (l == "BEGIN:VCARD") {
+                        inVCard = true
+                        currentContact = VCardContact()
+                    } else if (l == "END:VCARD") {
+                        if (inVCard && currentContact != null) {
+                            if (currentContact.name.isNotEmpty() || currentContact.phones.isNotEmpty() || currentContact.emails.isNotEmpty()) {
+                                contacts.add(currentContact)
+                            }
+                        }
+                        inVCard = false
+                        currentContact = null
+                    } else if (inVCard && currentContact != null) {
+                        val upperL = l.uppercase()
+                        if (upperL.startsWith("FN:") || upperL.startsWith("FN;")) {
+                            val value = l.substringAfter(":", "")
+                            if (value.isNotEmpty()) currentContact.name =
+                                decodeQuotedPrintable(value)
+                        } else if (upperL.startsWith("N:") || upperL.startsWith("N;")) {
+                            if (currentContact.name.isEmpty()) {
+                                val value = l.substringAfter(":", "")
+                                val parts = value.split(";")
+                                val last = decodeQuotedPrintable(parts.getOrNull(0) ?: "")
+                                val first = decodeQuotedPrintable(parts.getOrNull(1) ?: "")
+                                currentContact.name = "$first $last".trim()
+                            }
+                        } else if (upperL.startsWith("TEL:") || upperL.startsWith("TEL;")) {
+                            val value = l.substringAfter(":", "")
+                            if (value.isNotEmpty()) currentContact.phones.add(
+                                decodeQuotedPrintable(
+                                    value
+                                )
+                            )
+                        } else if (upperL.startsWith("EMAIL:") || upperL.startsWith("EMAIL;")) {
+                            val value = l.substringAfter(":", "")
+                            if (value.isNotEmpty()) currentContact.emails.add(
+                                decodeQuotedPrintable(
+                                    value
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return contacts
+    }
+
+    private fun decodeQuotedPrintable(text: String): String {
+        return text.replace(Regex("=([0-9A-F]{2})", RegexOption.IGNORE_CASE)) { matchResult ->
+            try {
+                matchResult.groupValues[1].toInt(16).toChar().toString()
+            } catch (e: Exception) {
+                Log.e("TAG", "decodeQuotedPrintable: ${e.message}")
+                matchResult.value
+            }
+        }
+    }
+
+    private suspend fun saveContactsToAccount(
+        contacts: List<VCardContact>,
+        account: AvailableAccountModel
+    ) {
+        withContext(Dispatchers.IO) {
+            val ops = ArrayList<ContentProviderOperation>()
+            val accountName = account.accountName.ifEmpty { null }
+            val accountType = account.accountType.ifEmpty { null }
+
+            for (contact in contacts) {
+                val rawContactInsertIndex = ops.size
+
+                ops.add(
+                    ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
+                        .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, accountName)
+                        .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, accountType)
+                        .build()
+                )
+
+                if (contact.name.isNotEmpty()) {
+                    ops.add(
+                        ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                            .withValueBackReference(
+                                ContactsContract.Data.RAW_CONTACT_ID,
+                                rawContactInsertIndex
+                            )
+                            .withValue(
+                                ContactsContract.Data.MIMETYPE,
+                                ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE
+                            )
+                            .withValue(
+                                ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME,
+                                contact.name
+                            )
+                            .build()
+                    )
+                }
+
+                for (phone in contact.phones) {
+                    ops.add(
+                        ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                            .withValueBackReference(
+                                ContactsContract.Data.RAW_CONTACT_ID,
+                                rawContactInsertIndex
+                            )
+                            .withValue(
+                                ContactsContract.Data.MIMETYPE,
+                                ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE
+                            )
+                            .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phone)
+                            .withValue(
+                                ContactsContract.CommonDataKinds.Phone.TYPE,
+                                ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE
+                            )
+                            .build()
+                    )
+                }
+
+                for (email in contact.emails) {
+                    ops.add(
+                        ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                            .withValueBackReference(
+                                ContactsContract.Data.RAW_CONTACT_ID,
+                                rawContactInsertIndex
+                            )
+                            .withValue(
+                                ContactsContract.Data.MIMETYPE,
+                                ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE
+                            )
+                            .withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, email)
+                            .withValue(
+                                ContactsContract.CommonDataKinds.Email.TYPE,
+                                ContactsContract.CommonDataKinds.Email.TYPE_WORK
+                            )
+                            .build()
+                    )
+                }
+
+                if (ops.size >= 300) {
+                    try {
+                        contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                    ops.clear()
+                }
+            }
+
+            if (ops.isNotEmpty()) {
+                try {
+                    contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    private fun updateSimPrefUI() {
+        val simPref = SharedPreferenceManager.getInt(this, Constance.SIM_PREFERENCE, -1)
+        if (simPref == -1) {
+            binding.tvSimPref.text = getString(R.string.ask_every_time)
+        } else {
+            if (ActivityCompat.checkSelfPermission(
+                    this, Manifest.permission.CALL_PHONE
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                val subscriptionManager =
+                    getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+                val activeSimList = subscriptionManager?.activeSubscriptionInfoList
+                val selectedSim = activeSimList?.find { it.subscriptionId == simPref }
+                if (selectedSim != null) {
+                    binding.tvSimPref.text = selectedSim.carrierName
+                } else {
+                    binding.tvSimPref.text = getString(R.string.ask_every_time)
+                    SharedPreferenceManager.putInt(this, Constance.SIM_PREFERENCE, -1)
+                }
+            } else {
+                binding.tvSimPref.text = getString(R.string.ask_every_time)
+            }
+        }
+    }
+
+    fun openDefaultAppDialog(context: Context) {
+        try {
+            if (Build.VERSION.SDK_INT >= 29) {
+                val roleManager = context.getSystemService(ROLE_SERVICE) as RoleManager
+                val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
+                defaultDialerLauncher.launch(intent)
+            } else {
+                val telecomManager = context.getSystemService(TELECOM_SERVICE) as TelecomManager
+                if (context.packageName != telecomManager.defaultDialerPackage) {
+                    val intent = Intent("android.telecom.action.CHANGE_DEFAULT_DIALER").apply {
+                        putExtra(
+                            "android.telecom.extra.CHANGE_DEFAULT_DIALER_PACKAGE_NAME",
+                            context.packageName
+                        )
+                    }
+                    defaultDialerLauncher.launch(intent)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("TAG", "openDefaultAppDialog: ${e.message}")
         }
     }
 }

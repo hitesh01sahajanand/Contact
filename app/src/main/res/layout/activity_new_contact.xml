@@ -92,7 +92,7 @@
                         android:orientation="horizontal">
 
                         <LinearLayout
-                            android:layout_width="match_parent"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical">
@@ -108,7 +108,7 @@
                             android:layout_height="@dimen/_14sdp"
                             android:layout_gravity="center_vertical"
                             android:src="@drawable/ic_down_arrow"
-                            android:tint="@color/black_color" />
+                            app:tint="@color/black_color" />
 
                     </LinearLayout>
 
@@ -121,15 +121,18 @@
                     android:layout_marginVertical="@dimen/_24sdp"
                     android:orientation="vertical">
 
-                    <androidx.cardview.widget.CardView
+                    <com.google.android.material.card.MaterialCardView
                         android:id="@+id/cv_add_photo"
                         android:layout_width="@dimen/_100sdp"
                         android:layout_height="@dimen/_100sdp"
                         android:layout_gravity="center"
                         android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
                         app:cardBackgroundColor="@color/light_blue_color"
-                        app:cardCornerRadius="@dimen/_100sdp"
-                        app:cardElevation="0dp">
+                        app:cardElevation="0dp"
+                        app:cardPreventCornerOverlap="true"
+                        app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
+                        app:strokeColor="@android:color/transparent"
+                        app:strokeWidth="1dp">
 
                         <ImageView
                             android:layout_width="match_parent"
@@ -143,7 +146,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:scaleType="centerCrop" />
-                    </androidx.cardview.widget.CardView>
+                    </com.google.android.material.card.MaterialCardView>
 
                 </LinearLayout>
 
@@ -255,8 +258,8 @@
                             android:layout_height="wrap_content"
                             android:background="@null"
                             android:hint="@string/email"
-                            android:inputType="textEmailAddress"
                             android:imeOptions="actionDone"
+                            android:inputType="textEmailAddress"
                             android:padding="@dimen/_13sdp"
                             android:textColor="@color/black_color"
                             android:textColorHint="@color/grey_color" />

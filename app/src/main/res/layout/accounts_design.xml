@@ -13,14 +13,17 @@
         android:orientation="horizontal"
         android:paddingVertical="@dimen/_10sdp">
 
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/cv_profile"
             android:layout_width="@dimen/_34sdp"
             android:layout_height="@dimen/_34sdp"
             android:visibility="visible"
             app:cardBackgroundColor="@color/color_1"
-            app:cardCornerRadius="@dimen/_40sdp"
-            app:cardElevation="0dp">
+            app:cardElevation="0dp"
+            app:cardPreventCornerOverlap="true"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
+            app:strokeColor="@android:color/transparent"
+            app:strokeWidth="1dp">
 
             <TextView
                 android:id="@+id/tv_contact_name"
@@ -32,7 +35,7 @@
                 android:text=""
                 android:textColor="@color/white" />
 
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -41,9 +44,11 @@
             android:orientation="vertical">
 
             <LinearLayout
+                android:id="@+id/ll_accounts"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:visibility="visible">
 
                 <TextView
                     android:id="@+id/tv_id_name"
@@ -56,6 +61,39 @@
                     android:singleLine="true"
                     android:text=""
                     android:textColor="@color/black" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_accounts_count"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tv_email_name"
+                    style="@style/TextStyle.Medium"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:ellipsize="end"
+                    android:gravity="center_vertical"
+                    android:singleLine="true"
+                    android:text=""
+                    android:textColor="@color/black" />
+
+                <TextView
+                    android:id="@+id/tv_count"
+                    style="@style/TextStyle.Small"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="start"
+                    android:ellipsize="end"
+                    android:gravity="center_vertical"
+                    android:singleLine="true"
+                    android:text=""
+                    android:textColor="@color/grey_color" />
 
             </LinearLayout>
 

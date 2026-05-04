@@ -27,6 +27,7 @@ import com.example.contactmanager.R
 import com.example.contactmanager.activities.history.HistoryActivity
 import com.example.contactmanager.activities.newContact.NewContactActivity
 import com.example.contactmanager.activities.setRingtone.SetRingtoneActivity
+import com.example.contactmanager.activities.storageLocation.StorageLocationActivity
 import com.example.contactmanager.databinding.ActivityContactsDetailsBinding
 import com.example.contactmanager.databinding.MoreDetailDesignBinding
 import com.example.contactmanager.models.CallLogEntry
@@ -186,6 +187,18 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                 contactDetail?.let {
                     Common.shareContact(this, it.stringNumber)
                 }
+            }
+
+            binding.cvStorageLocation.id -> {
+                val intent = Intent(this, StorageLocationActivity::class.java)
+                contactDetail?.let {
+                    intent.putExtra("contact_id", it.contactId)
+                    val name = if (it.stringCallName.isNullOrEmpty()) it.stringNumber else it.stringCallName
+                    intent.putExtra("contact_name", name)
+                    intent.putExtra("contact_number", it.stringNumber)
+                    intent.putExtra("contact_photo_uri", it.stringPhotoUri)
+                }
+                startActivity(intent)
             }
 
             binding.llMore.id -> {

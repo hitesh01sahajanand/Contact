@@ -10,7 +10,10 @@ import com.example.contactmanager.databinding.AccountsDesignBinding
 import com.example.contactmanager.models.AccountModel
 import com.example.contactmanager.utils.Common
 
-class AllAccountAdapter(private val onClick: (AccountModel) -> Unit) :
+class AllAccountAdapter(
+    private val isCountVisible: Boolean = false,
+    private val onClick: (AccountModel) -> Unit
+) :
     RecyclerView.Adapter<AllAccountAdapter.AccountHolder>() {
     private var accountsList = mutableListOf<AccountModel>()
 
@@ -42,14 +45,26 @@ class AllAccountAdapter(private val onClick: (AccountModel) -> Unit) :
         notifyDataSetChanged()
     }
 
-    class AccountHolder(private val binding: AccountsDesignBinding) :
+    inner class AccountHolder(private val binding: AccountsDesignBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun setData(itemData: AccountModel) {
-            if (itemData.count == 0) {
-                binding.tvIdName.text = itemData.name
+
+            if (isCountVisible) {
+                binding.llAccounts.isVisible = false
+                binding.llAccountsCount.isVisible = true
             } else {
-                binding.tvIdName.text = "${itemData.name} (${itemData.count})"
+                binding.llAccountsCount.isVisible = false
+                binding.llAccounts.isVisible = true
             }
+
+            if (itemData.email.isNotEmpty()) {
+                binding.tvIdName.text = itemData.email
+            } else {
+                binding.tvIdName.text = itemData.name
+            }
+
+            binding.tvEmailName.text = itemData.email
+            binding.tvCount.text = itemData.count.toString()
 
             val color = Common.profileColors[adapterPosition % Common.profileColors.size]
             binding.cvProfile.setCardBackgroundColor(

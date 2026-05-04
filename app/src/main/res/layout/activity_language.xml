@@ -37,32 +37,20 @@
                 android:textColor="@color/black" />
 
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/cv_done"
+                style="@style/TextStyle.Medium"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:gravity="center_vertical"
                 android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                android:text="@string/allow_permission"
-                android:textStyle="bold"
-                app:cardBackgroundColor="@color/main_color"
-                app:cardCornerRadius="@dimen/_25sdp">
-
-                <TextView
-                    style="@style/TextStyle.Medium"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:paddingHorizontal="@dimen/_25sdp"
-                    android:paddingVertical="@dimen/_10sdp"
-                    android:text="@string/done"
-                    android:textColor="@color/white"
-                    android:textSize="@dimen/_12sdp"
-                    android:textStyle="bold" />
-
-            </androidx.cardview.widget.CardView>
+                android:paddingHorizontal="@dimen/_25sdp"
+                android:paddingVertical="@dimen/_10sdp"
+                android:text="@string/done"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/main_color"
+                app:cornerRadius="@dimen/_25sdp"
+                app:elevation="0dp" />
 
         </LinearLayout>
 
