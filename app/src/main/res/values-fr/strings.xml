@@ -86,7 +86,7 @@
     <string name="choose_your_preferred_app">Choisissez votre application préférée</string>
     <string name="conference_participants">Participants à la conférence</string>
     <string name="search_contact">Rechercher un contact…</string>
-    <string name="block_contacts">Bloquer les contacts</string>
+    <string name="block_contacts">Bloquer</string>
     <string name="speed_dial">Numérotation rapide</string>
     <string name="quick_response">Réponse rapide</string>
     <string name="sound_vibration"><![CDATA[Son & Vibration]]></string>
@@ -210,4 +210,32 @@
     <string name="set_your_favorite_tag_to_contact">définissez votre étiquette favorite pour le contact</string>
     <string name="enter_tag">entrer une étiquette</string>
     <string name="no_speed_dial_set_for">Aucun numéro abrégé défini pour %1$d</string>
+
+    <string name="device">Appareil</string>
+    <string name="export_contacts">Exporter les contacts</string>
+    <string name="include_contact_sources">Inclure les sources de contacts</string>
+    <string name="filename_without_vcf">Nom du fichier (sans .vcf)</string>
+    <string name="export">Exporter</string>
+    <string name="please_wait">Veuillez patienter...</string>
+    <string name="contacts_successfully_saved_to">Contacts enregistrés avec succès dans :\n%1$s</string>
+    <string name="error_exporting_contacts">Erreur lors de l’exportation des contacts : %1$s</string>
+    <string name="no_contacts_found_to_export">Aucun contact trouvé à exporter</string>
+    <string name="this_name_is_already_stored_please_choose_another">Ce nom est déjà enregistré. Veuillez en choisir un autre.</string>
+    <string name="enter_file_name">Saisir le nom du fichier</string>
+    <string name="no_accounts_selected">Aucun compte sélectionné</string>
+    <string name="no_accounts_found">Aucun compte trouvé</string>
+    <string name="select_account_for_import">Sélectionner un compte pour l’importation</string>
+    <string name="importing_contacts">Importation des contacts...</string>
+    <string name="no_contacts_found_in_file">Aucun contact trouvé dans le fichier</string>
+    <string name="contacts_imported_successfully">%1$d contacts importés avec succès</string>
+    <string name="error_importing_contacts">Erreur lors de l’importation des contacts : %1$s</string>
+    <string name="import_">Importer</string>
+    <string name="permissions_required_to_export_contacts">Autorisations requises pour exporter les contacts</string>
+    <string name="permissions_required_to_import_contacts">Autorisations requises pour importer les contacts</string>
+    <string name="export_contact">Exporter le contact</string>
+    <string name="import_contact">Importer le contact</string>
+    <string name="please_wait_fetching_accounts">Veuillez patienter, récupération des comptes...</string>
+    <string name="local_storage_restricted">Stockage local restreint</string>
+    <string name="your_system_is_set_to_save">Votre système est configuré pour enregistrer les contacts dans Google par défaut. Pour enregistrer uniquement sur l’appareil, vous devez modifier ce paramètre dans les réglages système ou sélectionner un compte Google.</string>
+    <string name="open_settings">Ouvrir les paramètres</string>
 </resources>

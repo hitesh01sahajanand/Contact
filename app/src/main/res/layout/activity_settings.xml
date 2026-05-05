@@ -79,7 +79,6 @@
                     android:layout_marginTop="@dimen/_10sdp"
                     android:background="@drawable/all_rounded_corner_bg"
                     android:orientation="vertical"
-                    android:padding="@dimen/_8sdp"
                     android:visibility="visible">
 
                     <LinearLayout
@@ -87,9 +86,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
                         android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                         android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp"
                         android:visibility="visible">
 
                         <ImageView
@@ -125,6 +126,7 @@
                         android:layout_gravity="center_vertical"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp"
                         android:visibility="gone">
 
                         <ImageView
@@ -143,15 +145,15 @@
                             android:text="@string/show_a_call_confirmation"
                             android:textColor="@color/black_color" />
 
-                        <Switch
+                        <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switch_confirm_dialog"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
-                            android:scaleX="0.9"
                             android:thumb="@drawable/thumb_selector"
-                            android:track="@drawable/track_selector"
-                            tools:ignore="UseSwitchCompatOrMaterialXml" />
+                            app:thumbTint="@null"
+                            app:track="@drawable/track_selector"
+                            app:trackTint="@null" />
 
                     </LinearLayout>
 
@@ -173,7 +175,6 @@
                     android:layout_marginTop="@dimen/_10sdp"
                     android:background="@drawable/all_rounded_corner_bg"
                     android:orientation="vertical"
-                    android:padding="@dimen/_8sdp"
                     android:visibility="visible">
 
                     <LinearLayout
@@ -181,9 +182,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
                         android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"
@@ -235,10 +238,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginTop="@dimen/_16sdp"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
                         android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"
@@ -304,7 +308,6 @@
                     android:layout_marginTop="@dimen/_10sdp"
                     android:background="@drawable/all_rounded_corner_bg"
                     android:orientation="vertical"
-                    android:padding="@dimen/_10sdp"
                     android:visibility="visible">
 
                     <LinearLayout
@@ -312,9 +315,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
                         android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"
@@ -345,10 +350,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginTop="@dimen/_16sdp"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
                         android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"
@@ -380,10 +386,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginTop="@dimen/_16sdp"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
                         android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"
@@ -416,10 +423,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginTop="@dimen/_16sdp"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
                         android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"
@@ -447,16 +455,16 @@
 
                     </LinearLayout>
 
-
                     <LinearLayout
                         android:id="@+id/ll_sim_pref"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginTop="@dimen/_16sdp"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
                         android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"
@@ -497,9 +505,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginTop="@dimen/_16sdp"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"
@@ -518,14 +527,16 @@
                             android:text="@string/merge_duplicate_contacts"
                             android:textColor="@color/black_color" />
 
-                        <Switch
+                        <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switch_merge_duplicate_contact"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
-                            android:scaleX="0.9"
                             android:thumb="@drawable/thumb_selector"
-                            android:track="@drawable/track_selector" />
+                            app:thumbTint="@null"
+                            app:track="@drawable/track_selector"
+                            app:trackTint="@null" />
+
 
                     </LinearLayout>
 
@@ -534,9 +545,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginTop="@dimen/_16sdp"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp"
                         tools:ignore="UseSwitchCompatOrMaterialXml">
 
                         <ImageView
@@ -555,14 +567,15 @@
                             android:text="@string/dial_pad_sound"
                             android:textColor="@color/black_color" />
 
-                        <Switch
+                        <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switch_dial_pad_sound"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
-                            android:scaleX="0.9"
                             android:thumb="@drawable/thumb_selector"
-                            android:track="@drawable/track_selector" />
+                            app:thumbTint="@null"
+                            app:track="@drawable/track_selector"
+                            app:trackTint="@null" />
 
                     </LinearLayout>
 
@@ -571,9 +584,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginTop="@dimen/_16sdp"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"
@@ -592,15 +606,15 @@
                             android:text="@string/show_flash_on_call"
                             android:textColor="@color/black_color" />
 
-                        <Switch
+                        <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switch_call_flash"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
-                            android:scaleX="0.9"
                             android:thumb="@drawable/thumb_selector"
-                            android:track="@drawable/track_selector"
-                            tools:ignore="UseSwitchCompatOrMaterialXml" />
+                            app:thumbTint="@null"
+                            app:track="@drawable/track_selector"
+                            app:trackTint="@null" />
 
                     </LinearLayout>
 
@@ -609,9 +623,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginTop="@dimen/_16sdp"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"
@@ -630,15 +645,15 @@
                             android:text="@string/use_swipe_to_action"
                             android:textColor="@color/black_color" />
 
-                        <Switch
+                        <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switch_swipe_action"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
-                            android:scaleX="0.9"
                             android:thumb="@drawable/thumb_selector"
-                            android:track="@drawable/track_selector"
-                            tools:ignore="UseSwitchCompatOrMaterialXml" />
+                            app:thumbTint="@null"
+                            app:track="@drawable/track_selector"
+                            app:trackTint="@null" />
 
                     </LinearLayout>
 
@@ -647,10 +662,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginTop="@dimen/_16sdp"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
                         android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"
@@ -684,10 +700,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginTop="@dimen/_16sdp"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
                         android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"
@@ -703,7 +720,7 @@
                             android:layout_marginHorizontal="@dimen/_10sdp"
                             android:layout_weight="1"
                             android:gravity="center_vertical"
-                            android:text="@string/export_contact_to_a_vcf_file"
+                            android:text="@string/export_contacts"
                             android:textColor="@color/black_color" />
 
                         <ImageView
@@ -721,10 +738,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginTop="@dimen/_16sdp"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
                         android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"
@@ -740,7 +758,7 @@
                             android:layout_marginHorizontal="@dimen/_10sdp"
                             android:layout_weight="1"
                             android:gravity="center_vertical"
-                            android:text="Import Contact to a .vcf File"
+                            android:text="@string/import_contact"
                             android:textColor="@color/black_color" />
 
                         <ImageView
@@ -773,7 +791,6 @@
                     android:layout_marginVertical="@dimen/_10sdp"
                     android:background="@drawable/all_rounded_corner_bg"
                     android:orientation="vertical"
-                    android:padding="@dimen/_8sdp"
                     android:visibility="visible">
 
                     <LinearLayout
@@ -781,9 +798,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
                         android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"
@@ -817,10 +836,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginTop="@dimen/_16sdp"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
                         android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"
@@ -853,10 +873,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginTop="@dimen/_16sdp"
+                        android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
                         android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"

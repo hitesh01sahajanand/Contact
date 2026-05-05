@@ -29,6 +29,8 @@ object Constance {
     const val CONTACT_ID = "contactId"
     const val IS_CONTACT_SAVED = "isContactSaved"
     const val DATA_FETCH = "dataFetch"
+    const val NAME = "name"
+    const val PHOTO_URI = "photo_uri"
     const val WHATSAPP: String = "com.whatsapp"
     const val WHATSAPP_BUSINESS: String = "com.whatsapp.w4b"
     const val DUO: String = "com.google.android.apps.tachyon"

@@ -210,4 +210,33 @@
     <string name="set_your_favorite_tag_to_contact">연락처에 좋아하는 태그를 설정하세요</string>
     <string name="enter_tag">태그 입력</string>
     <string name="no_speed_dial_set_for">%1$d에 대한 단축 다이얼이 설정되어 있지 않습니다</string>
+
+    <string name="device">기기</string>
+    <string name="export_contacts">연락처 내보내기</string>
+    <string name="include_contact_sources">연락처 소스 포함</string>
+    <string name="filename_without_vcf">파일 이름 (.vcf 제외)</string>
+    <string name="export">내보내기</string>
+    <string name="please_wait">잠시만 기다려 주세요...</string>
+    <string name="contacts_successfully_saved_to">연락처가 다음 위치에 성공적으로 저장되었습니다:\n%1$s</string>
+    <string name="error_exporting_contacts">연락처를 내보내는 중 오류 발생: %1$s</string>
+    <string name="no_contacts_found_to_export">내보낼 연락처가 없습니다</string>
+    <string name="this_name_is_already_stored_please_choose_another">이 이름은 이미 저장되어 있습니다. 다른 이름을 선택하세요.</string>
+    <string name="enter_file_name">파일 이름 입력</string>
+    <string name="no_accounts_selected">선택된 계정이 없습니다</string>
+    <string name="no_accounts_found">계정을 찾을 수 없습니다</string>
+    <string name="select_account_for_import">가져올 계정 선택</string>
+    <string name="importing_contacts">연락처를 가져오는 중...</string>
+    <string name="no_contacts_found_in_file">파일에서 연락처를 찾을 수 없습니다</string>
+    <string name="contacts_imported_successfully">%1$d개의 연락처를 성공적으로 가져왔습니다</string>
+    <string name="error_importing_contacts">연락처를 가져오는 중 오류 발생: %1$s</string>
+    <string name="import_">가져오기</string>
+    <string name="permissions_required_to_export_contacts">연락처를 내보내려면 권한이 필요합니다</string>
+    <string name="permissions_required_to_import_contacts">연락처를 가져오려면 권한이 필요합니다</string>
+    <string name="export_contact">연락처 내보내기</string>
+    <string name="import_contact">연락처 가져오기</string>
+    <string name="please_wait_fetching_accounts">잠시만 기다려 주세요, 계정을 불러오는 중입니다...</string>
+    <string name="local_storage_restricted">로컬 저장소 제한됨</string>
+    <string name="your_system_is_set_to_save">시스템은 기본적으로 연락처를 Google에 저장하도록 설정되어 있습니다. 기기에만 저장하려면 시스템 설정에서 변경하거나 Google 계정을 선택해야 합니다.</string>
+    <string name="open_settings">설정 열기</string>
+
 </resources>

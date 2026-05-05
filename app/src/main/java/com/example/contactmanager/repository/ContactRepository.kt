@@ -17,21 +17,37 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
         try {
             val resolver = context.contentResolver
 
-            // 🔹 0. Get all valid contact_id's
+            // 🔹 0. Get all valid contact_id's (Device and Google only)
             val validContactIds = mutableSetOf<Long>()
             resolver.query(
                 ContactsContract.RawContacts.CONTENT_URI,
-                arrayOf(ContactsContract.RawContacts.CONTACT_ID),
+                arrayOf(
+                    ContactsContract.RawContacts.CONTACT_ID,
+                    ContactsContract.RawContacts.ACCOUNT_TYPE
+                ),
                 "${ContactsContract.RawContacts.DELETED} = 0",
                 null,
                 null
             )?.use { cursor ->
+                val idIdx = cursor.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID)
+                val typeIdx = cursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE)
                 while (cursor.moveToNext()) {
-                    if (!cursor.isNull(0)) validContactIds.add(cursor.getLong(0))
+                    if (!cursor.isNull(idIdx)) {
+                        val contactId = cursor.getLong(idIdx)
+                        val type = cursor.getString(typeIdx) ?: ""
+
+                        val isWhatsApp = type == "com.whatsapp" || type.contains("whatsapp", ignoreCase = true)
+                        val isTelegram = type == "org.telegram.messenger" || type.contains("telegram", ignoreCase = true)
+
+                        // Only add if it's NOT WhatsApp and NOT Telegram
+                        if (!isWhatsApp && !isTelegram) {
+                            validContactIds.add(contactId)
+                        }
+                    }
                 }
             }
 
-            // 🔹 1. Get ALL Contacts
+            // 🔹 1. Get ALL Contacts (With phone number filter)
             resolver.query(
                 ContactsContract.Contacts.CONTENT_URI,
                 arrayOf(
@@ -40,7 +56,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                     ContactsContract.Contacts.PHOTO_URI,
                     ContactsContract.Contacts.STARRED
                 ),
-                null,
+                "${ContactsContract.Contacts.HAS_PHONE_NUMBER} > 0",
                 null,
                 "${ContactsContract.Contacts.SORT_KEY_PRIMARY} ASC"
             )?.use { cursor ->
@@ -173,7 +189,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
         }
 
         val sortedList = contactMap.values
-            .filter { (!it.displayName.isNullOrBlank() || !it.number.isNullOrBlank()) && !it.contactId.isNullOrEmpty() }
+            .filter { !it.number.isNullOrBlank() && !it.contactId.isNullOrEmpty() }
             .sortedWith { c1, c2 ->
                 val name1 = c1.displayName?.trim() ?: ""
                 val name2 = c2.displayName?.trim() ?: ""
@@ -228,7 +244,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 }
             }
 
-            // 🔹 1. Get Contacts from the system
+            // 🔹 1. Get Contacts from the system (With phone number filter)
             resolver.query(
                 ContactsContract.Contacts.CONTENT_URI,
                 arrayOf(
@@ -237,7 +253,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                     ContactsContract.Contacts.PHOTO_URI,
                     ContactsContract.Contacts.STARRED
                 ),
-                null,
+                "${ContactsContract.Contacts.HAS_PHONE_NUMBER} > 0",
                 null,
                 "${ContactsContract.Contacts.SORT_KEY_PRIMARY} ASC"
             )?.use { cursor ->
@@ -375,7 +391,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
         }
 
         val sortedList = contactMap.values
-            .filter { (!it.displayName.isNullOrBlank() || !it.number.isNullOrBlank()) && !it.contactId.isNullOrEmpty() }
+            .filter { !it.number.isNullOrBlank() && !it.contactId.isNullOrEmpty() }
             .sortedWith { c1, c2 ->
                 val name1 = c1.displayName?.trim() ?: ""
                 val name2 = c2.displayName?.trim() ?: ""
@@ -452,7 +468,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 }
             }
 
-            // 🔹 1. Get Base Contacts
+            // 🔹 1. Get Base Contacts (With phone number filter)
             resolver.query(
                 ContactsContract.Contacts.CONTENT_URI,
                 arrayOf(
@@ -461,7 +477,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                     ContactsContract.Contacts.PHOTO_URI,
                     ContactsContract.Contacts.STARRED
                 ),
-                null,
+                "${ContactsContract.Contacts.HAS_PHONE_NUMBER} > 0",
                 null,
                 "${ContactsContract.Contacts.SORT_KEY_PRIMARY} ASC"
             )?.use { cursor ->
@@ -596,7 +612,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
         }
 
         val sortedList = contactMap.values
-            .filter { (!it.displayName.isNullOrBlank() || !it.number.isNullOrBlank()) && !it.contactId.isNullOrEmpty() }
+            .filter { !it.number.isNullOrBlank() && !it.contactId.isNullOrEmpty() }
             .sortedWith { c1, c2 ->
                 val name1 = c1.displayName?.trim() ?: ""
                 val name2 = c2.displayName?.trim() ?: ""
@@ -635,11 +651,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
 
         try {
             // ── Step 1: Build the "visible & listable" contact map ────────────
-            // Fetch displayName + HAS_PHONE_NUMBER so we can apply the exact
-            // same filter the real loaders use:
-            //   filter { (!displayName.isNullOrBlank() || !number.isNullOrBlank()) }
-            // Contacts that fail this filter are NOT shown in the list → exclude
-            // them from counts too.
+            // Only include contacts with phone numbers
             data class ContactInfo(val displayName: String, val hasPhone: Boolean)
             val contactInfo = mutableMapOf<Long, ContactInfo>()
 
@@ -650,40 +662,27 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                     ContactsContract.Contacts.DISPLAY_NAME_PRIMARY,
                     ContactsContract.Contacts.HAS_PHONE_NUMBER
                 ),
-                null, null, null
+                "${ContactsContract.Contacts.HAS_PHONE_NUMBER} > 0",
+                null,
+                null
             )?.use { cursor ->
                 val idIdx = cursor.getColumnIndex(ContactsContract.Contacts._ID)
-                val nameIdx =
-                    cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)
-                val hasPhoneIdx =
-                    cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)
+                val nameIdx = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)
+                val hasPhoneIdx = cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)
                 while (cursor.moveToNext()) {
                     val id = cursor.getLong(idIdx)
                     val name = cursor.getString(nameIdx) ?: ""
                     val hasPhone = cursor.getInt(hasPhoneIdx) == 1
-                    // Same filter as the real loaders — skip contacts with no
-                    // display name AND no phone number (they never appear in list)
-                    if (name.isNotBlank() || hasPhone) {
+                    if (hasPhone) {
                         contactInfo[id] = ContactInfo(name, hasPhone)
                     }
                 }
             }
 
-            // All Accounts — apply isMerge deduplication by display name
-            // isMerge=true  → same name contacts count as one (duplicates hidden)
-            // isMerge=false → every contact counted individually
-            counts["All Accounts"] = if (isMerge) {
-                contactInfo.entries
-                    .map { (id, info) -> info.displayName.ifEmpty { id.toString() } }
-                    .toSet().size
-            } else {
-                contactInfo.size
-            }
-
-            // ── Step 2: Device Only + per-Google-account ──────────────────────
-            // Scan RawContacts — only 3 columns needed (fast)
+            // ── Step 2: Device Only + per-Google-account + All Valid ──────────
             val deviceIdentifiers = mutableSetOf<String>()
             val googleAccountMap = mutableMapOf<String, MutableSet<String>>()
+            val allValidIdentifiers = mutableSetOf<String>()
 
             resolver.query(
                 ContactsContract.RawContacts.CONTENT_URI,
@@ -693,10 +692,10 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                     ContactsContract.RawContacts.ACCOUNT_NAME
                 ),
                 "${ContactsContract.RawContacts.DELETED} = 0",
-                null, null
+                null,
+                null
             )?.use { cursor ->
-                val contactIdIdx =
-                    cursor.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID)
+                val contactIdIdx = cursor.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID)
                 val typeIdx = cursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE)
                 val nameIdx = cursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_NAME)
 
@@ -704,38 +703,37 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                     if (cursor.isNull(contactIdIdx)) continue
                     val contactId = cursor.getLong(contactIdIdx)
 
-                    // Skip contacts that would be filtered out by the real loaders
+                    // Skip contacts that would be filtered out (no phone number)
                     val info = contactInfo[contactId] ?: continue
 
                     val type = cursor.getString(typeIdx) ?: ""
                     val accountName = cursor.getString(nameIdx) ?: ""
 
                     // isMerge: same display name → one slot
-                    val identifier =
-                        if (isMerge) info.displayName.ifEmpty { contactId.toString() }
-                        else contactId.toString()
+                    val identifier = if (isMerge) info.displayName.ifEmpty { contactId.toString() }
+                    else contactId.toString()
 
                     val isGoogle = type == "com.google"
-                    val isWhatsApp =
-                        type == "com.whatsapp" || type.contains("whatsapp", ignoreCase = true)
-                    val isTelegram =
-                        type == "org.telegram.messenger" || type.contains(
-                            "telegram", ignoreCase = true
-                        )
-                    val isEmail =
-                        accountName.contains("@") && type.contains("exchange", ignoreCase = true)
+                    val isWhatsApp = type == "com.whatsapp" || type.contains("whatsapp", ignoreCase = true)
+                    val isTelegram = type == "org.telegram.messenger" || type.contains("telegram", ignoreCase = true)
+                    val isEmail = accountName.contains("@") && type.contains("exchange", ignoreCase = true)
 
-                    if (!isGoogle && !isWhatsApp && !isTelegram && !isEmail) {
-                        deviceIdentifiers.add(identifier)
-                    }
+                    // Only count if NOT WhatsApp and NOT Telegram
+                    if (!isWhatsApp && !isTelegram) {
+                        allValidIdentifiers.add(identifier)
 
-                    if (isGoogle && accountName.isNotEmpty()) {
-                        googleAccountMap.getOrPut(accountName) { mutableSetOf() }
-                            .add(identifier)
+                        if (!isGoogle && !isEmail) {
+                            deviceIdentifiers.add(identifier)
+                        }
+
+                        if (isGoogle && accountName.isNotEmpty()) {
+                            googleAccountMap.getOrPut(accountName) { mutableSetOf() }.add(identifier)
+                        }
                     }
                 }
             }
 
+            counts["All Accounts"] = allValidIdentifiers.size
             counts["Device Only"] = deviceIdentifiers.size
             googleAccountMap.forEach { (email, set) -> counts[email] = set.size }
 

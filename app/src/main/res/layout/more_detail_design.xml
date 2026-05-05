@@ -15,11 +15,12 @@
         <TextView
             android:id="@+id/tv_delete"
             style="@style/TextStyle.Medium"
-            android:layout_width="wrap_content"
+            android:layout_width="@dimen/_140sdp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/_5sdp"
+            android:background="@drawable/ripple_effect_bg"
             android:paddingHorizontal="@dimen/_10sdp"
-            android:paddingVertical="@dimen/_10sdp"
+            android:paddingTop="@dimen/_15sdp"
+            android:paddingBottom="@dimen/_10sdp"
             android:text="@string/delete"
             android:textColor="@color/black_color" />
 
@@ -32,10 +33,10 @@
         <TextView
             android:id="@+id/tv_block"
             style="@style/TextStyle.Medium"
-            android:layout_width="wrap_content"
+            android:layout_width="@dimen/_140sdp"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
-            android:layout_marginBottom="@dimen/_5sdp"
+            android:background="@drawable/ripple_effect_bg"
             android:padding="@dimen/_10sdp"
             android:text="@string/block"
             android:textColor="@color/black_color" />
@@ -49,11 +50,13 @@
         <TextView
             android:id="@+id/tv_change_ringtone"
             style="@style/TextStyle.Medium"
-            android:layout_width="wrap_content"
+            android:layout_width="@dimen/_140sdp"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
-            android:layout_marginBottom="@dimen/_5sdp"
+            android:background="@drawable/ripple_effect_bg"
             android:padding="@dimen/_10sdp"
+            android:paddingTop="@dimen/_10sdp"
+            android:paddingBottom="@dimen/_15sdp"
             android:text="@string/change_ringtone"
             android:textColor="@color/black_color" />
 

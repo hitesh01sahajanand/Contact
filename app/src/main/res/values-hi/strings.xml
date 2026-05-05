@@ -86,7 +86,7 @@
     <string name="choose_your_preferred_app">अपना पसंदीदा ऐप चुनें</string>
     <string name="conference_participants">कॉन्फ्रेंस प्रतिभागी</string>
     <string name="search_contact">संपर्क खोजें…</string>
-    <string name="block_contacts">संपर्क ब्लॉक करें</string>
+    <string name="block_contacts">ब्लॉक करें</string>
     <string name="speed_dial">स्पीड डायल</string>
     <string name="quick_response">त्वरित प्रतिक्रिया</string>
     <string name="sound_vibration"><![CDATA[ध्वनि और कंपन]]></string>
@@ -210,5 +210,33 @@
     <string name="set_your_favorite_tag_to_contact">अपने संपर्क के लिए अपना पसंदीदा टैग सेट करें</string>
     <string name="enter_tag">टैग दर्ज करें</string>
     <string name="no_speed_dial_set_for">%1$d के लिए कोई स्पीड डायल सेट नहीं है</string>
+
+    <string name="device">डिवाइस</string>
+    <string name="export_contacts">संपर्क निर्यात करें</string>
+    <string name="include_contact_sources">संपर्क स्रोत शामिल करें</string>
+    <string name="filename_without_vcf">फ़ाइल नाम (.vcf के बिना)</string>
+    <string name="export">निर्यात करें</string>
+    <string name="please_wait">कृपया प्रतीक्षा करें...</string>
+    <string name="contacts_successfully_saved_to">संपर्क सफलतापूर्वक यहां सहेजे गए:\n%1$s</string>
+    <string name="error_exporting_contacts">संपर्क निर्यात करने में त्रुटि: %1$s</string>
+    <string name="no_contacts_found_to_export">निर्यात करने के लिए कोई संपर्क नहीं मिला</string>
+    <string name="this_name_is_already_stored_please_choose_another">यह नाम पहले से सहेजा गया है। कृपया दूसरा चुनें।</string>
+    <string name="enter_file_name">फ़ाइल नाम दर्ज करें</string>
+    <string name="no_accounts_selected">कोई खाता चयनित नहीं है</string>
+    <string name="no_accounts_found">कोई खाता नहीं मिला</string>
+    <string name="select_account_for_import">आयात के लिए खाता चुनें</string>
+    <string name="importing_contacts">संपर्क आयात किए जा रहे हैं...</string>
+    <string name="no_contacts_found_in_file">फ़ाइल में कोई संपर्क नहीं मिला</string>
+    <string name="contacts_imported_successfully">%1$d संपर्क सफलतापूर्वक आयात किए गए</string>
+    <string name="error_importing_contacts">संपर्क आयात करने में त्रुटि: %1$s</string>
+    <string name="import_">आयात करें</string>
+    <string name="permissions_required_to_export_contacts">संपर्क निर्यात करने के लिए अनुमतियाँ आवश्यक हैं</string>
+    <string name="permissions_required_to_import_contacts">संपर्क आयात करने के लिए अनुमतियाँ आवश्यक हैं</string>
+    <string name="export_contact">संपर्क निर्यात करें</string>
+    <string name="import_contact">संपर्क आयात करें</string>
+    <string name="please_wait_fetching_accounts">कृपया प्रतीक्षा करें, खाते प्राप्त किए जा रहे हैं...</string>
+    <string name="local_storage_restricted">स्थानीय संग्रहण प्रतिबंधित</string>
+    <string name="your_system_is_set_to_save">आपका सिस्टम डिफ़ॉल्ट रूप से संपर्कों को Google में सहेजने के लिए सेट है। केवल डिवाइस में सहेजने के लिए, आपको इसे सिस्टम सेटिंग्स में बदलना होगा या एक Google खाता चुनना होगा।</string>
+    <string name="open_settings">सेटिंग्स खोलें</string>
 
 </resources>

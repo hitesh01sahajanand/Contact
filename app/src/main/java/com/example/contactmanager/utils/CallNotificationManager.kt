@@ -58,20 +58,37 @@ class CallNotificationManager(private val context: Context) {
     }
 
     @SuppressLint("RemoteViewLayout", "FullScreenIntentPolicy")
-    fun setupNotification(lowPriority: Boolean = false): Notification {
+    fun setupNotification(lowPriority: Boolean = false, tag: String? = null): Notification {
         val call = NewCallManager.getPrimaryCall() ?: return buildEmptyNotification()
 
         val state = NewCallManager.getState()
         val number = call.details.handle?.schemeSpecificPart ?: "Unknown"
-        val name = Common.getDisplayName(context, number, call.details.callerDisplayName)
+
+        val contactName = Common.getContactName(context, number)
+        val name = if (contactName != number) {
+            contactName
+        } else if (!tag.isNullOrBlank()) {
+            tag
+        } else if (!call.details.callerDisplayName.isNullOrBlank() && call.details.callerDisplayName != number) {
+            call.details.callerDisplayName
+        } else {
+            ""
+        }
+
+        val finalName = if (name.isNullOrBlank()) number else name
 
         val isIncoming = state == Call.STATE_RINGING
 
         // Notification View (RemoteViews)
         val remoteViews = RemoteViews(context.packageName, R.layout.notification_view)
-        remoteViews.setTextViewText(R.id.pop_name, name)
+        if (name.isNullOrBlank()) {
+            remoteViews.setViewVisibility(R.id.pop_name, View.GONE)
+        } else {
+            remoteViews.setViewVisibility(R.id.pop_name, View.VISIBLE)
+            remoteViews.setTextViewText(R.id.pop_name, name)
+        }
         remoteViews.setTextViewText(R.id.pop_number, number)
-        remoteViews.setImageViewBitmap(R.id.pop_image, Common.generateAvatar(name))
+        remoteViews.setImageViewBitmap(R.id.pop_image, Common.generateAvatar(finalName))
 
         // Accept Action
         val acceptIntent = Intent(context, CallActionReceiver::class.java).apply {
@@ -110,13 +127,13 @@ class CallNotificationManager(private val context: Context) {
         )
 
         val builder = NotificationCompat.Builder(context, CALL_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_all_call)
+            .setSmallIcon(R.mipmap.ic_launcher_round)
             .setCustomContentView(remoteViews)
             .setCustomHeadsUpContentView(remoteViews)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-            .setContentTitle(name)
-            .setContentText(number)
-            .setPriority(if (lowPriority) NotificationCompat.PRIORITY_LOW else NotificationCompat.PRIORITY_HIGH)
+            .setContentTitle(if (name.isNullOrBlank()) number else name)
+            .setContentText(if (name.isNullOrBlank()) null else number)
+            .setPriority(if (isIncoming) NotificationCompat.PRIORITY_LOW else NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_CALL)
             .setOngoing(true)
             .setContentIntent(activityPendingIntent)
@@ -136,7 +153,7 @@ class CallNotificationManager(private val context: Context) {
 
     private fun buildEmptyNotification(): Notification {
         return NotificationCompat.Builder(context, CALL_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_all_call)
+            .setSmallIcon(R.mipmap.ic_launcher_round)
             .setContentTitle("Call Ended")
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
@@ -147,11 +164,13 @@ class CallNotificationManager(private val context: Context) {
     }
 
     fun showMissedCallNotification(number: String, name: String?) {
-        val newName =
-            if (Common.getContactName(context, number).isEmpty()) name else Common.getContactName(
-                context,
-                number
-            )
+        // Priority: contact name > tag (name param) > no label
+        val fetchedContactName = Common.getContactName(context, number)
+        val contactName = if (fetchedContactName == number) "" else fetchedContactName
+
+        val displayName = contactName.takeIf { it.isNotEmpty() } ?: name?.takeIf { it.isNotEmpty() }
+
+        val contentText = if (displayName != null) "$displayName: $number" else number
 
         val activityIntent = Intent(context, CallActivity::class.java).apply {
             // Probably should go to Call Log or Home Activity, but keeping it simple
@@ -163,9 +182,9 @@ class CallNotificationManager(private val context: Context) {
         )
 
         val builder = NotificationCompat.Builder(context, MISSED_CALL_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_miss_call)
+            .setSmallIcon(R.mipmap.ic_launcher_round)
             .setContentTitle("Missed Call")
-            .setContentText("$newName: $number")
+            .setContentText(contentText)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_MISSED_CALL)
             .setAutoCancel(true)

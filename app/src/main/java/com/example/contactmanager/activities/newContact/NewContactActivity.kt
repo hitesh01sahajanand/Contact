@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -136,23 +137,30 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
                     AccountModel(
                         name = it.first,
                         email = it.second,
+                        accountType = it.third,
                         avtar = Common.generateAvatar(it.first)
                     )
                 )
             }
 
+            // 👉 Smart Default Account Selection
             if (newDisplayList.isNotEmpty() && !isContactSaved) {
-                val itemData = newDisplayList[0]
-                binding.inAccountDesign.tvIdName.text = itemData.name
+                // Try to find a Google account to set as default (since Android 14+ often prefers it)
+                // If there's only one Google account, or any Google account, it's a safer default.
+                val defaultAccount =
+                    newDisplayList.find { it.accountType == "com.google" } ?: newDisplayList[0]
+
+                binding.inAccountDesign.tvIdName.text = defaultAccount.name
                 binding.inAccountDesign.cvProfile.isVisible = true
-                val color = Common.profileColors[1 % Common.profileColors.size]
+                val color =
+                    Common.profileColors[abs(defaultAccount.name.hashCode()) % Common.profileColors.size]
                 binding.inAccountDesign.cvProfile.setCardBackgroundColor(
                     ContextCompat.getColor(binding.root.context, color)
                 )
-                val firstChar = itemData.name.firstOrNull()?.uppercase() ?: ""
+                val firstChar = defaultAccount.name.firstOrNull()?.uppercase() ?: ""
                 binding.inAccountDesign.tvContactName.text = firstChar
 
-                accountModel = itemData
+                accountModel = defaultAccount
             }
         }
 
@@ -189,18 +197,23 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             binding.edtEmail.setText(email)
         }
 
-        viewModel.contactAccountName.observe(this) { accountName ->
+        viewModel.contactAccountInfo.observe(this) { accountInfo ->
+            val accountName = accountInfo.first
+            val accountType = accountInfo.second
+
             val accName =
                 if (accountName != null && accountName.contains("@")) accountName.substringBefore("@") else "Device Only"
             val email = if (accountName != null && accountName.contains("@")) accountName else ""
             val itemData = AccountModel(
                 name = accName,
                 email = email,
+                accountType = accountType,
                 avtar = Common.generateAvatar(accName)
             )
             binding.inAccountDesign.tvIdName.text = itemData.name
             binding.inAccountDesign.cvProfile.isVisible = true
-            val color = Common.profileColors[1 % Common.profileColors.size]
+            val color =
+                Common.profileColors[abs(itemData.name.hashCode()) % Common.profileColors.size]
             binding.inAccountDesign.cvProfile.setCardBackgroundColor(
                 ContextCompat.getColor(binding.root.context, color)
             )
@@ -220,8 +233,28 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         }
 
         viewModel.savedContactMassage.observe(this) { msg ->
-            if (msg.contains("✅")) {
-                finish()
+            if (msg.contains("System Error")) {
+                // 👉 Show Dialog to redirect to settings
+                Common.alertDialog(
+                    context = this,
+                    title = getString(R.string.local_storage_restricted),
+                    description = getString(R.string.your_system_is_set_to_save),
+                    btnOkay = getString(R.string.open_settings),
+                    onItemClick = {
+                        try {
+                            val intent = Intent(Settings.ACTION_SYNC_SETTINGS)
+                            startActivity(intent)
+                        } catch (e: Exception) {
+                            val intent = Intent(Settings.ACTION_SETTINGS)
+                            startActivity(intent)
+                        }
+                    }
+                )
+            } else {
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                if (msg.contains("✅")) {
+                    finish()
+                }
             }
         }
     }
@@ -269,6 +302,14 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
                     }
 
                     else -> {
+                        if (accountModel == null) {
+                            Toast.makeText(
+                                this,
+                                getString(R.string.please_wait_fetching_accounts),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return
+                        }
                         viewModel.saveOrUpdateContact(
                             name = name,
                             number = number,

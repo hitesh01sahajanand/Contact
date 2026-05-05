@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
 import android.provider.CallLog
+import android.provider.ContactsContract
 import android.telephony.PhoneNumberUtils
 import android.util.Log
 import androidx.lifecycle.LiveData
@@ -72,6 +73,11 @@ class RecentViewModel @Inject constructor(
         try {
             context.contentResolver.registerContentObserver(
                 CallLog.Calls.CONTENT_URI,
+                true,
+                observer
+            )
+            context.contentResolver.registerContentObserver(
+                ContactsContract.Contacts.CONTENT_URI,
                 true,
                 observer
             )

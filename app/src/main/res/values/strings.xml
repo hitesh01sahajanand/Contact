@@ -85,7 +85,7 @@
     <string name="choose_your_preferred_app">Choose your preferred app</string>
     <string name="conference_participants">Conference Participants</string>
     <string name="search_contact">Search Contact...</string>
-    <string name="block_contacts">Block Contacts</string>
+    <string name="block_contacts">Block</string>
     <string name="speed_dial">Speed Dial</string>
     <string name="quick_response">Quick Response</string>
     <string name="sound_vibration"><![CDATA[Sound & Vibration]]></string>
@@ -209,6 +209,7 @@
     <string name="set_your_favorite_tag_to_contact">set your favorite tag to contact</string>
     <string name="enter_tag">enter tag</string>
     <string name="no_speed_dial_set_for">No speed dial set for %1$d</string>
+
     <string name="device">Device</string>
     <string name="export_contacts">Export Contacts</string>
     <string name="include_contact_sources">Include Contact Sources</string>
@@ -230,6 +231,10 @@
     <string name="import_">import</string>
     <string name="permissions_required_to_export_contacts">Permissions required to export contacts</string>
     <string name="permissions_required_to_import_contacts">Permissions required to import contacts</string>
-    <string name="export_contact_to_a_vcf_file">Export Contact to a .vcf File</string>
-
+    <string name="export_contact">Export Contact</string>
+    <string name="import_contact">Import Contact</string>
+    <string name="please_wait_fetching_accounts">Please wait, fetching accounts...</string>
+    <string name="local_storage_restricted">Local Storage Restricted</string>
+    <string name="your_system_is_set_to_save">Your system is set to save contacts to Google by default. To save on Device Only, you must change this in System Settings or select a Google account.</string>
+    <string name="open_settings">Open Settings</string>
 </resources>

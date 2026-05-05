@@ -32,13 +32,13 @@
                 app:cardBackgroundColor="@color/bg_color"
                 app:cardElevation="0dp"
                 app:cardPreventCornerOverlap="true"
-                app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
-                app:strokeColor="@android:color/transparent"
-                app:strokeWidth="1dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/ll_call_details"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toTopOf="parent"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
+                app:strokeColor="@android:color/transparent"
+                app:strokeWidth="1dp">
 
                 <ImageView
                     android:id="@+id/iv_collapse_call_type"
@@ -179,11 +179,11 @@
                     android:layout_gravity="end"
                     app:cardElevation="0dp"
                     app:cardPreventCornerOverlap="true"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
                     app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
                     app:strokeColor="@android:color/transparent"
-                    app:strokeWidth="1dp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent">
+                    app:strokeWidth="1dp">
 
                     <ImageView
                         android:id="@+id/iv_expanded_contact_photo"
@@ -216,16 +216,18 @@
                 </com.google.android.material.card.MaterialCardView>
 
 
-                <androidx.cardview.widget.CardView
+                <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cv_block_contact"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/_10sdp"
                     app:cardBackgroundColor="@color/block_bg_color"
-                    app:cardCornerRadius="@dimen/_20sdp"
                     app:cardElevation="0dp"
+                    app:cardPreventCornerOverlap="true"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/cv_expanded_profile">
+                    app:layout_constraintTop_toBottomOf="@+id/cv_expanded_profile"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
+                    app:strokeColor="@android:color/transparent">
 
                     <LinearLayout
                         android:id="@+id/ll_block_contact"
@@ -255,7 +257,7 @@
 
 
                     </LinearLayout>
-                </androidx.cardview.widget.CardView>
+                </com.google.android.material.card.MaterialCardView>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -38,6 +38,7 @@ import com.example.contactmanager.viewmodels.ContactDetailsViewModel
 import com.example.contactmanager.viewmodels.FavoriteViewModel
 import com.example.contactmanager.viewmodels.RecentViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlin.math.abs
 
 @AndroidEntryPoint
 class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
@@ -63,6 +64,25 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             contactDetail = it
             initView()
         }
+
+        // 👉 Display initial data from intent for instant loading
+        showInitialData()
+    }
+
+    private fun showInitialData() {
+        val name = intent.getStringExtra(Constance.NAME)
+        val number = intent.getStringExtra(Constance.NUMBER)
+        val photoUri = intent.getStringExtra(Constance.PHOTO_URI)
+
+        if (!name.isNullOrEmpty() || !number.isNullOrEmpty()) {
+            contactDetail = CallLogEntry(
+                stringNumber = number,
+                stringCallName = name,
+                stringPhotoUri = photoUri,
+                contactId = intent.getStringExtra(Constance.DATA_FETCH)
+            )
+            initView()
+        }
     }
 
     override fun onResume() {
@@ -81,6 +101,8 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             binding.tvName.text = name
             binding.tvNumber.text = it.stringNumber
             if (!it.stringPhotoUri.isNullOrEmpty()) {
+                binding.tvFirstName.isVisible = false
+                binding.ivContactPhoto.isVisible = true
                 Glide.with(this)
                     .load(it.stringPhotoUri)
                     .signature(
@@ -90,7 +112,21 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                     )
                     .into(binding.ivContactPhoto)
             } else {
-                binding.ivContactPhoto.setImageBitmap(Common.generateAvatar(name ?: ""))
+                val color = Common.profileColors[1 % Common.profileColors.size]
+                binding.cvAddPhoto.setCardBackgroundColor(
+                    ContextCompat.getColor(this, color)
+                )
+                val firstChar = name?.trim()
+                    ?.split(" ")
+                    ?.filter { data -> data.isNotEmpty() }
+                    ?.take(2)
+                    ?.map { data -> data[0].uppercaseChar() }
+                    ?.joinToString("")
+
+                binding.tvFirstName.text = firstChar
+
+                binding.ivContactPhoto.isVisible = false
+                binding.tvFirstName.isVisible = true
             }
 
             it.contactId?.let { id ->
@@ -193,7 +229,8 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                 val intent = Intent(this, StorageLocationActivity::class.java)
                 contactDetail?.let {
                     intent.putExtra("contact_id", it.contactId)
-                    val name = if (it.stringCallName.isNullOrEmpty()) it.stringNumber else it.stringCallName
+                    val name =
+                        if (it.stringCallName.isNullOrEmpty()) it.stringNumber else it.stringCallName
                     intent.putExtra("contact_name", name)
                     intent.putExtra("contact_number", it.stringNumber)
                     intent.putExtra("contact_photo_uri", it.stringPhotoUri)

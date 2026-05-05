@@ -1,6 +1,7 @@
 package com.example.contactmanager.activities.settings
 
 import android.Manifest
+import android.accounts.AccountManager
 import android.app.Dialog
 import android.app.role.RoleManager
 import android.content.ContentProviderOperation
@@ -8,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -55,9 +57,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import android.accounts.AccountManager
-import android.telephony.SubscriptionInfo
-import android.media.MediaScannerConnection
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -321,6 +320,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                 )
                 if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
                     permissionsToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    permissionsToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE)
                 }
                 
                 // READ_PHONE_STATE is optional but recommended for SIM account names
@@ -341,7 +341,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             }
 
             binding.llImportContact.id -> {
-                importFileLauncher.launch(arrayOf("text/vcard", "text/x-vcard", "text/directory", "*/*"))
+                importFileLauncher.launch("*/*")
             }
 
             binding.llShare.id -> {
@@ -375,9 +375,8 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                 val subscriptionManager =
                     getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
                 subscriptionManager?.activeSubscriptionInfoList?.forEachIndexed { index, info ->
-                    val simName = "SIM ${index + 1} (${info.displayName})"
+                    val simName = "SIM ${index + 1}"
                     val key = "sim_${info.subscriptionId}"
-                    // SIM account names are often the slot index or carrier name
                     accountsMap[key] =
                         AvailableAccountModel(info.displayName.toString(), "sim", simName, 0)
                 }
@@ -437,14 +436,15 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                         }
                         deviceModel.count++
                     } else if (isSim) {
-                        // Try to match existing SIM account or create new one
-                        // For SIMs, we often see multiple raw contacts with same type/name
                         val key = if (name.isNotEmpty()) "sim_$name" else "sim_$type"
                         val simModel = accountsMap.getOrPut(key) {
+                            // If we don't have a mapping, just call it SIM
+                            // But try to find an index if possible
+                            val simIndex = accountsMap.values.count { it.accountType == "sim" } + 1
                             AvailableAccountModel(
                                 name,
                                 type,
-                                "SIM ${name.ifEmpty { "" }}".trim(),
+                                "SIM $simIndex",
                                 0
                             )
                         }
@@ -468,7 +468,20 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             e.printStackTrace()
         }
 
-        return accountsMap.values.toMutableList()
+        val sortedAccounts = accountsMap.values.sortedWith(compareBy { account ->
+            val type = account.accountType.lowercase()
+            val name = account.accountName.lowercase()
+            when {
+                // Device/Phone: empty type and name
+                type.isEmpty() && name.isEmpty() -> 0
+                // SIM: type contains "sim" or "adn"
+                type.contains("sim") || type.contains("adn") -> 1
+                // Others: Email, Google, WhatsApp, etc.
+                else -> 2
+            }
+        })
+
+        return sortedAccounts.toMutableList()
     }
 
     private fun showExportContactsDialog() {
@@ -513,9 +526,9 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
 
         val appName = getString(R.string.app_name).replace(" ", "_")
         val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
-        val defaultName = "${appName}_${dateFormat.format(java.util.Date())}"
+        val defaultName = "${appName}_${dateFormat.format(java.util.Date())}.vcf"
         accountBinding.edtFileName.setText(defaultName)
-        accountBinding.edtFileName.setSelection(defaultName.length)
+        accountBinding.edtFileName.setSelection(defaultName.length - 4)
 
         accountBinding.cvCancel.setOnClickListener {
             dialog.dismiss()
@@ -620,6 +633,8 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                     }
                 }
 
+                Log.d("Export", "Valid contact IDs: ${validContactIds.size}")
+
                 val lookupKeys = mutableSetOf<String>()
                 if (validContactIds.isNotEmpty()) {
                     resolver.query(
@@ -633,10 +648,15 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                         null
                     )?.use { cursor ->
                         while (cursor.moveToNext()) {
-                            lookupKeys.add(cursor.getString(0))
+                            val key = cursor.getString(0)
+                            if (!key.isNullOrEmpty()) {
+                                lookupKeys.add(key)
+                            }
                         }
                     }
                 }
+
+                Log.d("Export", "Found ${lookupKeys.size} lookup keys for export")
 
                 if (lookupKeys.isEmpty()) {
                     withContext(Dispatchers.Main) {
@@ -652,8 +672,13 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
 
                 val downloadsDir =
                     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                if (!downloadsDir.exists()) downloadsDir.mkdirs()
+                if (!downloadsDir.exists()) {
+                    val created = downloadsDir.mkdirs()
+                    Log.d("Export", "Downloads directory created: $created")
+                }
+                
                 val file = File(downloadsDir, finalFileName)
+                var bytesWritten = 0L
 
                 FileOutputStream(file).use { output ->
                     for (key in lookupKeys) {
@@ -664,20 +689,44 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                         try {
                             resolver.openAssetFileDescriptor(uri, "r")?.createInputStream()
                                 ?.use { input ->
-                                    input.copyTo(output)
+                                    val copied = input.copyTo(output)
+                                    bytesWritten += copied
                                 }
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            Log.e("Export", "Error reading vCard for key $key", e)
                         }
                     }
+                    output.flush()
+                }
+
+                Log.d("Export", "Bytes written to file: $bytesWritten")
+
+                if (bytesWritten == 0L) {
+                    withContext(Dispatchers.Main) {
+                        dialog.dismiss()
+                        Toast.makeText(
+                            this@SettingsActivity,
+                            getString(R.string.no_contacts_found_to_export),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    if (file.exists()) file.delete()
+                    return@launch
                 }
 
                 MediaScannerConnection.scanFile(
                     this@SettingsActivity,
                     arrayOf(file.absolutePath),
-                    null,
+                    arrayOf("text/vcard"),
                     null
                 )
+                
+                // Also broadcast intent for older versions
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                    val mediaScanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+                    mediaScanIntent.data = Uri.fromFile(file)
+                    sendBroadcast(mediaScanIntent)
+                }
 
                 withContext(Dispatchers.Main) {
                     accountBinding.llLoader.visibility = View.GONE
@@ -709,11 +758,19 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                 )) == PackageManager.PERMISSION_GRANTED
 
             val writeStorageGranted = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
-                (permissions[Manifest.permission.WRITE_EXTERNAL_STORAGE]
+                val writeGranted = (permissions[Manifest.permission.WRITE_EXTERNAL_STORAGE]
                     ?: ContextCompat.checkSelfPermission(
                         this,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE
                     )) == PackageManager.PERMISSION_GRANTED
+                
+                val readGranted = (permissions[Manifest.permission.READ_EXTERNAL_STORAGE]
+                    ?: ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.READ_EXTERNAL_STORAGE
+                    )) == PackageManager.PERMISSION_GRANTED
+                
+                writeGranted && readGranted
             } else true
 
             if (readContactsGranted && writeStorageGranted) {
@@ -728,7 +785,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
         }
 
     private val importFileLauncher =
-        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             if (uri != null) {
                 importFileUri = uri
                 val permissionsToRequest = mutableListOf(
@@ -736,6 +793,9 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                     Manifest.permission.WRITE_CONTACTS,
                     Manifest.permission.READ_PHONE_STATE
                 )
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
+                    permissionsToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+                }
                 val ungrantedPermissions = permissionsToRequest.filter {
                     ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
                 }
@@ -752,8 +812,11 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             val readContactsGranted = permissions[Manifest.permission.READ_CONTACTS] == true
             val writeContactsGranted = permissions[Manifest.permission.WRITE_CONTACTS] == true
             val readPhoneStateGranted = permissions[Manifest.permission.READ_PHONE_STATE] == true
+            val readStorageGranted = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
+                permissions[Manifest.permission.READ_EXTERNAL_STORAGE] == true
+            } else true
 
-            if (readContactsGranted && writeContactsGranted && readPhoneStateGranted) {
+            if (readContactsGranted && writeContactsGranted && readPhoneStateGranted && readStorageGranted) {
                 importFileUri?.let { showImportAccountSelectionDialog(it) }
             } else {
                 Toast.makeText(

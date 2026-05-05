@@ -65,6 +65,9 @@ import com.example.contactmanager.models.QuickResponseModel
 import com.example.contactmanager.receivers.ReminderReceiver
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -375,87 +378,125 @@ object Common {
     fun shareContact(context: Context, phoneNumber: String?) {
         if (phoneNumber.isNullOrEmpty()) return
 
-        try {
-            val resolver = context.contentResolver
-            val lookupUri = Uri.withAppendedPath(
-                ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
-                Uri.encode(phoneNumber)
-            )
-
-            var lookupKey: String? = null
-            var displayName: String? = null
-
-            resolver.query(
-                lookupUri,
-                arrayOf(
-                    ContactsContract.PhoneLookup.LOOKUP_KEY,
-                    ContactsContract.PhoneLookup.DISPLAY_NAME
-                ),
-                null, null, null
-            )?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    lookupKey = cursor.getString(0)
-                    displayName = cursor.getString(1)
-                }
-            }
-
-            if (lookupKey == null) {
-                Toast.makeText(context, "Please save contact first", Toast.LENGTH_SHORT).show()
-                return
-            }
-
-            val vCardUri = Uri.withAppendedPath(
-                ContactsContract.Contacts.CONTENT_VCARD_URI,
-                lookupKey
-            )
-
-            // Create temporary file in cache
-            val fileName = "Contact_${System.currentTimeMillis()}.vcf"
-            val cacheFile = File(context.cacheDir, fileName)
-
-            var success = false
+        // Run all I/O off the main thread to avoid ANR
+        CoroutineScope(Dispatchers.IO).launch {
             try {
-                resolver.openAssetFileDescriptor(vCardUri, "r")?.use { fd ->
-                    fd.createInputStream().use { input ->
-                        FileOutputStream(cacheFile).use { output ->
-                            input.copyTo(output)
-                        }
+                val resolver = context.contentResolver
+                val lookupUri = Uri.withAppendedPath(
+                    ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
+                    Uri.encode(phoneNumber)
+                )
+
+                var lookupKey: String? = null
+                var displayName: String? = null
+
+                resolver.query(
+                    lookupUri,
+                    arrayOf(
+                        ContactsContract.PhoneLookup.LOOKUP_KEY,
+                        ContactsContract.PhoneLookup.DISPLAY_NAME
+                    ),
+                    null, null, null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        lookupKey = cursor.getString(0)
+                        displayName = cursor.getString(1)
                     }
                 }
-                success = cacheFile.exists() && cacheFile.length() > 0
+
+                if (lookupKey == null) {
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        Toast.makeText(context, "Please save contact first", Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                    return@launch
+                }
+
+                val vCardUri = Uri.withAppendedPath(
+                    ContactsContract.Contacts.CONTENT_VCARD_URI,
+                    lookupKey
+                )
+
+                // Create temporary file in cache
+                val fileName = "Contact_${System.currentTimeMillis()}.vcf"
+                val cacheFile = File(context.cacheDir, fileName)
+
+                var success = false
+                try {
+                    resolver.openAssetFileDescriptor(vCardUri, "r")?.use { fd ->
+                        fd.createInputStream().use { input ->
+                            FileOutputStream(cacheFile).use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+                    }
+                    success = cacheFile.exists() && cacheFile.length() > 0
+                } catch (e: Exception) {
+                    Log.e("TAG", "Error reading vCard: ${e.message}")
+                }
+
+                if (!success) {
+                    // Fallback: Generate a simple vCard manually if system one fails or is empty
+                    val vcardContent = "BEGIN:VCARD\n" +
+                            "VERSION:3.0\n" +
+                            "N:;${displayName ?: ""};;;\n" +
+                            "FN:${displayName ?: ""}\n" +
+                            "TEL;TYPE=CELL:$phoneNumber\n" +
+                            "END:VCARD"
+                    cacheFile.writeText(vcardContent)
+                }
+
+                val shareUri = FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.provider",
+                    cacheFile
+                )
+
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/x-vcard"
+                    putExtra(Intent.EXTRA_STREAM, shareUri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+
+                // Grant read permission to every app that can handle this intent,
+                // including the system process that generates the share-sheet preview.
+                val chooser = Intent.createChooser(intent, "Share Contact").apply {
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                val resolvedActivities =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        context.packageManager.queryIntentActivities(
+                            intent,
+                            PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong())
+                        )
+                    } else {
+                        @Suppress("DEPRECATION")
+                        context.packageManager.queryIntentActivities(
+                            intent,
+                            PackageManager.MATCH_DEFAULT_ONLY
+                        )
+                    }
+                for (resolveInfo in resolvedActivities) {
+                    val pkg = resolveInfo.activityInfo.packageName
+                    context.grantUriPermission(
+                        pkg,
+                        shareUri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                }
+
+                // Switch to main thread only for the UI call
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    context.startActivity(chooser)
+                }
+
             } catch (e: Exception) {
-                Log.e("TAG", "Error reading vCard: ${e.message}")
+                e.printStackTrace()
+                Log.e("TAG", "shareContact error: ${e.message}")
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    Toast.makeText(context, "Unable to share contact", Toast.LENGTH_SHORT).show()
+                }
             }
-
-            if (!success) {
-                // Fallback: Generate a simple vCard manually if system one fails or is empty
-                val vcardContent = "BEGIN:VCARD\n" +
-                        "VERSION:3.0\n" +
-                        "N:;${displayName ?: ""};;;\n" +
-                        "FN:${displayName ?: ""}\n" +
-                        "TEL;TYPE=CELL:$phoneNumber\n" +
-                        "END:VCARD"
-                cacheFile.writeText(vcardContent)
-            }
-
-            val shareUri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.provider",
-                cacheFile
-            )
-
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/x-vcard"
-                putExtra(Intent.EXTRA_STREAM, shareUri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-
-            context.startActivity(Intent.createChooser(intent, "Share Contact"))
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Log.e("TAG", "shareContact error: ${e.message}")
-            Toast.makeText(context, "Unable to share contact", Toast.LENGTH_SHORT).show()
         }
     }
 

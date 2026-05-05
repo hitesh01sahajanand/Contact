@@ -14,19 +14,27 @@ import javax.inject.Inject
 
 class NewContactRepository @Inject constructor(@param:ApplicationContext private val context: Context) {
 
-    fun getGoogleAccounts(): List<Pair<String, String>> {
-
-        val list = mutableListOf<Pair<String, String>>()
-
+    fun getGoogleAccounts(): List<Triple<String, String, String>> {
+        val list = mutableListOf<Triple<String, String, String>>()
         val accountManager = AccountManager.get(context)
-        val accounts = accountManager.getAccountsByType("com.google")
+        
+        // Get Google Accounts
+        val googleAccounts = accountManager.getAccountsByType("com.google")
+        for (account in googleAccounts) {
+            list.add(Triple(account.name.substringBefore("@"), account.name, "com.google"))
+        }
 
-        for (account in accounts) {
-            val email = account.name
-
-            val name = email.substringBefore("@")
-
-            list.add(Pair(name, email))
+        // Get other accounts that might be local/manufacturer specific
+        val allAccounts = accountManager.accounts
+        for (account in allAccounts) {
+            if (account.type != "com.google" && !account.type.contains("whatsapp", ignoreCase = true)) {
+                // If it looks like a local account (e.g., Samsung, Xiaomi, etc.)
+                if (account.type.contains("local", ignoreCase = true) || 
+                    account.type.contains("phone", ignoreCase = true) ||
+                    account.type.contains("contact", ignoreCase = true)) {
+                    list.add(Triple("Device (${account.type.substringAfterLast(".")})", account.name, account.type))
+                }
+            }
         }
 
         return list
@@ -61,7 +69,9 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
             // 👉 Determine if we need to MOVE the contact (Account changed)
             var shouldRecreate = false
             if (isContactSaved && contactId != null) {
-                val currentAccount = getContactAccountName(contactId)
+                val accountInfo = getContactAccountName(contactId)
+                val currentAccount = accountInfo.first
+                val currentAccountType = accountInfo.second
                 val isCurrentLocal = currentAccount.isNullOrBlank()
                 val isTargetLocal =
                     accountModel.name == "Device Only" || accountModel.email.isBlank()
@@ -163,6 +173,21 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
                                 .build()
                         )
                     }
+                } else {
+                    // 👉 Email Cleared (Delete existing email)
+                    if (isEmailExists(rawId)) {
+                        ops.add(
+                            ContentProviderOperation.newDelete(ContactsContract.Data.CONTENT_URI)
+                                .withSelection(
+                                    "${ContactsContract.Data.RAW_CONTACT_ID}=? AND ${ContactsContract.Data.MIMETYPE}=?",
+                                    arrayOf(
+                                        rawId,
+                                        ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE
+                                    )
+                                )
+                                .build()
+                        )
+                    }
                 }
 
                 // 👉 Photo
@@ -203,6 +228,8 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
                     }
                 }
 
+                // 👉 APPLY
+                context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
                 onCallBack("Contact Updated ✅", null)
             } else {
 
@@ -213,11 +240,27 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
                 // 👉 Account
                 val accountValues = android.content.ContentValues()
                 if (accountModel.name != "Device Only" && accountModel.email.isNotBlank()) {
-                    accountValues.put(ContactsContract.RawContacts.ACCOUNT_TYPE, "com.google")
+                    // It's a cloud or specific local account selected from the list
+                    val type = accountModel.accountType ?: if (accountModel.email.contains("@")) "com.google" else "com.android.localphone" 
+                    accountValues.put(ContactsContract.RawContacts.ACCOUNT_TYPE, type)
                     accountValues.put(ContactsContract.RawContacts.ACCOUNT_NAME, accountModel.email)
+                    Log.d("TAG", "Saving to account: ${accountModel.email} (Type: $type)")
                 } else {
-                    accountValues.putNull(ContactsContract.RawContacts.ACCOUNT_TYPE)
-                    accountValues.putNull(ContactsContract.RawContacts.ACCOUNT_NAME)
+                    // For local contacts on Android 14+, null/null might be rejected if a cloud account is default.
+                    val localAccount = findLocalAccount()
+                    if (localAccount != null) {
+                        accountValues.put(ContactsContract.RawContacts.ACCOUNT_TYPE, localAccount.first)
+                        accountValues.put(ContactsContract.RawContacts.ACCOUNT_NAME, localAccount.second)
+                        Log.d("TAG", "Saving to Detected Local account: ${localAccount.first}")
+                    } else {
+                        // If no local account type is found, we use putNull.
+                        // This honors the user's "Device Only" request.
+                        // If this fails with IllegalArgumentException on Android 14+, 
+                        // it will be caught and the user will be informed.
+                        accountValues.putNull(ContactsContract.RawContacts.ACCOUNT_TYPE)
+                        accountValues.putNull(ContactsContract.RawContacts.ACCOUNT_NAME)
+                        Log.d("TAG", "Saving to Device Only (using null/null)")
+                    }
                 }
 
                 ops.add(
@@ -305,13 +348,13 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
                     }
                 }
 
-                // 🔥 If moving, delete the old raw contact
-                if (shouldRecreate && existingRawId != null) {
+                // 🔥 If moving, delete ALL old raw contacts associated with this contact
+                if (shouldRecreate && contactId != null) {
                     ops.add(
                         ContentProviderOperation.newDelete(ContactsContract.RawContacts.CONTENT_URI)
                             .withSelection(
-                                "${ContactsContract.RawContacts._ID}=?",
-                                arrayOf(existingRawId)
+                                "${ContactsContract.RawContacts.CONTACT_ID}=?",
+                                arrayOf(contactId)
                             )
                             .build()
                     )
@@ -322,9 +365,13 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
 
                 // 👉 Get NEW Contact ID
                 var newContactId: String? = null
-                if (results.isNotEmpty() && results[0].uri != null) {
-                    val newRawId = ContentUris.parseId(results[0].uri!!)
-                    newContactId = getContactIdFromRawId(newRawId.toString())
+                if (results != null && results.isNotEmpty() && results[0]?.uri != null) {
+                    try {
+                        val newRawId = ContentUris.parseId(results[0].uri!!)
+                        newContactId = getContactIdFromRawId(newRawId.toString())
+                    } catch (e: Exception) {
+                        Log.e("TAG", "Error parsing new contact ID: ${e.message}")
+                    }
                 }
 
                 onCallBack(
@@ -333,21 +380,26 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
                 )
             }
 
-            // 👉 APPLY (Only if not already applied in the Recreate branch)
-            if (existingRawId != null && !shouldRecreate) {
+            // 👉 APPLY (Already handled in branches above)
+            /*if (existingRawId != null && !shouldRecreate) {
                 context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
-            }
+            }*/
 
         } catch (e: Exception) {
             e.printStackTrace()
-            onCallBack(e.message ?: "Error", null)
+            val errorMsg = if (e.message?.contains("local or SIM accounts", ignoreCase = true) == true) {
+                "System Error: Cannot save to Device while a Google account is set as default. Please select your Google account from the list above. ⚠️"
+            } else {
+                e.message ?: "Error"
+            }
+            onCallBack(errorMsg, null)
         }
     }
 
     fun getContactIdFromRawId(rawContactId: String): String? {
         var contactId: String? = null
-        // 👉 Aggregation can take a few ms. Try 5 times with delay.
-        for (i in 0 until 5) {
+        // 👉 Aggregation can take a few ms. Try 10 times with delay.
+        for (i in 0 until 10) {
             val cursor = context.contentResolver.query(
                 ContactsContract.RawContacts.CONTENT_URI,
                 arrayOf(ContactsContract.RawContacts.CONTACT_ID),
@@ -362,7 +414,7 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
             }
             if (contactId != null) break
             try {
-                Thread.sleep(200)
+                Thread.sleep(300)
             } catch (e: Exception) {
                 Log.e("TAG", "getContactIdFromRawId: ${e.message}")
             }
@@ -373,33 +425,54 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
     fun getRawContactIdFromContactId(contactId: String): String? {
         val rawCursor = context.contentResolver.query(
             ContactsContract.RawContacts.CONTENT_URI,
-            arrayOf(ContactsContract.RawContacts._ID),
-            "${ContactsContract.RawContacts.CONTACT_ID}=?",
+            arrayOf(ContactsContract.RawContacts._ID, ContactsContract.RawContacts.ACCOUNT_TYPE),
+            "${ContactsContract.RawContacts.CONTACT_ID}=? AND ${ContactsContract.RawContacts.DELETED}=0",
             arrayOf(contactId),
             null
         )
+        var bestRawId: String? = null
         rawCursor?.use { rc ->
-            if (rc.moveToFirst()) {
-                return rc.getString(0)
+            while (rc.moveToNext()) {
+                val rawId = rc.getString(0)
+                val type = rc.getString(1) ?: ""
+                
+                val isWhatsApp = type == "com.whatsapp" || type.contains("whatsapp", ignoreCase = true)
+                val isTelegram = type == "org.telegram.messenger" || type.contains("telegram", ignoreCase = true)
+                
+                if (!isWhatsApp && !isTelegram) {
+                    // This is a "real" account (Google, Device, etc.)
+                    return rawId // Prioritize the first real account found
+                }
+                if (bestRawId == null) bestRawId = rawId
             }
         }
-        return null
+        return bestRawId
     }
 
-    fun getContactAccountName(contactId: String): String? {
+    fun getContactAccountName(contactId: String): Pair<String?, String?> {
         val rawCursor = context.contentResolver.query(
             ContactsContract.RawContacts.CONTENT_URI,
-            arrayOf(ContactsContract.RawContacts.ACCOUNT_NAME),
-            "${ContactsContract.RawContacts.CONTACT_ID}=?",
+            arrayOf(ContactsContract.RawContacts.ACCOUNT_NAME, ContactsContract.RawContacts.ACCOUNT_TYPE),
+            "${ContactsContract.RawContacts.CONTACT_ID}=? AND ${ContactsContract.RawContacts.DELETED}=0",
             arrayOf(contactId),
             null
         )
+        var bestMatch: Pair<String?, String?> = Pair(null, null)
         rawCursor?.use { rc ->
-            if (rc.moveToFirst()) {
-                return rc.getString(0)
+            while (rc.moveToNext()) {
+                val name = rc.getString(0)
+                val type = rc.getString(1) ?: ""
+                
+                val isWhatsApp = type == "com.whatsapp" || type.contains("whatsapp", ignoreCase = true)
+                val isTelegram = type == "org.telegram.messenger" || type.contains("telegram", ignoreCase = true)
+                
+                if (!isWhatsApp && !isTelegram) {
+                    return Pair(name, type) // Prioritize real accounts
+                }
+                if (bestMatch.first == null) bestMatch = Pair(name, type)
             }
         }
-        return null
+        return bestMatch
     }
 
     fun getContactEmail(contactId: String): String? {
@@ -458,5 +531,52 @@ class NewContactRepository @Inject constructor(@param:ApplicationContext private
             return it.count > 0
         }
         return false
+    }
+
+    fun findLocalAccount(): Pair<String, String>? {
+        val accountManager = AccountManager.get(context)
+        val accounts = accountManager.accounts
+        
+        Log.d("TAG", "--- Available Accounts ---")
+        for (acc in accounts) {
+            Log.d("TAG", "Account: Name=${acc.name}, Type=${acc.type}")
+        }
+
+        // 1. Check for well-known local/phone account types
+        val localTypes = arrayOf(
+            "com.android.localphone",
+            "vnd.sec.contact.phone",
+            "com.phone.contacts",
+            "com.android.contacts.default",
+            "com.samsung.android.core.apps.contact",
+            "com.sonyericsson.localcontacts",
+            "com.google.android.gms.primary",
+            "default",
+            "local",
+            "phone"
+        )
+
+        for (type in localTypes) {
+            for (acc in accounts) {
+                if (acc.type.equals(type, ignoreCase = true)) return Pair(acc.type, acc.name)
+            }
+        }
+        
+        // 2. Check account names for "Phone" or "Device"
+        for (acc in accounts) {
+            if (acc.name.equals("Phone", ignoreCase = true) || acc.name.equals("Device", ignoreCase = true)) {
+                return Pair(acc.type, acc.name)
+            }
+        }
+
+        // 3. Search for any account containing "local", "phone", or "device" in type
+        for (acc in accounts) {
+            val type = acc.type.lowercase()
+            if (type.contains("local") || type.contains("phone") || type.contains("device")) {
+                return Pair(acc.type, acc.name)
+            }
+        }
+
+        return null
     }
 }

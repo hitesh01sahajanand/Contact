@@ -79,30 +79,40 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <androidx.cardview.widget.CardView
+                    <com.google.android.material.card.MaterialCardView
                         android:id="@+id/cv_add_photo"
                         android:layout_width="@dimen/_100sdp"
                         android:layout_height="@dimen/_100sdp"
                         android:layout_gravity="center"
                         android:layout_marginTop="@dimen/_22sdp"
                         android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                        app:cardBackgroundColor="@color/light_blue_color"
-                        app:cardCornerRadius="@dimen/_100sdp"
-                        app:cardElevation="0dp">
-
-                        <ImageView
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:padding="@dimen/_30sdp"
-                            android:scaleType="centerCrop"
-                            android:src="@drawable/ic_user" />
+                        app:cardBackgroundColor="@color/white"
+                        app:cardElevation="0dp"
+                        app:cardPreventCornerOverlap="true"
+                        app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
+                        app:strokeColor="@color/border_color"
+                        app:strokeWidth="0.5dp">
 
                         <ImageView
                             android:id="@+id/iv_contact_photo"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:scaleType="centerCrop" />
-                    </androidx.cardview.widget.CardView>
+                            android:scaleType="centerCrop"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/tv_first_name"
+                            style="@style/TextStyle.ExtraLarge"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:text=""
+                            android:textColor="@color/white"
+                            android:visibility="gone" />
+
+
+                    </com.google.android.material.card.MaterialCardView>
 
 
                     <TextView

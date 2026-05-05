@@ -87,18 +87,72 @@ class StorageLocationActivity : AppCompatActivity(), OnClickHandler {
             null
         )
 
+        var simCount = 0
         cursor?.use {
             while (it.moveToNext()) {
                 val accountName =
                     it.getString(it.getColumnIndexOrThrow(ContactsContract.RawContacts.ACCOUNT_NAME))
+                        ?: ""
                 val accountType =
                     it.getString(it.getColumnIndexOrThrow(ContactsContract.RawContacts.ACCOUNT_TYPE))
+                        ?: ""
 
-                result.add(Pair(accountName, accountType))
+                val isGoogle = accountType == "com.google"
+                val isWhatsApp = accountType.contains("whatsapp", ignoreCase = true)
+                val isTelegram = accountType.contains("telegram", ignoreCase = true)
+                val isEmail =
+                    accountName.contains("@") && accountType.contains("exchange", ignoreCase = true)
+                val isSim = accountType.contains("sim", ignoreCase = true) || accountType.contains(
+                    "adn",
+                    ignoreCase = true
+                )
+
+                val displayName = when {
+                    isGoogle -> accountName
+                    isWhatsApp -> "WhatsApp"
+                    isTelegram -> "Telegram"
+                    isSim -> {
+                        simCount++
+                        if (accountName.contains(
+                                "sim",
+                                ignoreCase = true
+                            ) && accountName.any { it.isDigit() }
+                        ) {
+                            accountName.uppercase()
+                        } else {
+                            "SIM $simCount"
+                        }
+                    }
+
+                    !isGoogle && !isWhatsApp && !isTelegram && !isEmail && !isSim -> "Device"
+                    else -> accountName.ifEmpty { "Device" }
+                }
+
+                result.add(Pair(displayName, accountType))
             }
         }
 
-        return result
+        // 🔹 Sorting logic
+        return result.sortedWith(compareBy { (name, type) ->
+            val isGoogle = type == "com.google"
+            val isWhatsApp = type?.contains("whatsapp", ignoreCase = true) == true
+            val isTelegram = type?.contains("telegram", ignoreCase = true) == true
+            val isEmail =
+                name?.contains("@") == true && type?.contains("exchange", ignoreCase = true) == true
+            val isSim = type?.contains("sim", ignoreCase = true) == true || type?.contains(
+                "adn",
+                ignoreCase = true
+            ) == true
+            val isDevice = name == "Device"
+
+            when {
+                isDevice -> 0
+                isSim -> 1
+                isGoogle || isEmail -> 2
+                isWhatsApp || isTelegram -> 3
+                else -> 4
+            }
+        })
     }
 
     override fun onClick(view: View) {

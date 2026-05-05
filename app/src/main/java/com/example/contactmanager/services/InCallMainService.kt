@@ -9,6 +9,7 @@ import androidx.core.app.ServiceCompat
 import com.example.contactmanager.ApplicationClass
 import com.example.contactmanager.activities.call.CallActivity
 import com.example.contactmanager.repository.BlockRepository
+import com.example.contactmanager.repository.TagRepository
 import com.example.contactmanager.utils.CallNotificationManager
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
@@ -21,6 +22,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -28,6 +30,9 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
 
     @Inject
     lateinit var blockRepository: BlockRepository
+
+    @Inject
+    lateinit var tagRepository: TagRepository
 
     private lateinit var callNotificationManager: CallNotificationManager
     private lateinit var ringtonePlayer: RingtonePlayer
@@ -65,33 +70,46 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
     }
 
     private fun refreshNotification() {
-        val call = NewCallManager.getPrimaryCall()
-        if (call == null) {
-            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
-            callNotificationManager.cancelNotification()
-            return
-        }
-
-        val state = NewCallManager.getState()
-        val isIncomingRinging = state == Call.STATE_RINGING
-        val isVisible = NewCallManager.isCallActivityVisible
-
-        // High priority only for incoming ringing calls that are not visible
-        val lowPriority = !(isIncomingRinging && !isVisible)
-
-        val notification = callNotificationManager.setupNotification(lowPriority)
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(
-                    CallNotificationManager.CALL_NOTIFICATION_ID,
-                    notification,
-                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
-                )
-            } else {
-                startForeground(CallNotificationManager.CALL_NOTIFICATION_ID, notification)
+        CoroutineScope(Dispatchers.IO).launch {
+            val call = NewCallManager.getPrimaryCall()
+            if (call == null) {
+                withContext(Dispatchers.Main) {
+                    ServiceCompat.stopForeground(
+                        this@InCallMainService,
+                        ServiceCompat.STOP_FOREGROUND_REMOVE
+                    )
+                    callNotificationManager.cancelNotification()
+                }
+                return@launch
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+
+            val state = NewCallManager.getState()
+            val isIncomingRinging = state == Call.STATE_RINGING
+            val isVisible = NewCallManager.isCallActivityVisible
+
+            // High priority only for incoming ringing calls that are not visible
+            val lowPriority = !(isIncomingRinging && !isVisible)
+
+            val number = call.details?.handle?.schemeSpecificPart ?: "Unknown"
+            val contactName = Common.getContactName(this@InCallMainService, number)
+            val tag = if (contactName == number) tagRepository.getTag(number) else null
+
+            withContext(Dispatchers.Main) {
+                val notification = callNotificationManager.setupNotification(lowPriority, tag)
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        startForeground(
+                            CallNotificationManager.CALL_NOTIFICATION_ID,
+                            notification,
+                            android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
+                        )
+                    } else {
+                        startForeground(CallNotificationManager.CALL_NOTIFICATION_ID, notification)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
         }
     }
 
@@ -160,7 +178,13 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
 
             // High priority for incoming call, low for outgoing/ongoing
             val lowPriority = !isIncomingRinging
-            val notification = callNotificationManager.setupNotification(lowPriority)
+            
+            val contactName = Common.getContactName(this@InCallMainService, number)
+            val tag = if (contactName == number) {
+                withContext(Dispatchers.IO) { tagRepository.getTag(number) }
+            } else null
+            
+            val notification = callNotificationManager.setupNotification(lowPriority, tag)
 
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -226,9 +250,14 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
         val disconnectCauseCode = call.details?.disconnectCause?.code
         if (call.state == Call.STATE_RINGING || disconnectCauseCode == android.telecom.DisconnectCause.MISSED) {
             val number = call.details?.handle?.schemeSpecificPart ?: "Unknown"
-            val name = call.details?.callerDisplayName
-
-            callNotificationManager.showMissedCallNotification(number, name)
+            CoroutineScope(Dispatchers.IO).launch {
+                // If no system contact name, look up the user's saved tag from DB
+                val contactName = Common.getContactName(this@InCallMainService, number)
+                val tag = if (contactName == number) tagRepository.getTag(number) else null
+                withContext(Dispatchers.Main) {
+                    callNotificationManager.showMissedCallNotification(number, tag)
+                }
+            }
         }
 
         val wasPrimaryCall = call == NewCallManager.getPrimaryCall()

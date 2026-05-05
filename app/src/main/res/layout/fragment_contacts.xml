@@ -30,12 +30,12 @@
             app:cardBackgroundColor="@color/bg_color"
             app:cardElevation="0dp"
             app:cardPreventCornerOverlap="true"
-            app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Rounded"
-            app:strokeColor="@android:color/transparent"
-            app:strokeWidth="1dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/in_header">
+            app:layout_constraintTop_toBottomOf="@+id/in_header"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Rounded"
+            app:strokeColor="@android:color/transparent"
+            app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -85,9 +85,8 @@
                 android:layout_gravity="center_vertical"
                 android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
                 app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="@dimen/_12sdp"
                 app:cardElevation="0dp"
-                app:cardPreventCornerOverlap="true"
-                app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Rounded"
                 app:strokeColor="@android:color/transparent"
                 app:strokeWidth="1dp">
 
@@ -113,7 +112,7 @@
                         android:layout_marginStart="@dimen/_8sdp"
                         android:rotation="270"
                         android:src="@drawable/ic_back_arrow"
-                        android:tint="@color/black_color" />
+                        app:tint="@color/black_color" />
 
                 </LinearLayout>
 
@@ -187,12 +186,12 @@
                 app:cardBackgroundColor="@color/white"
                 app:cardElevation="0dp"
                 app:cardPreventCornerOverlap="true"
-                app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Rounded"
-                app:strokeColor="@android:color/transparent"
-                app:strokeWidth="1dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toTopOf="parent"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Rounded"
+                app:strokeColor="@android:color/transparent"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:id="@+id/indexBar"

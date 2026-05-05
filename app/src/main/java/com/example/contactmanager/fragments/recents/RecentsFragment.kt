@@ -51,21 +51,16 @@ class RecentsFragment : Fragment(), OnClickHandler {
     }
 
     override fun onResume() {
-
         super.onResume()
         if (PermissionManager.hasPermissions(requireActivity())) {
-            if (allList.isEmpty()) {
-                viewModel.loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
-            }
+            viewModel.loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
         }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
         if (!hidden && PermissionManager.hasPermissions(requireActivity())) {
-            if (allList.isEmpty()) {
-                viewModel.loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
-            }
+            viewModel.loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
         }
     }
 
@@ -101,6 +96,9 @@ class RecentsFragment : Fragment(), OnClickHandler {
                 Constance.ACTION_INFO -> {
                     val intent = Intent(requireActivity(), ContactsDetailsActivity::class.java)
                     intent.putExtra(Constance.DATA_FETCH, callLogModel.contactId)
+                    intent.putExtra(Constance.NAME, callLogModel.stringCallName)
+                    intent.putExtra(Constance.NUMBER, callLogModel.stringNumber)
+                    intent.putExtra(Constance.PHOTO_URI, callLogModel.stringPhotoUri)
                     requireActivity().startActivity(intent)
                 }
 

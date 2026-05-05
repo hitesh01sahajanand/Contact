@@ -210,4 +210,34 @@
     <string name="set_your_favorite_tag_to_contact">ตั้งค่าแท็กโปรดสำหรับผู้ติดต่อ</string>
     <string name="enter_tag">ป้อนแท็ก</string>
     <string name="no_speed_dial_set_for">ไม่มีการตั้งค่าปุ่มโทรด่วนสำหรับ %1$d</string>
+
+    <string name="device">อุปกรณ์</string>
+    <string name="export_contacts">ส่งออกผู้ติดต่อ</string>
+    <string name="include_contact_sources">รวมแหล่งที่มาของผู้ติดต่อ</string>
+    <string name="filename_without_vcf">ชื่อไฟล์ (ไม่รวม .vcf)</string>
+    <string name="export">ส่งออก</string>
+    <string name="please_wait">กรุณารอสักครู่...</string>
+    <string name="contacts_successfully_saved_to">บันทึกผู้ติดต่อเรียบร้อยแล้วที่:\n%1$s</string>
+    <string name="error_exporting_contacts">เกิดข้อผิดพลาดในการส่งออกผู้ติดต่อ: %1$s</string>
+    <string name="no_contacts_found_to_export">ไม่พบผู้ติดต่อสำหรับส่งออก</string>
+    <string name="this_name_is_already_stored_please_choose_another">ชื่อนี้ถูกบันทึกไว้แล้ว กรุณาเลือกชื่ออื่น</string>
+    <string name="enter_file_name">ป้อนชื่อไฟล์</string>
+    <string name="no_accounts_selected">ไม่ได้เลือกบัญชี</string>
+    <string name="no_accounts_found">ไม่พบบัญชี</string>
+    <string name="select_account_for_import">เลือกบัญชีสำหรับนำเข้า</string>
+    <string name="importing_contacts">กำลังนำเข้าผู้ติดต่อ...</string>
+    <string name="no_contacts_found_in_file">ไม่พบผู้ติดต่อในไฟล์</string>
+    <string name="contacts_imported_successfully">%1$d รายชื่อผู้ติดต่อถูกนำเข้าเรียบร้อยแล้ว</string>
+    <string name="error_importing_contacts">เกิดข้อผิดพลาดในการนำเข้าผู้ติดต่อ: %1$s</string>
+    <string name="import_">นำเข้า</string>
+    <string name="permissions_required_to_export_contacts">ต้องมีสิทธิ์ในการส่งออกผู้ติดต่อ</string>
+    <string name="permissions_required_to_import_contacts">ต้องมีสิทธิ์ในการนำเข้าผู้ติดต่อ</string>
+    <string name="export_contact">ส่งออกผู้ติดต่อ</string>
+    <string name="import_contact">นำเข้าผู้ติดต่อ</string>
+    <string name="please_wait_fetching_accounts">กรุณารอสักครู่ กำลังดึงข้อมูลบัญชี...</string>
+    <string name="local_storage_restricted">พื้นที่เก็บข้อมูลภายในถูกจำกัด</string>
+    <string name="your_system_is_set_to_save">ระบบของคุณถูกตั้งค่าให้บันทึกผู้ติดต่อไปยัง Google โดยค่าเริ่มต้น หากต้องการบันทึกเฉพาะในอุปกรณ์ คุณต้องเปลี่ยนการตั้งค่านี้ในการตั้งค่าระบบ หรือเลือกบัญชี Google</string>
+    <string name="open_settings">เปิดการตั้งค่า</string>
+
+
 </resources>

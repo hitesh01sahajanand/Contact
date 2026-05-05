@@ -41,15 +41,17 @@ class StorageLocationAdapter : RecyclerView.Adapter<StorageLocationAdapter.Stora
     class StorageViewHolder(private val binding: StorageLocationDesignBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun setData(itemData: Pair<String?, String?>) {
-
-            binding.tvName.text = itemData.first
-            binding.tvNumber.text = itemData.second
-
             val context = binding.root.context
-            val accountType = itemData.second
-            var iconDrawable: android.graphics.drawable.Drawable? = null
+            val displayName = itemData.first ?: ""
+            val accountType = itemData.second ?: ""
 
-            if (accountType != null) {
+            binding.tvName.text = displayName
+            binding.tvNumber.text = "" // Will be set to account label if applicable
+
+            var iconDrawable: android.graphics.drawable.Drawable? = null
+            var accountLabel: String? = null
+
+            if (accountType.isNotEmpty()) {
                 try {
                     val accountManager = android.accounts.AccountManager.get(context)
                     val authTypes = accountManager.authenticatorTypes
@@ -60,6 +62,11 @@ class StorageLocationAdapter : RecyclerView.Adapter<StorageLocationAdapter.Stora
                                 auth.iconId,
                                 null
                             )
+                            accountLabel = context.packageManager.getText(
+                                auth.packageName,
+                                auth.labelId,
+                                null
+                            )?.toString()
                             break
                         }
                     }
@@ -70,12 +77,17 @@ class StorageLocationAdapter : RecyclerView.Adapter<StorageLocationAdapter.Stora
                 if (iconDrawable == null) {
                     try {
                         iconDrawable = context.packageManager.getApplicationIcon(accountType)
+                        val appInfo = context.packageManager.getApplicationInfo(accountType, 0)
+                        accountLabel = context.packageManager.getApplicationLabel(appInfo).toString()
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
                 }
             }
 
+            // Show the account type/label for all accounts as requested
+            binding.tvNumber.isVisible = !accountLabel.isNullOrEmpty() || accountType.isNotEmpty()
+            binding.tvNumber.text = accountLabel ?: accountType
 
             if (iconDrawable != null) {
                 binding.tvContactName.isVisible = false
@@ -84,14 +96,13 @@ class StorageLocationAdapter : RecyclerView.Adapter<StorageLocationAdapter.Stora
             } else {
                 binding.tvContactName.isVisible = true
                 binding.ivContactPhoto.isVisible = false
-                val color = Common.profileColors[1 % Common.profileColors.size]
+                val color = Common.profileColors[adapterPosition % Common.profileColors.size]
                 binding.cvProfile.setCardBackgroundColor(
                     ContextCompat.getColor(binding.root.context, color)
                 )
-                val firstChar = itemData.first?.firstOrNull()?.uppercase() ?: ""
+                val firstChar = displayName.firstOrNull()?.uppercase() ?: ""
                 binding.tvContactName.text = firstChar
             }
-
         }
 
     }

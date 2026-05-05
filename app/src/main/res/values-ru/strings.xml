@@ -210,4 +210,33 @@
     <string name="set_your_favorite_tag_to_contact">установите ваш любимый тег для контакта</string>
     <string name="enter_tag">введите тег</string>
     <string name="no_speed_dial_set_for">Быстрый набор для %1$d не установлен</string>
+
+    <string name="device">Устройство</string>
+    <string name="export_contacts">Экспорт контактов</string>
+    <string name="include_contact_sources">Включить источники контактов</string>
+    <string name="filename_without_vcf">Имя файла (без .vcf)</string>
+    <string name="export">Экспорт</string>
+    <string name="please_wait">Пожалуйста, подождите...</string>
+    <string name="contacts_successfully_saved_to">Контакты успешно сохранены в:\n%1$s</string>
+    <string name="error_exporting_contacts">Ошибка при экспорте контактов: %1$s</string>
+    <string name="no_contacts_found_to_export">Нет контактов для экспорта</string>
+    <string name="this_name_is_already_stored_please_choose_another">Это имя уже сохранено. Пожалуйста, выберите другое.</string>
+    <string name="enter_file_name">Введите имя файла</string>
+    <string name="no_accounts_selected">Нет выбранных аккаунтов</string>
+    <string name="no_accounts_found">Аккаунты не найдены</string>
+    <string name="select_account_for_import">Выберите аккаунт для импорта</string>
+    <string name="importing_contacts">Импорт контактов...</string>
+    <string name="no_contacts_found_in_file">В файле не найдено контактов</string>
+    <string name="contacts_imported_successfully">%1$d контактов успешно импортировано</string>
+    <string name="error_importing_contacts">Ошибка при импорте контактов: %1$s</string>
+    <string name="import_">Импорт</string>
+    <string name="permissions_required_to_export_contacts">Требуются разрешения для экспорта контактов</string>
+    <string name="permissions_required_to_import_contacts">Требуются разрешения для импорта контактов</string>
+    <string name="export_contact">Экспорт контакта</string>
+    <string name="import_contact">Импорт контакта</string>
+    <string name="please_wait_fetching_accounts">Пожалуйста, подождите, получение аккаунтов...</string>
+    <string name="local_storage_restricted">Локальное хранилище ограничено</string>
+    <string name="your_system_is_set_to_save">Ваша система настроена на сохранение контактов в Google по умолчанию. Чтобы сохранять только на устройстве, необходимо изменить это в настройках системы или выбрать аккаунт Google.</string>
+    <string name="open_settings">Открыть настройки</string>
+
 </resources>

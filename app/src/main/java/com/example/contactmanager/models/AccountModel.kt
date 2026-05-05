@@ -7,5 +7,6 @@ data class AccountModel(
     val email: String,
     val isAll: Boolean = false,
     val avtar: Bitmap? = null,
-    val count: Int = 0
+    val count: Int = 0,
+    val accountType: String? = null
 )

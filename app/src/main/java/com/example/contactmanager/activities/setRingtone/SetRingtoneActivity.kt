@@ -13,7 +13,9 @@ import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Log
 import android.view.View
+import android.webkit.MimeTypeMap
 import android.widget.Toast
+import java.io.File
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -56,36 +58,54 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
         }
 
     private val requestAudioPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-            if (isGranted) {
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
+            val allGranted = result.values.all { it }
+            if (allGranted) {
                 displayCurrentRingtone()
                 loadSystemRingtones()
             } else {
-                Toast.makeText(
-                    this,
-                    "Permission required to read ringtone details",
-                    Toast.LENGTH_SHORT
-                ).show()
-                binding.tvRingtoneName.text = "Default"
+                // If at least the READ permission is granted, we can still load ringtones
+                val readGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    result[android.Manifest.permission.READ_MEDIA_AUDIO] == true
+                } else {
+                    result[android.Manifest.permission.READ_EXTERNAL_STORAGE] == true
+                }
+
+                if (readGranted) {
+                    displayCurrentRingtone()
+                    loadSystemRingtones()
+                } else {
+                    Toast.makeText(
+                        this,
+                        "Permission required to read ringtone details",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    binding.tvRingtoneName.text = "Default"
+                }
             }
         }
 
     private fun checkAndRequestAudioPermission(): Boolean {
-        val permission =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                android.Manifest.permission.READ_MEDIA_AUDIO
-            } else {
-                android.Manifest.permission.READ_EXTERNAL_STORAGE
+        val permissions = mutableListOf<String>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(android.Manifest.permission.READ_MEDIA_AUDIO)
+        } else {
+            permissions.add(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+            // For Android 9 and below, we also need WRITE to set custom ringtones
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                permissions.add(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
             }
+        }
 
-        return if (androidx.core.content.ContextCompat.checkSelfPermission(
-                this,
-                permission
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        ) {
+        val missingPermissions = permissions.filter {
+            androidx.core.content.ContextCompat.checkSelfPermission(this, it) !=
+                    android.content.pm.PackageManager.PERMISSION_GRANTED
+        }.toTypedArray()
+
+        return if (missingPermissions.isEmpty()) {
             true
         } else {
-            requestAudioPermissionLauncher.launch(permission)
+            requestAudioPermissionLauncher.launch(missingPermissions)
             false
         }
     }
@@ -250,7 +270,8 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
 
     private fun setCustomRingtone(uri: Uri, displayName: String) {
 
-        val safeName = displayName.trim().takeIf { it.isNotBlank() }
+        val safeName = displayName.trim().replace("[\\\\/:*?\"<>|]".toRegex(), "_")
+            .takeIf { it.isNotBlank() }
             ?: getString(R.string.custom_ringtone).takeIf { it.isNotBlank() }
             ?: "Custom Ringtone"
 
@@ -263,7 +284,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
         try {
             val values = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, safeName)
-                put(MediaStore.MediaColumns.TITLE, safeName) // ✅ FIX (important)
+                put(MediaStore.MediaColumns.TITLE, safeName)
                 put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
 
                 put(MediaStore.Audio.Media.IS_RINGTONE, true)
@@ -272,8 +293,22 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                 put(MediaStore.Audio.Media.IS_ALARM, false)
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_RINGTONES) // ✅ FIX
-                    put(MediaStore.MediaColumns.IS_PENDING, 1) // ✅ FIX
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_RINGTONES)
+                    put(MediaStore.MediaColumns.IS_PENDING, 1)
+                } else {
+                    // For Android 9 and below, we need to provide a file path via the DATA column
+                    @Suppress("DEPRECATION")
+                    val ringtoneDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_RINGTONES)
+                    if (!ringtoneDir.exists()) ringtoneDir.mkdirs()
+
+                    val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "mp3"
+                    var file = File(ringtoneDir, "$safeName.$extension")
+
+                    // Avoid overwriting if possible or just use a unique name
+                    if (file.exists()) {
+                        file = File(ringtoneDir, "${safeName}_${System.currentTimeMillis()}.$extension")
+                    }
+                    put(MediaStore.MediaColumns.DATA, file.absolutePath)
                 }
             }
 
@@ -592,7 +627,9 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                 stopAllPlayback()
                 adapter.clearSelection()
                 selectedRingtone = null
-                pickRingtoneLauncher.launch("audio/*")
+                if (checkAndRequestAudioPermission()) {
+                    pickRingtoneLauncher.launch("audio/*")
+                }
             }
 
             binding.llRecentRingtone.id -> {

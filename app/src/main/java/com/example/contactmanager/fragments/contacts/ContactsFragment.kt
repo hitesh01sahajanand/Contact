@@ -114,6 +114,9 @@ class ContactsFragment : Fragment(), OnClickHandler {
                 Constance.ACTION_INFO -> {
                     val intent = Intent(requireActivity(), ContactsDetailsActivity::class.java)
                     intent.putExtra(Constance.DATA_FETCH, contactModel.contactId)
+                    intent.putExtra(Constance.NAME, contactModel.displayName)
+                    intent.putExtra(Constance.NUMBER, contactModel.number)
+                    intent.putExtra(Constance.PHOTO_URI, contactModel.userThumbnail)
                     requireActivity().startActivity(intent)
                 }
 

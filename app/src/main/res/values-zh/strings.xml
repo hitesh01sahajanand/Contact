@@ -210,4 +210,33 @@
     <string name="set_your_favorite_tag_to_contact">为联系人设置你最喜欢的标签</string>
     <string name="enter_tag">输入标签</string>
     <string name="no_speed_dial_set_for">%1$d 未设置快速拨号</string>
+
+    <string name="device">设备</string>
+    <string name="export_contacts">导出联系人</string>
+    <string name="include_contact_sources">包含联系人来源</string>
+    <string name="filename_without_vcf">文件名（不含 .vcf）</string>
+    <string name="export">导出</string>
+    <string name="please_wait">请稍候...</string>
+    <string name="contacts_successfully_saved_to">联系人已成功保存到：\n%1$s</string>
+    <string name="error_exporting_contacts">导出联系人时出错：%1$s</string>
+    <string name="no_contacts_found_to_export">未找到可导出的联系人</string>
+    <string name="this_name_is_already_stored_please_choose_another">该名称已存在。请选择其他名称。</string>
+    <string name="enter_file_name">输入文件名</string>
+    <string name="no_accounts_selected">未选择任何账户</string>
+    <string name="no_accounts_found">未找到任何账户</string>
+    <string name="select_account_for_import">选择用于导入的账户</string>
+    <string name="importing_contacts">正在导入联系人...</string>
+    <string name="no_contacts_found_in_file">文件中未找到联系人</string>
+    <string name="contacts_imported_successfully">成功导入 %1$d 个联系人</string>
+    <string name="error_importing_contacts">导入联系人时出错：%1$s</string>
+    <string name="import_">导入</string>
+    <string name="permissions_required_to_export_contacts">导出联系人需要权限</string>
+    <string name="permissions_required_to_import_contacts">导入联系人需要权限</string>
+    <string name="export_contact">导出联系人</string>
+    <string name="import_contact">导入联系人</string>
+    <string name="please_wait_fetching_accounts">请稍候，正在获取账户...</string>
+    <string name="local_storage_restricted">本地存储受限</string>
+    <string name="your_system_is_set_to_save">您的系统默认设置为将联系人保存到 Google。若仅保存到设备，请在系统设置中更改此设置或选择一个 Google 账户。</string>
+    <string name="open_settings">打开设置</string>
+
 </resources>
