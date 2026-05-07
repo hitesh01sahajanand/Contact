@@ -20,53 +20,66 @@
         android:orientation="vertical"
         tools:context=".activities.permissions.PermissionActivity">
 
-        <com.airbnb.lottie.LottieAnimationView
-            android:id="@+id/lotti_permission"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginHorizontal="@dimen/_10sdp"
-            android:layout_marginTop="@dimen/_40sdp"
-            android:adjustViewBounds="true"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:lottie_autoPlay="true"
-            app:lottie_loop="true"
-            app:lottie_rawRes="@raw/permission_light" />
-
         <LinearLayout
+            android:id="@+id/ll_set_default"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="@dimen/_10sdp"
-            android:layout_marginTop="@dimen/_10sdp"
+            android:layout_height="0dp"
             android:orientation="vertical"
+            app:layout_constraintBottom_toTopOf="@+id/ll_default"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/lotti_permission">
+            app:layout_constraintTop_toTopOf="parent">
 
-            <TextView
-                style="@style/TextStyle.MediumLarge"
+            <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/lotti_permission"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:gravity="center"
-                android:text="@string/set_default_app"
-                android:textColor="@color/black_color" />
+                android:layout_marginHorizontal="@dimen/_10sdp"
+                android:layout_marginTop="@dimen/_40sdp"
+                android:adjustViewBounds="true"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:lottie_autoPlay="true"
+                app:lottie_loop="true"
+                app:lottie_rawRes="@raw/permission_light" />
 
-            <TextView
-                android:id="@+id/tv_permission_desc"
-                style="@style/TextStyle.Medium"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginTop="@dimen/_5sdp"
-                android:gravity="center"
-                android:text="@string/to_make_receive_calls_set_this_app"
-                android:textColor="@color/grey_color" />
+                android:layout_marginHorizontal="@dimen/_10sdp"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:orientation="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/lotti_permission">
 
+                <TextView
+                    style="@style/TextStyle.MediumLarge"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text="@string/set_default_app"
+                    android:textColor="@color/black_color" />
+
+                <TextView
+                    android:id="@+id/tv_permission_desc"
+                    style="@style/TextStyle.Medium"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="@dimen/_5sdp"
+                    android:gravity="center"
+                    android:text="@string/to_make_receive_calls_set_this_app"
+                    android:textColor="@color/grey_color" />
+
+
+            </LinearLayout>
 
         </LinearLayout>
+
 
         <LinearLayout
             android:id="@+id/ll_default"
@@ -77,7 +90,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/scroll_view">
+            app:layout_constraintTop_toBottomOf="@+id/ll_set_default">
 
             <com.airbnb.lottie.LottieAnimationView
                 android:id="@+id/lotti_permission_btn"
@@ -97,7 +110,7 @@
             <TextView
                 android:id="@+id/tv_cancel"
                 style="@style/TextStyle.Medium"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginHorizontal="@dimen/_10sdp"

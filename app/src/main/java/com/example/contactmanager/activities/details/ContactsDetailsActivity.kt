@@ -38,7 +38,6 @@ import com.example.contactmanager.viewmodels.ContactDetailsViewModel
 import com.example.contactmanager.viewmodels.FavoriteViewModel
 import com.example.contactmanager.viewmodels.RecentViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlin.math.abs
 
 @AndroidEntryPoint
 class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
@@ -305,6 +304,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                                     title = getString(R.string.unblock_contact),
                                     description = getString(R.string.you_will_be_able_to_receive_call),
                                     btnOkay = getString(R.string.unblock),
+                                    isImageVisible = true,
                                     onItemClick = {
                                         recentViewModel.unblockNumber(model.stringNumber)
                                         popUpBinding.tvBlock.text = getString(R.string.block)
@@ -315,6 +315,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                                     title = getString(R.string.block_contact),
                                     description = getString(R.string.you_will_be_able_to_receive_call),
                                     btnOkay = getString(R.string.block),
+                                    isImageVisible = true,
                                     onItemClick = {
                                         recentViewModel.blockNumber(model.stringNumber)
                                         popUpBinding.tvBlock.text = getString(R.string.unblock)

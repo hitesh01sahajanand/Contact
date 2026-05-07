@@ -31,24 +31,22 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="@dimen/_5sdp"
-            android:gravity="center"
-            android:text=""
+            android:gravity="start"
+            android:text="@string/select_sim"
             android:textColor="@color/black_color"
             android:textSize="@dimen/_16sdp" />
 
-        <TextView
-            android:id="@+id/tv_description"
-            style="@style/TextStyle.Regular"
+        <RadioGroup
+            android:id="@+id/radio_group"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
             android:layout_marginTop="@dimen/_10sdp"
-            android:gravity="center"
-            android:text="@string/can_you_call_back_later"
-            android:textColor="@color/grey_color"
-            android:textSize="@dimen/_14sdp" />
+            android:orientation="vertical">
+
+        </RadioGroup>
 
         <LinearLayout
+            android:id="@+id/ll_buttons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/_20sdp"
@@ -87,5 +85,4 @@
 
 
     </LinearLayout>
-
 </layout>

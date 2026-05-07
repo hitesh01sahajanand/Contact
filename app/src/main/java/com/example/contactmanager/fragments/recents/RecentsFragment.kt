@@ -52,14 +52,14 @@ class RecentsFragment : Fragment(), OnClickHandler {
 
     override fun onResume() {
         super.onResume()
-        if (PermissionManager.hasPermissions(requireActivity())) {
+        if (PermissionManager.hasCallLogPermissions(requireActivity())) {
             viewModel.loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
         }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
-        if (!hidden && PermissionManager.hasPermissions(requireActivity())) {
+        if (!hidden && PermissionManager.hasCallLogPermissions(requireActivity())) {
             viewModel.loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
         }
     }
@@ -136,6 +136,7 @@ class RecentsFragment : Fragment(), OnClickHandler {
                                 title = requireActivity().getString(R.string.unblock_contact),
                                 description = requireActivity().getString(R.string.you_will_be_able_to_receive_call),
                                 btnOkay = requireActivity().getString(R.string.unblock),
+                                isImageVisible = true,
                                 onItemClick = {
                                     callLogModel.stringNumber?.let {
                                         viewModel.unblockNumber(it)
@@ -144,6 +145,7 @@ class RecentsFragment : Fragment(), OnClickHandler {
                         } else {
                             Common.alertDialog(
                                 context = requireActivity(),
+                                isImageVisible = true,
                                 title = requireActivity().getString(R.string.block_contact),
                                 description = requireActivity().getString(R.string.you_will_be_able_to_receive_call),
                                 btnOkay = requireActivity().getString(R.string.block),
@@ -301,10 +303,13 @@ class RecentsFragment : Fragment(), OnClickHandler {
 
     private fun updateVisibility() {
         val isLoading = viewModel.isLoadingFirstTime.value ?: false
+        val recentList = viewModel.allRecentCallHistory.value
         val isEmpty = adapter.getCurrentList().isEmpty()
 
-        binding.pbLoading.isVisible = isLoading
-        if (isLoading) {
+        val showLoading = isLoading || recentList == null
+        binding.pbLoading.isVisible = showLoading
+        
+        if (showLoading) {
             binding.llHistorySpaceHolder.isVisible = false
             binding.rvRecents.isVisible = false
         } else {

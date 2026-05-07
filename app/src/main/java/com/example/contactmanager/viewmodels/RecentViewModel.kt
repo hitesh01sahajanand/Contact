@@ -70,6 +70,15 @@ class RecentViewModel @Inject constructor(
     }
 
     init {
+        registerObserver()
+        observeBlockedNumbers()
+        observeTags()
+    }
+
+    private var isObserverRegistered = false
+
+    fun registerObserver() {
+        if (isObserverRegistered) return
         try {
             context.contentResolver.registerContentObserver(
                 CallLog.Calls.CONTENT_URI,
@@ -81,11 +90,17 @@ class RecentViewModel @Inject constructor(
                 true,
                 observer
             )
+            isObserverRegistered = true
         } catch (e: SecurityException) {
             e.printStackTrace()
         }
-        observeBlockedNumbers()
-        observeTags()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        if (isObserverRegistered) {
+            context.contentResolver.unregisterContentObserver(observer)
+        }
     }
 
     private fun observeTags() {
@@ -114,11 +129,6 @@ class RecentViewModel @Inject constructor(
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        context.contentResolver.unregisterContentObserver(observer)
-    }
-
     private val colorList = listOf(
         "#2173C2".toColorInt(),
         "#FFB950".toColorInt(),
@@ -128,6 +138,7 @@ class RecentViewModel @Inject constructor(
     )
 
     fun loadAllRecentsHistory(offset: Int, limit: Int) {
+        registerObserver()
         if (isLoading) return
         isLoading = true
 

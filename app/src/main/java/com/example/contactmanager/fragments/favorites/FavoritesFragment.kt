@@ -40,14 +40,14 @@ class FavoritesFragment : Fragment(), OnClickHandler {
 
     override fun onResume() {
         super.onResume()
-        if (PermissionManager.hasPermissions(requireActivity())) {
+        if (PermissionManager.hasContactPermissions(requireActivity())) {
             viewModel.getAllFavoriteContact()
         }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
-        if (!hidden && PermissionManager.hasPermissions(requireActivity())) {
+        if (!hidden && PermissionManager.hasContactPermissions(requireActivity())) {
             viewModel.getAllFavoriteContact()
         }
     }
@@ -58,7 +58,7 @@ class FavoritesFragment : Fragment(), OnClickHandler {
         binding.inHeader.tvTitle.text = requireActivity().getString(R.string.favorite)
         binding.inHeader.cvAdd.isVisible = true
 
-        viewModel.allFavoriteContacts.observe(requireActivity()) { favoriteList ->
+        viewModel.allFavoriteContacts.observe(viewLifecycleOwner) { favoriteList ->
             if (favoriteList.isNotEmpty()) {
                 favoriteAdapter.addAll(favoriteList)
                 binding.cvFavorite.isVisible = true

@@ -19,9 +19,7 @@
                 android:id="@+id/pop_image"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:padding="@dimen/_8sdp"
-                android:src="@drawable/ic_user" />
+                android:layout_gravity="center" />
         </FrameLayout>
 
 
@@ -47,7 +45,7 @@
                 android:singleLine="true"
                 android:text="Unkown Number"
                 android:textAlignment="center"
-                android:textColor="@color/black"
+                android:textAppearance="@style/TextAppearance.Compat.Notification.Title"
                 android:textSize="18sp" />
 
             <TextView
@@ -58,7 +56,7 @@
                 android:layout_marginTop="1dp"
                 android:singleLine="true"
                 android:text="+91 1234 456 456"
-                android:textColor="#787878"
+                android:textAppearance="@style/TextAppearance.Compat.Notification.Line2"
                 android:textSize="12sp" />
         </LinearLayout>
 

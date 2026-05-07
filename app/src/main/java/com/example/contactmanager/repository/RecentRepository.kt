@@ -48,6 +48,7 @@ class RecentRepository @Inject constructor(@param:ApplicationContext private val
             val typeIdx = cursor.getColumnIndex(CallLog.Calls.TYPE)
             val dateIdx = cursor.getColumnIndex(CallLog.Calls.DATE)
             val durationIdx = cursor.getColumnIndex(CallLog.Calls.DURATION)
+            val subscriptionIdIdx = cursor.getColumnIndex("subscription_id")
 
             val entriesToProcess = mutableListOf<Triple<Long, String, Int>>()
             if (cursor.moveToPosition(offset)) {
@@ -119,6 +120,7 @@ class RecentRepository @Inject constructor(@param:ApplicationContext private val
                         if (dateIdx != -1) cursor.getString(dateIdx) else System.currentTimeMillis()
                             .toString()
                     val duration = if (durationIdx != -1) cursor.getString(durationIdx) else "0"
+                    val simId = if (subscriptionIdIdx != -1) cursor.getInt(subscriptionIdIdx) else -1
 
                     val normNum = Common.cleanNumber(number)
                     val cacheData = contactCache[normNum] ?: ContactCacheData()
@@ -139,7 +141,8 @@ class RecentRepository @Inject constructor(@param:ApplicationContext private val
                             stringPhotoUri = cacheData.photoUri,
                             contactId = cacheData.contactId,
                             isBlocked = false, // Will be set in ViewModel
-                            intType = rawType
+                            intType = rawType,
+                            simId = simId
                         ).apply {
                             resetCallIds(id)
                         }

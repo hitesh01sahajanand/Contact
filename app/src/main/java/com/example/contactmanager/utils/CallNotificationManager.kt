@@ -7,11 +7,13 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.telecom.Call
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.call.CallActivity
 import com.example.contactmanager.receivers.CallActionReceiver
@@ -127,7 +129,9 @@ class CallNotificationManager(private val context: Context) {
         )
 
         val builder = NotificationCompat.Builder(context, CALL_CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher_round)
+            .setSmallIcon(R.drawable.ic_call)
+            .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher_round))
+            .setColor(ContextCompat.getColor(context, R.color.main_color))
             .setCustomContentView(remoteViews)
             .setCustomHeadsUpContentView(remoteViews)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
@@ -153,7 +157,9 @@ class CallNotificationManager(private val context: Context) {
 
     private fun buildEmptyNotification(): Notification {
         return NotificationCompat.Builder(context, CALL_CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher_round)
+            .setSmallIcon(R.drawable.ic_call)
+            .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher_round))
+            .setColor(ContextCompat.getColor(context, R.color.main_color))
             .setContentTitle("Call Ended")
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
@@ -182,8 +188,10 @@ class CallNotificationManager(private val context: Context) {
         )
 
         val builder = NotificationCompat.Builder(context, MISSED_CALL_CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher_round)
-            .setContentTitle("Missed Call")
+            .setSmallIcon(R.drawable.ic_miss_call)
+            .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher_round))
+            .setColor(ContextCompat.getColor(context, R.color.red))
+            .setContentTitle(context.getString(R.string.missed_call))
             .setContentText(contentText)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_MISSED_CALL)

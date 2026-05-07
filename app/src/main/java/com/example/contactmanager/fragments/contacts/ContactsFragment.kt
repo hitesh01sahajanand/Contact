@@ -3,6 +3,7 @@ package com.example.contactmanager.fragments.contacts
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -49,7 +50,7 @@ class ContactsFragment : Fragment(), OnClickHandler {
 
     override fun onResume() {
         super.onResume()
-        if (PermissionManager.hasPermissions(requireActivity())) {
+        if (PermissionManager.hasContactPermissions(requireActivity())) {
             val isMerge = SharedPreferenceManager.getBoolean(
                 requireActivity(),
                 Constance.MERGE_DUPLICATE_CONTACT,
@@ -57,17 +58,16 @@ class ContactsFragment : Fragment(), OnClickHandler {
             )
             allContactsAdapter.setMergeDuplicate(isMerge)
             updateAccountUI()
-            allContactsAdapter.filter(binding.edtSearch.text.toString())
-            if (allContactsAdapter.itemCount == 0) {
-                viewModel.loadContacts(showLoader = false)
-            }
+
+            val showLoader = allContactsAdapter.itemCount == 0
+            viewModel.loadContacts(showLoader = showLoader)
             viewModel.fetchAccountCounts(isMerge)
         }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
-        if (!hidden && PermissionManager.hasPermissions(requireActivity())) {
+        if (!hidden && PermissionManager.hasContactPermissions(requireActivity())) {
             val isMerge = SharedPreferenceManager.getBoolean(
                 requireActivity(),
                 Constance.MERGE_DUPLICATE_CONTACT,
@@ -75,10 +75,9 @@ class ContactsFragment : Fragment(), OnClickHandler {
             )
             allContactsAdapter.setMergeDuplicate(isMerge)
             updateAccountUI()
-            allContactsAdapter.filter(binding.edtSearch.text.toString())
-            if (allContactsAdapter.itemCount == 0) {
-                viewModel.loadContacts(showLoader = false)
-            }
+
+            val showLoader = allContactsAdapter.itemCount == 0
+            viewModel.loadContacts(showLoader = showLoader)
             viewModel.fetchAccountCounts(isMerge)
         }
     }
@@ -139,20 +138,17 @@ class ContactsFragment : Fragment(), OnClickHandler {
         viewModel.allContactList.observe(viewLifecycleOwner) { allContacts ->
             allContactsAdapter.addAll(allContacts)
             updateAccountUI()
-            binding.llContactSpaceHolder.isVisible = allContactsAdapter.itemCount == 0
+            updateVisibility()
         }
 
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.pbLoading.isVisible = isLoading
-            binding.clContacts.isVisible = !isLoading
-            if (isLoading) {
-                binding.llContactSpaceHolder.isVisible = false
-            }
+        viewModel.isLoading.observe(viewLifecycleOwner) { _ ->
+            updateVisibility()
         }
 
         val letters = ('A'..'Z') + "#"
 
         val sizeInPx = resources.getDimension(com.intuit.sdp.R.dimen._11sdp)
+        binding.indexBar.removeAllViews()
         letters.forEach { letter ->
             val tv = TextView(context).apply {
                 text = letter.toString()
@@ -181,8 +177,7 @@ class ContactsFragment : Fragment(), OnClickHandler {
         binding.edtSearch.addTextChangedListener { editable ->
             val query = editable.toString()
             allContactsAdapter.filter(query)
-            binding.llContactSpaceHolder.isVisible = allContactsAdapter.itemCount == 0
-            binding.rvAllContacts.isVisible = allContactsAdapter.itemCount != 0
+            updateVisibility()
         }
 
         binding.edtSearch.setOnEditorActionListener { v, actionId, _ ->
@@ -191,12 +186,28 @@ class ContactsFragment : Fragment(), OnClickHandler {
                 allContactsAdapter.filter(query)
                 binding.edtSearch.clearFocus()
                 Common.hideKeyboard(requireActivity(), v)
+                updateVisibility()
                 true
             } else {
                 false
             }
         }
 
+    }
+
+    private fun updateVisibility() {
+        val isLoading = viewModel.isLoading.value ?: false
+        val itemCount = allContactsAdapter.itemCount
+
+        if (isLoading && itemCount == 0) {
+            binding.pbLoading.isVisible = true
+            binding.clContacts.isVisible = false
+            binding.llContactSpaceHolder.isVisible = false
+        } else {
+            binding.pbLoading.isVisible = false
+            binding.clContacts.isVisible = itemCount > 0
+            binding.llContactSpaceHolder.isVisible = itemCount == 0
+        }
     }
 
     private fun scrollToLetter(letter: String) {

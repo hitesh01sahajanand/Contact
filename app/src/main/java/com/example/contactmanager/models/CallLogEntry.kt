@@ -30,7 +30,8 @@ data class CallLogEntry(
     var intColor: Int = 0,
     var intIconColor: Int = 0,
     var callIds: MutableList<Long> = mutableListOf(),
-    var callCount: Int = 1
+    var callCount: Int = 1,
+    var simId: Int = -1
 )
 {
 

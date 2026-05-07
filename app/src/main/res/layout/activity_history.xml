@@ -224,7 +224,7 @@
                     android:layout_height="@dimen/_20sdp"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_block"
-                    android:tint="@color/black_color" />
+                    app:tint="@color/black_color" />
 
                 <TextView
                     android:id="@+id/tv_block"

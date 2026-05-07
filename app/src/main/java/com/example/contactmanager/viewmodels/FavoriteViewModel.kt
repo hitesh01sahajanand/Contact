@@ -37,21 +37,36 @@ class FavoriteViewModel @Inject constructor(
     }
 
     init {
-        context.contentResolver.registerContentObserver(
-            ContactsContract.Contacts.CONTENT_URI,
-            true,
-            observer
-        )
+        registerObserver()
+    }
+
+    private var isObserverRegistered = false
+
+    fun registerObserver() {
+        if (isObserverRegistered) return
+        try {
+            context.contentResolver.registerContentObserver(
+                ContactsContract.Contacts.CONTENT_URI,
+                true,
+                observer
+            )
+            isObserverRegistered = true
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+        }
     }
 
     override fun onCleared() {
         super.onCleared()
-        context.contentResolver.unregisterContentObserver(observer)
+        if (isObserverRegistered) {
+            context.contentResolver.unregisterContentObserver(observer)
+        }
     }
 
     private var _allFavoriteContacts = MutableLiveData<ArrayList<ContactModel>>()
     val allFavoriteContacts: LiveData<ArrayList<ContactModel>> = _allFavoriteContacts
     fun getAllFavoriteContact(){
+        registerObserver()
         viewModelScope.launch(Dispatchers.IO) {
             val data = repository.getAllFavoriteContacts()
             Log.d("FavoriteViewModel", "getAllFavoriteContact: loaded ${data.size} favorites")

@@ -19,6 +19,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
 
             // 🔹 0. Get all valid contact_id's (Device and Google only)
             val validContactIds = mutableSetOf<Long>()
+            var rawContactsQueried = false
             resolver.query(
                 ContactsContract.RawContacts.CONTENT_URI,
                 arrayOf(
@@ -29,6 +30,7 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 null,
                 null
             )?.use { cursor ->
+                rawContactsQueried = true
                 val idIdx = cursor.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID)
                 val typeIdx = cursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE)
                 while (cursor.moveToNext()) {
@@ -68,7 +70,12 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
 
                 while (cursor.moveToNext()) {
                     val contactIdLong = cursor.getLong(idIndex)
-                    if (contactIdLong in validContactIds) {
+                    
+                    // If RawContacts query failed or returned nothing (e.g. permission restriction),
+                    // we show the contact anyway to prevent "data loss" in UI.
+                    val shouldAdd = !rawContactsQueried || validContactIds.isEmpty() || contactIdLong in validContactIds
+                    
+                    if (shouldAdd) {
                         val contactId = contactIdLong.toString()
                         val displayName = cursor.getString(nameIndex) ?: ""
                         val photoUri = cursor.getString(photoIndex)

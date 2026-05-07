@@ -35,7 +35,7 @@
     <string name="create_a_new_group">Create a new Group</string>
     <string name="speed_dial_number">Speed Dial Number</string>
     <string name="clear_history">Clear History</string>
-    <string name="clear_history_desc">Are you sure you want to clear history?</string>
+    <string name="clear_history_desc">Are you sure you want to \nclear history?</string>
     <string name="clear">Clear</string>
     <string name="sync_contact">Sync Contact</string>
     <string name="settings">Settings</string>
@@ -166,7 +166,9 @@
     <string name="contacts">Contacts</string>
     <string name="contacts_desc">We access information about your contacts, such as phone numbers and associated names, but this data is kept on your device.</string>
     <string name="display_over_other_apps">Display Over Other Apps</string>
-    <string name="display_over_desc">We access information about your contacts, such as phone numbers and associated names, but this data is kept on your device.</string>
+    <string name="display_over_desc">Enable this to show the call screen and caller information over other apps when you receive a call.</string>
+    <string name="default_dialer">Default Dialer</string>
+    <string name="default_dialer_desc">To make and receive calls, this app must be your default dialer.</string>
     <string name="contact_safe">Your contacts are safe and will not be shared with anyone</string>
     <string name="continue_">Continue</string>
     <string name="permissions_are_required">Permissions are required. Please enable them in settings.</string>
@@ -237,4 +239,6 @@
     <string name="local_storage_restricted">Local Storage Restricted</string>
     <string name="your_system_is_set_to_save">Your system is set to save contacts to Google by default. To save on Device Only, you must change this in System Settings or select a Google account.</string>
     <string name="open_settings">Open Settings</string>
+    <string name="missed_call">Missed Call</string>
+    <string name="always_ask">Always ask</string>
 </resources>

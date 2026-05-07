@@ -50,6 +50,7 @@ import com.example.contactmanager.models.VCardContact
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
+import com.example.contactmanager.utils.PermissionManager
 import com.example.contactmanager.utils.PermissionManager.isDefaultDialer
 import com.example.contactmanager.utils.SharedPreferenceManager
 import com.example.contactmanager.utils.ThemeManager
@@ -68,6 +69,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
     private var availableAccounts = listOf<AvailableAccountModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        ThemeManager.applyAppTheme(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_settings)
@@ -113,13 +115,15 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
         binding.switchConfirmDialog.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 if (!Settings.canDrawOverlays(this)) {
-                    val intent = Intent(
-                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:$packageName".toUri()
-                    )
-                    startActivity(intent)
-                    // Optional: reset switch if permission not granted, but usually we just let them go to settings
+                    PermissionManager.openPermissionDialog(this, onClick = {
+                        val intent = Intent(
+                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            "package:$packageName".toUri()
+                        )
+                        startActivity(intent)
+                        SharedPreferenceManager.putBoolean(this, Constance.CONFIRM_DIALOG, true)
+                    })
                 }
-                SharedPreferenceManager.putBoolean(this, Constance.CONFIRM_DIALOG, true)
             } else {
                 SharedPreferenceManager.putBoolean(this, Constance.CONFIRM_DIALOG, false)
             }
@@ -203,11 +207,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
 
                     SharedPreferenceManager.putString(this, Constance.APP_THEME, theme)
                     ThemeManager.applyAppTheme(this)
-
-                    val intent = Intent(this, HomeActivity::class.java)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                    startActivity(intent)
-                    finish()
+                    recreate()
                 })
             }
 
@@ -239,63 +239,10 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
 
             binding.llSimPref.id -> {
                 Common.ensureDefaultDialer(this, onProceed = {
-                    if (ActivityCompat.checkSelfPermission(
-                            this, Manifest.permission.CALL_PHONE
-                        ) == PackageManager.PERMISSION_GRANTED
-                    ) {
-                        val subscriptionManager =
-                            getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
-                        val activeSimList = subscriptionManager?.activeSubscriptionInfoList
-
-                        if (activeSimList.isNullOrEmpty()) {
-                            Toast.makeText(
-                                this,
-                                getString(R.string.no_sim_cards_found), Toast.LENGTH_SHORT
-                            ).show()
-                            return@ensureDefaultDialer
-                        }
-
-                        val simNames = Array(activeSimList.size + 1) { i ->
-                            if (i == 0) "Always ask"
-                            else "SIM $i (${activeSimList[i - 1].carrierName})"
-                        }
-
-                        val simPref =
-                            SharedPreferenceManager.getInt(this, Constance.SIM_PREFERENCE, -1)
-                        var selectedIndex = if (simPref == -1) 0 else {
-                            val index = activeSimList.indexOfFirst { it.subscriptionId == simPref }
-                            if (index != -1) index + 1 else 0
-                        }
-
-                        val builder = MaterialAlertDialogBuilder(this)
-
-                        builder.setTitle(getString(R.string.select_sim))
-
-                        builder.setSingleChoiceItems(simNames, selectedIndex) { _, which ->
-                            selectedIndex = which
-                        }
-
-                        builder.setPositiveButton(getString(R.string.set)) { dialog, _ ->
-                            if (selectedIndex == 0) {
-                                SharedPreferenceManager.putInt(this, Constance.SIM_PREFERENCE, -1)
-                            } else {
-                                val selectedSim = activeSimList[selectedIndex - 1]
-                                SharedPreferenceManager.putInt(
-                                    this,
-                                    Constance.SIM_PREFERENCE,
-                                    selectedSim.subscriptionId
-                                )
-                            }
-                            updateSimPrefUI()
-                            dialog.dismiss()
-                        }
-
-                        builder.setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
-                            dialog.dismiss()
-                        }
-
-                        builder.show()
-                    }
+                    Common.selectSimDialog(context = this, onItemClick = { subId ->
+                        SharedPreferenceManager.putInt(this, Constance.SIM_PREFERENCE, subId)
+                        updateSimPrefUI()
+                    })
                 })
             }
 
@@ -322,9 +269,12 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                     permissionsToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     permissionsToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE)
                 }
-                
+
                 // READ_PHONE_STATE is optional but recommended for SIM account names
-                val phoneStateGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED
+                val phoneStateGranted = ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.READ_PHONE_STATE
+                ) == PackageManager.PERMISSION_GRANTED
                 if (!phoneStateGranted) {
                     permissionsToRequest.add(Manifest.permission.READ_PHONE_STATE)
                 }
@@ -514,7 +464,11 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             withContext(Dispatchers.Main) {
                 if (accounts.isEmpty()) {
                     dialog.dismiss()
-                    Toast.makeText(this@SettingsActivity, getString(R.string.no_accounts_found), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@SettingsActivity,
+                        getString(R.string.no_accounts_found),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 } else {
                     availableAccounts = accounts
                     availableAccountsAdapter.addAll(accounts)
@@ -676,7 +630,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                     val created = downloadsDir.mkdirs()
                     Log.d("Export", "Downloads directory created: $created")
                 }
-                
+
                 val file = File(downloadsDir, finalFileName)
                 var bytesWritten = 0L
 
@@ -720,7 +674,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                     arrayOf("text/vcard"),
                     null
                 )
-                
+
                 // Also broadcast intent for older versions
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                     val mediaScanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
@@ -763,13 +717,13 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                         this,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE
                     )) == PackageManager.PERMISSION_GRANTED
-                
+
                 val readGranted = (permissions[Manifest.permission.READ_EXTERNAL_STORAGE]
                     ?: ContextCompat.checkSelfPermission(
                         this,
                         Manifest.permission.READ_EXTERNAL_STORAGE
                     )) == PackageManager.PERMISSION_GRANTED
-                
+
                 writeGranted && readGranted
             } else true
 
@@ -857,7 +811,11 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             withContext(Dispatchers.Main) {
                 if (accounts.isEmpty()) {
                     dialog.dismiss()
-                    Toast.makeText(this@SettingsActivity, getString(R.string.no_accounts_found), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@SettingsActivity,
+                        getString(R.string.no_accounts_found),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 } else {
                     availableAccountsAdapter.addAll(accounts)
                     accountBinding.llLoader.visibility = View.GONE
@@ -1121,12 +1079,11 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                     this, Manifest.permission.CALL_PHONE
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
-                val subscriptionManager =
-                    getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+                val subscriptionManager = getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
                 val activeSimList = subscriptionManager?.activeSubscriptionInfoList
                 val selectedSim = activeSimList?.find { it.subscriptionId == simPref }
                 if (selectedSim != null) {
-                    binding.tvSimPref.text = selectedSim.carrierName
+                    binding.tvSimPref.text = selectedSim.displayName
                 } else {
                     binding.tvSimPref.text = getString(R.string.ask_every_time)
                     SharedPreferenceManager.putInt(this, Constance.SIM_PREFERENCE, -1)

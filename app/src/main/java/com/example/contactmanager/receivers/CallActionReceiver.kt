@@ -15,7 +15,7 @@ class CallActionReceiver : BroadcastReceiver() {
                 call.answer(VideoProfile.STATE_AUDIO_ONLY)
             }
             "DECLINE", "HANGUP" -> {
-                call.disconnect()
+                NewCallManager.reject()
             }
         }
     }

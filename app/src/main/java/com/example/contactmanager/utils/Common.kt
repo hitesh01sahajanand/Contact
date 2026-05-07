@@ -10,6 +10,7 @@ import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -33,9 +34,13 @@ import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import android.widget.PopupWindow
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.toDrawable
@@ -48,6 +53,7 @@ import com.example.contactmanager.R
 import com.example.contactmanager.adapters.AllAccountAdapter
 import com.example.contactmanager.adapters.AppsAdapter
 import com.example.contactmanager.adapters.QuickResponseAdapter
+import com.example.contactmanager.databinding.AddBlockNumbersDesignBinding
 import com.example.contactmanager.databinding.AlertDialogDesignBinding
 import com.example.contactmanager.databinding.AppThemeDialogBinding
 import com.example.contactmanager.databinding.ContactPopUpDesignBinding
@@ -58,6 +64,8 @@ import com.example.contactmanager.databinding.PopUpMenuDesignBinding
 import com.example.contactmanager.databinding.RemindMeDialogDesignBinding
 import com.example.contactmanager.databinding.SaveTagDesignBinding
 import com.example.contactmanager.databinding.SendMessageDialogDesignBinding
+import com.example.contactmanager.databinding.SimSelectDesignBinding
+import com.example.contactmanager.databinding.SimSelectionDesignBinding
 import com.example.contactmanager.databinding.VideoCallDialogBinding
 import com.example.contactmanager.models.AccountModel
 import com.example.contactmanager.models.ContactModel
@@ -97,7 +105,9 @@ object Common {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
-                return android.provider.BlockedNumberContract.isBlocked(context, number)
+                if (PermissionManager.isDefaultDialer(context)) {
+                    return android.provider.BlockedNumberContract.isBlocked(context, number)
+                }
             } catch (e: Exception) {
                 Log.e("Common", "isNumberBlocked: ${e.message}")
             }
@@ -344,7 +354,13 @@ object Common {
         if (s1.isEmpty() || s2.isEmpty()) return false
         if (s1 == s2) return true
 
-        return s1.length >= 10 && s2.length >= 10 &&
+        // Match last 10 digits (common for country code vs 0 prefix differences)
+        if (s1.length >= 10 && s2.length >= 10) {
+            if (s1.takeLast(10) == s2.takeLast(10)) return true
+        }
+
+        // Final fallback for shorter numbers or partial matches
+        return s1.length >= 7 && s2.length >= 7 &&
                 (s1.endsWith(s2) || s2.endsWith(s1))
     }
 
@@ -737,10 +753,20 @@ object Common {
         context: Context,
         onItemClick: (String) -> Unit
     ) {
-        val dialog = BottomSheetDialog(context)
+        val dialog = Dialog(context)
         val bindingAppTheme =
             AppThemeDialogBinding.inflate(LayoutInflater.from(context))
 
+        val margin = (10 * context.resources.displayMetrics.density).toInt()
+
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+
+        dialog.window?.setLayout(
+            screenWidth - (margin * 3),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         dialog.setContentView(bindingAppTheme.root)
         dialog.setCancelable(false)
 
@@ -760,6 +786,112 @@ object Common {
 
         bindingAppTheme.llDefaultMode.setOnClickListener {
             onItemClick(bindingAppTheme.tvDefaultMode.text.toString())
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+
+    fun selectSimDialog(
+        context: Context,
+        onItemClick: (Int) -> Unit
+    ) {
+        val dialog = Dialog(context)
+        val binding = SimSelectDesignBinding.inflate(LayoutInflater.from(context))
+        dialog.setContentView(binding.root)
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+
+        val margin = (20 * context.resources.displayMetrics.density).toInt()
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        dialog.window?.setLayout(
+            screenWidth - (margin * 3),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        dialog.setCancelable(false)
+        binding.tvOkay.text = context.getString(R.string.set)
+
+        val subscriptionManager =
+            context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+        val activeSimList = if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.READ_PHONE_STATE
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            subscriptionManager?.activeSubscriptionInfoList
+        } else null
+
+        if (activeSimList.isNullOrEmpty()) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.no_sim_cards_found),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        binding.radioGroup.removeAllViews()
+
+        val params = RadioGroup.LayoutParams(
+            RadioGroup.LayoutParams.MATCH_PARENT,
+            RadioGroup.LayoutParams.WRAP_CONTENT
+        )
+        params.setMargins(0, 10, 0, 10)
+
+        val typeface = ResourcesCompat.getFont(context, R.font.fig_tree_medium)
+
+        // Always ask option
+        val rbAlwaysAsk = RadioButton(context).apply {
+            text = context.getString(R.string.always_ask)
+            id = View.generateViewId()
+            textSize = 16f
+            setTextColor(ContextCompat.getColor(context, R.color.black_color))
+            buttonTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(context, R.color.main_color)
+            )
+            this.typeface = typeface
+        }
+        binding.radioGroup.addView(rbAlwaysAsk, params)
+
+        activeSimList.forEachIndexed { index, info ->
+            val rb = RadioButton(context).apply {
+                text = "SIM ${index + 1} (${info.carrierName})"
+                id = View.generateViewId()
+                textSize = 16f
+                setTextColor(ContextCompat.getColor(context, R.color.black_color))
+                buttonTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(context, R.color.main_color)
+                )
+                this.typeface = typeface
+            }
+            binding.radioGroup.addView(rb, params)
+        }
+
+        // Set current selection
+        val simPref = SharedPreferenceManager.getInt(context, Constance.SIM_PREFERENCE, -1)
+        if (simPref == -1) {
+            rbAlwaysAsk.isChecked = true
+        } else {
+            val index = activeSimList.indexOfFirst { it.subscriptionId == simPref }
+            if (index != -1) {
+                val radioButton = binding.radioGroup.getChildAt(index + 1) as? RadioButton
+                radioButton?.isChecked = true
+            } else {
+                rbAlwaysAsk.isChecked = true
+            }
+        }
+
+        binding.tvCancel.setOnClickListener { dialog.dismiss() }
+        binding.tvOkay.setOnClickListener {
+            val checkedId = binding.radioGroup.checkedRadioButtonId
+            val checkedView = binding.radioGroup.findViewById<View>(checkedId)
+            val checkedIndex = binding.radioGroup.indexOfChild(checkedView)
+
+            val resultSubId = if (checkedIndex == 0) -1 else {
+                activeSimList[checkedIndex - 1].subscriptionId
+            }
+            onItemClick(resultSubId)
             dialog.dismiss()
         }
 
@@ -963,62 +1095,17 @@ object Common {
             return
         }
 
-        // Check if the app is the default dialer
+        // If app is not default dialer, then direct call (Call Anyway)
         if (!PermissionManager.isDefaultDialer(context)) {
-            if (context is Activity) {
-                MaterialAlertDialogBuilder(context)
-                    .setTitle(context.getString(R.string.set_as_default_dialer))
-                    .setMessage(context.getString(R.string.to_make_calls_and_manage_sim))
-                    .setPositiveButton(context.getString(R.string.set_as_default)) { _, _ ->
-                        try {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                val roleManager =
-                                    context.getSystemService(Context.ROLE_SERVICE) as RoleManager
-                                val intent =
-                                    roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
-                                context.startActivityForResult(intent, 123)
-                            } else {
-                                val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER)
-                                intent.putExtra(
-                                    TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME,
-                                    context.packageName
-                                )
-                                context.startActivity(intent)
-                            }
-                        } catch (e: Exception) {
-                            Log.e("TAG", "actionCall: ${e.message}")
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.unable_to_open_default_app_settings),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-                    .setNegativeButton(context.getString(R.string.call_anyway)) { _, _ ->
-                        try {
-                            val intent = Intent(Intent.ACTION_CALL, "tel:$number".toUri())
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            Log.e("TAG", "actionCall: ${e.message}")
-                            val intent = Intent(Intent.ACTION_DIAL, "tel:$number".toUri())
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            context.startActivity(intent)
-                        }
-                    }
-                    .setNeutralButton("Cancel", null)
-                    .show()
-            } else {
-                try {
-                    val intent = Intent(Intent.ACTION_CALL, "tel:$number".toUri())
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    context.startActivity(intent)
-                } catch (e: Exception) {
-                    Log.e("TAG", "actionCall: ${e.message}")
-                    val intent = Intent(Intent.ACTION_DIAL, "tel:$number".toUri())
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    context.startActivity(intent)
-                }
+            try {
+                val intent = Intent(Intent.ACTION_CALL, Uri.fromParts("tel", number, null))
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                Log.e("TAG", "actionCall: ${e.message}")
+                val intent = Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null))
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                context.startActivity(intent)
             }
             return
         }
@@ -1028,7 +1115,7 @@ object Common {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             try {
-                val intent = Intent(Intent.ACTION_DIAL, "tel:$number".toUri())
+                val intent = Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null))
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 context.startActivity(intent)
             } catch (e: Exception) {
@@ -1065,34 +1152,59 @@ object Common {
                 }
             }
 
-            val simNames = Array(activeSimList.size) { i ->
-                "SIM ${i + 1} (${activeSimList[i].carrierName})"
+            val simDialog = Dialog(context)
+            val binding = SimSelectionDesignBinding.inflate(LayoutInflater.from(context))
+            simDialog.setContentView(binding.root)
+            simDialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+
+            val margin = (20 * context.resources.displayMetrics.density).toInt()
+            val displayMetrics = context.resources.displayMetrics
+            val screenWidth = displayMetrics.widthPixels
+            simDialog.window?.setLayout(
+                screenWidth - (margin * 3),
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            simDialog.setCancelable(true)
+
+            val typeface = ResourcesCompat.getFont(context, R.font.fig_tree_medium)
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            params.setMargins(0, 10, 0, 10)
+
+            activeSimList.forEachIndexed { index, info ->
+                val tvSim = TextView(context).apply {
+                    text = "SIM ${index + 1} (${info.carrierName})"
+                    id = View.generateViewId()
+                    textSize = 16f
+                    setTextColor(ContextCompat.getColor(context, R.color.black_color))
+                    this.typeface = typeface
+                    setPadding(
+                        (10 * context.resources.displayMetrics.density).toInt(),
+                        (10 * context.resources.displayMetrics.density).toInt(),
+                        (10 * context.resources.displayMetrics.density).toInt(),
+                        (10 * context.resources.displayMetrics.density).toInt()
+                    )
+                    background = ContextCompat.getDrawable(context, R.drawable.ripple_effect_bg)
+
+                    setOnClickListener {
+                        val selectedSim = activeSimList[index]
+                        val callBundle2 = Bundle().apply {
+                            putParcelable(
+                                TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
+                                getHandleForSubId(selectedSim.subscriptionId, context)
+                            )
+                        }
+                        val callUri2 = Uri.fromParts("tel", number, null)
+                        telecomManager.placeCall(callUri2, callBundle2)
+                        simDialog.dismiss()
+                    }
+                }
+                binding.llSimContainer.addView(tvSim, params)
             }
 
-            val builder = MaterialAlertDialogBuilder(context)
-
-            builder.setTitle(context.getString(R.string.select_sim))
-                .setItems(simNames) { _, which ->
-
-                    val selectedSim = activeSimList[which]
-
-                    val callBundle2 = Bundle().apply {
-                        putParcelable(
-                            TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
-                            getHandleForSubId(
-                                selectedSim.subscriptionId, context
-                            )
-                        )
-                    }
-
-                    val callUri2 = Uri.fromParts("tel", number, null)
-                    telecomManager.placeCall(callUri2, callBundle2)
-                }
-
-            val dialog = builder.create()
-            dialog.show()
-
-            dialog.getButton(Dialog.BUTTON_POSITIVE)?.setTextColor(Color.RED)
+            simDialog.show()
 
         } else {
             // Single SIM or SIM preference not set/matched
@@ -1113,15 +1225,22 @@ object Common {
         }
     }
 
+
     fun ensureDefaultDialer(context: Context, onProceed: () -> Unit) {
         if (PermissionManager.isDefaultDialer(context)) {
             onProceed()
         } else {
             if (context is Activity) {
-                MaterialAlertDialogBuilder(context)
-                    .setTitle(context.getString(R.string.set_as_default_dialer))
-                    .setMessage(context.getString(R.string.to_manage_blocked_numbers))
-                    .setPositiveButton(context.getString(R.string.set_as_default)) { _, _ ->
+                val image = R.drawable.ic_default_app
+
+                alertDialog(
+                    context = context,
+                    title = context.getString(R.string.set_as_default_dialer),
+                    description = context.getString(R.string.to_manage_blocked_numbers),
+                    btnOkay = context.getString(R.string.set_as_default),
+                    image = image,
+                    isImageVisible = true,
+                    onItemClick = {
                         try {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                                 val roleManager =
@@ -1146,8 +1265,7 @@ object Common {
                             ).show()
                         }
                     }
-                    .setNeutralButton(context.getString(R.string.cancel), null)
-                    .show()
+                )
             } else {
                 Toast.makeText(
                     context,
@@ -1184,7 +1302,7 @@ object Common {
         }
     }
 
-    fun showVideoAppChooser(activity: Activity, number: String, onSelection: (() -> Unit)? = null) {
+    /*fun showVideoAppChooser(activity: Activity, number: String, onSelection: (() -> Unit)? = null) {
         val appList = Constance.videoCallList
         val dialog = BottomSheetDialog(activity, R.style.TransparentDialog)
         val view = VideoCallDialogBinding.inflate(activity.layoutInflater, null, false)
@@ -1300,6 +1418,188 @@ object Common {
         }
 
         dialog.show()
+    }*/
+
+    fun showVideoAppChooser(
+        activity: Activity,
+        number: String,
+        onSelection: (() -> Unit)? = null
+    ) {
+
+        val appList = Constance.videoCallList
+
+        val dialog = BottomSheetDialog(activity, R.style.TransparentDialog)
+
+        val view = VideoCallDialogBinding.inflate(
+            activity.layoutInflater,
+            null,
+            false
+        )
+
+        dialog.setContentView(view.root)
+
+        view.rvApps.isVisible = false
+        view.loutVideoCall.isVisible = true
+        view.loutVideoCall.removeAllViews()
+
+        appList.forEach { pkg ->
+
+            val isInstalled = isAppInstalled(activity, pkg)
+
+            val itemBinding = ItemVideoCallBinding.inflate(
+                activity.layoutInflater,
+                view.loutVideoCall,
+                false
+            )
+
+            try {
+
+                if (isInstalled) {
+
+                    val info = activity.packageManager.getPackageInfo(pkg, 0)
+
+                    itemBinding.ivImage.setImageDrawable(
+                        info.applicationInfo?.loadIcon(activity.packageManager)
+                    )
+
+                    itemBinding.tvTitle.text =
+                        info.applicationInfo?.loadLabel(activity.packageManager)
+
+                } else {
+
+                    itemBinding.ivImage.setImageResource(R.drawable.ic_video_call)
+
+                    itemBinding.tvTitle.text = when (pkg) {
+
+                        Constance.WHATSAPP ->
+                            "Install WhatsApp"
+
+                        Constance.WHATSAPP_BUSINESS ->
+                            "Install WA Business"
+
+                        Constance.DUO ->
+                            "Install Meet"
+
+                        else ->
+                            "Install App"
+                    }
+                }
+
+            } catch (_: Exception) {
+
+                itemBinding.ivImage.setImageResource(R.drawable.ic_video_call)
+
+                itemBinding.tvTitle.text =
+                    if (pkg.contains("whatsapp"))
+                        "WhatsApp"
+                    else
+                        "Meet"
+            }
+
+            itemBinding.root.setOnClickListener {
+
+                dialog.dismiss()
+
+                if (isInstalled) {
+
+                    onSelection?.invoke()
+
+                    val formattedNumber = number
+                        .replace("+", "")
+                        .replace(" ", "")
+                        .replace("-", "")
+
+                    when (pkg) {
+
+                        Constance.DUO -> {
+
+                            startDuoCall(activity, formattedNumber)
+                        }
+
+                        Constance.WHATSAPP,
+                        Constance.WHATSAPP_BUSINESS -> {
+
+                            try {
+
+                                val intent = Intent(Intent.ACTION_VIEW).apply {
+
+                                    data =
+                                        "https://wa.me/$formattedNumber?video=1".toUri()
+
+                                    setPackage(pkg)
+
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+
+                                activity.startActivity(intent)
+
+                            } catch (e: Exception) {
+
+                                Toast.makeText(
+                                    activity,
+                                    "Unable to start WhatsApp video call",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
+                                Log.e(
+                                    "VideoCall",
+                                    "WhatsApp call error: ${e.message}"
+                                )
+                            }
+                        }
+
+                        else -> {
+
+                            try {
+
+                                activity.packageManager
+                                    .getLaunchIntentForPackage(pkg)
+                                    ?.let {
+                                        activity.startActivity(it)
+                                    }
+
+                            } catch (e: Exception) {
+
+                                Log.e(
+                                    "VideoCall",
+                                    "Launch error: ${e.message}"
+                                )
+                            }
+                        }
+                    }
+
+                } else {
+
+                    try {
+
+                        activity.startActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                "market://details?id=$pkg".toUri()
+                            )
+                        )
+
+                    } catch (e: Exception) {
+
+                        Log.e(
+                            "TAG",
+                            "PlayStore Error: ${e.message}"
+                        )
+
+                        activity.startActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                "https://play.google.com/store/apps/details?id=$pkg".toUri()
+                            )
+                        )
+                    }
+                }
+            }
+
+            view.loutVideoCall.addView(itemBinding.root)
+        }
+
+        dialog.show()
     }
 
     fun startDuoCall(activity: Activity, number: String) {
@@ -1339,32 +1639,54 @@ object Common {
 
     @SuppressLint("Range")
     fun getVideoCallID(context: Context, number: String, mimeType: String): Long? {
-        val cleanNumber = cleanNumber(number)
-        return try {
-            val resolver = context.applicationContext.contentResolver
-            resolver.query(
-                ContactsContract.Data.CONTENT_URI,
-                arrayOf(ContactsContract.Data._ID, ContactsContract.Data.DATA1),
-                "${ContactsContract.Data.MIMETYPE} = ?",
-                arrayOf(mimeType),
-                null
-            )?.use { cursor ->
-                while (cursor.moveToNext()) {
-                    val id = cursor.getLong(cursor.getColumnIndex(ContactsContract.Data._ID))
-                    val data1 = cursor.getString(cursor.getColumnIndex(ContactsContract.Data.DATA1))
-                    if (data1 != null) {
-                        val cleanData1 = cleanNumber(data1)
-                        if (PhoneNumberUtils.compare(context, cleanNumber, cleanData1)) {
+        val resolver = context.applicationContext.contentResolver
+
+        // Helper to perform query and comparison
+        fun findId(selection: String, args: Array<String>): Long? {
+            return try {
+                resolver.query(
+                    ContactsContract.Data.CONTENT_URI,
+                    arrayOf(ContactsContract.Data._ID, ContactsContract.Data.DATA1),
+                    selection,
+                    args,
+                    null
+                )?.use { cursor ->
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getLong(cursor.getColumnIndex(ContactsContract.Data._ID))
+                        val data1 =
+                            cursor.getString(cursor.getColumnIndex(ContactsContract.Data.DATA1))
+                        if (compareNumbers(number, data1)) {
                             return id
                         }
                     }
                 }
+                null
+            } catch (e: Exception) {
+                null
             }
-            null
-        } catch (e: Exception) {
-            Log.e("TAG", "isAppInstalled: ${e.message}")
-            null
         }
+
+        // 1. Primary search: By Contact ID and Exact MimeType (Fastest)
+        val contactId = getContactByNumber(context, number)?.contactId
+        if (contactId != null) {
+            val id = findId(
+                "${ContactsContract.Data.CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?",
+                arrayOf(contactId, mimeType)
+            )
+            if (id != null) return id
+        }
+
+        // 2. Secondary search: All rows with Exact MimeType (if contact lookup missed it)
+        val id = findId("${ContactsContract.Data.MIMETYPE} = ?", arrayOf(mimeType))
+        if (id != null) return id
+
+        // 3. Last resort: Flexible search by account type and "video" in mime
+        val accountType =
+            if (mimeType.contains("w4b")) Constance.WHATSAPP_BUSINESS else Constance.WHATSAPP
+        return findId(
+            "${ContactsContract.RawContacts.ACCOUNT_TYPE} = ? AND ${ContactsContract.Data.MIMETYPE} LIKE ?",
+            arrayOf(accountType, "%video%")
+        )
     }
 
     fun showMessageAppChooser(activity: Activity, number: String) {
@@ -1454,6 +1776,8 @@ object Common {
         title: String,
         description: String,
         btnOkay: String,
+        isImageVisible: Boolean = false,
+        image: Int = 0,
         onItemClick: (String) -> Unit
     ) {
 
@@ -1466,7 +1790,7 @@ object Common {
         dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         dialog.setCancelable(false)
 
-        val margin = (30 * context.resources.displayMetrics.density).toInt()
+        val margin = (20 * context.resources.displayMetrics.density).toInt()
 
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
@@ -1476,9 +1800,14 @@ object Common {
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
 
+        alertBinding.ivImage.isVisible = isImageVisible
         alertBinding.tvTitle.text = title
         alertBinding.tvDescription.text = description
         alertBinding.tvOkay.text = btnOkay
+        if (image != 0) {
+            alertBinding.ivImage.setImageResource(image)
+        }
+
 
         alertBinding.tvOkay.setOnClickListener {
             onItemClick("")
@@ -1492,11 +1821,45 @@ object Common {
         dialog.show()
     }
 
+    fun setBlockNumbersDialog(context: Context, onItemClick: (String) -> Unit) {
+        val dialog = Dialog(context)
+        val bindingBlock = AddBlockNumbersDesignBinding.inflate(LayoutInflater.from(context))
+
+        dialog.setContentView(bindingBlock.root)
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+        dialog.setCancelable(false)
+
+        val margin = (20 * context.resources.displayMetrics.density).toInt()
+
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+
+        dialog.window?.setLayout(
+            screenWidth - (margin * 3),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        bindingBlock.tvOkay.setOnClickListener {
+            if (bindingBlock.edtNumber.text.isNotEmpty()) {
+                onItemClick(bindingBlock.edtNumber.text.toString().trim())
+                dialog.dismiss()
+            } else {
+                bindingBlock.edtNumber.error = context.getString(R.string.enter_number)
+            }
+        }
+        bindingBlock.tvCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+
+    }
+
 
     private fun launchGenericMessage(activity: Activity, pkg: String, number: String) {
         try {
             val intent = Intent(Intent.ACTION_SENDTO).apply {
-                data = Uri.parse("smsto:$number")
+                data = "smsto:$number".toUri()
                 setPackage(pkg)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
@@ -1546,5 +1909,51 @@ object Common {
             return callerDisplayName
         }
         return number
+    }
+
+    fun getSimLabel(context: Context, subscriptionId: Int): String {
+        if (subscriptionId == -1) return ""
+        val subscriptionManager =
+            context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
+        val activeSubscriptionInfoList = try {
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.READ_PHONE_STATE
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                subscriptionManager.activeSubscriptionInfoList
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
+        }
+
+        if (activeSubscriptionInfoList == null || activeSubscriptionInfoList.size <= 1) return ""
+
+        activeSubscriptionInfoList.forEachIndexed { index, subscriptionInfo ->
+            if (subscriptionInfo.subscriptionId == subscriptionId) {
+                return "SIM ${index + 1}"
+            }
+        }
+        return ""
+    }
+
+    fun isMultiSim(context: Context): Boolean {
+        val subscriptionManager =
+            context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
+        return try {
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.READ_PHONE_STATE
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                (subscriptionManager.activeSubscriptionInfoList?.size ?: 0) > 1
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
     }
 }

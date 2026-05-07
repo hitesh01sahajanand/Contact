@@ -121,7 +121,7 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
                 ringtonePlayer.stopRinging()
                 FlashLightUtils.getInstance(this@InCallMainService).stopBlinking()
             }
-            if (state == Call.STATE_DISCONNECTED || state == Call.STATE_DISCONNECTING) {
+            if (state == Call.STATE_DISCONNECTED) {
                 ServiceCompat.stopForeground(
                     this@InCallMainService,
                     ServiceCompat.STOP_FOREGROUND_REMOVE

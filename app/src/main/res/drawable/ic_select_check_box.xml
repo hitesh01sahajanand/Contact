@@ -5,12 +5,12 @@
     android:viewportHeight="40">
   <path
       android:pathData="M10,0L30,0A10,10 0,0 1,40 10L40,30A10,10 0,0 1,30 40L10,40A10,10 0,0 1,0 30L0,10A10,10 0,0 1,10 0z"
-      android:fillColor="#327DFF"/>
+      android:fillColor="@color/main_color"/>
   <group>
     <clip-path
         android:pathData="M9,9h22v22h-22z"/>
     <path
         android:pathData="M30.678,12.244C30.248,11.814 29.552,11.814 29.122,12.244L15.943,25.423L10.878,20.357C10.448,19.928 9.752,19.928 9.322,20.357C8.893,20.787 8.893,21.483 9.322,21.913L15.166,27.756C15.595,28.186 16.292,28.185 16.721,27.756L30.678,13.8C31.107,13.37 31.107,12.674 30.678,12.244Z"
-        android:fillColor="#ffffff"/>
+        android:fillColor="@color/white"/>
   </group>
 </vector>

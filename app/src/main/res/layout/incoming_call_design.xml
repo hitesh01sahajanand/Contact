@@ -14,8 +14,8 @@
         android:id="@+id/ll_incoming_calls"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         android:background="@color/white"
+        android:orientation="vertical"
         android:visibility="visible">
 
         <com.google.android.material.card.MaterialCardView
@@ -27,12 +27,12 @@
             app:cardBackgroundColor="@color/color_1"
             app:cardElevation="0dp"
             app:cardPreventCornerOverlap="true"
-            app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
-            app:strokeColor="@android:color/transparent"
-            app:strokeWidth="1dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
+            app:strokeColor="@android:color/transparent"
+            app:strokeWidth="1dp">
 
             <ImageView
                 android:id="@+id/iv_user_space_holder"
@@ -76,6 +76,19 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tv_number_name" />
+
+        <TextView
+            android:id="@+id/tv_incoming_sim_number"
+            style="@style/TextStyle.Medium"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/_5sdp"
+            android:gravity="center"
+            android:textColor="@color/grey_color"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_calling" />
 
         <LinearLayout
             android:id="@+id/ll_remind_message"

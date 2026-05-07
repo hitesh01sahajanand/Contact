@@ -37,6 +37,9 @@ import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.core.net.toUri
+import com.example.contactmanager.utils.Constance
+import com.example.contactmanager.utils.SharedPreferenceManager
+import com.example.contactmanager.utils.ThemeManager
 
 @AndroidEntryPoint
 class HomeActivity : AppCompatActivity(), OnClickHandler {
@@ -57,16 +60,15 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
         Manifest.permission.READ_CONTACTS,
         Manifest.permission.WRITE_CONTACTS,
         Manifest.permission.READ_CALL_LOG,
-        Manifest.permission.WRITE_CALL_LOG
+        Manifest.permission.WRITE_CALL_LOG,
+        Manifest.permission.CALL_PHONE
     )
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         isFromPermissionRequest = true
-        if (permissions.all { it.value }) {
-            checkPermissions(showCustomDialog = false)
-        } else {
+        if (!permissions.all { it.value }) {
             // Check if any of the denied permissions are permanently denied (user clicked "Don't ask again")
             val isPermanentlyDenied = contactPermissions.any {
                 ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED &&
@@ -80,11 +82,11 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
                     Toast.LENGTH_LONG
                 ).show()
                 openAppSettings()
-                isFromPermissionRequest = false
+                isFromPermissionRequest = true
             } else {
                 Toast.makeText(this, getString(R.string.permission_denied), Toast.LENGTH_SHORT)
                     .show()
-                checkPermissions(showCustomDialog = true)
+                isFromPermissionRequest = false
             }
         }
     }
@@ -100,20 +102,14 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
         ActivityResultContracts.StartActivityForResult()
     ) {
         isFromPermissionRequest = true
-        checkPermissions(showCustomDialog = true)
+        SharedPreferenceManager.putBoolean(this, Constance.OVERLAY_PERMISSION_SKIP, true)
     }
 
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
 
-        // If permissions are missing, remove any restored fragments to prevent them from
-        // initializing ViewModels that might access ContentProviders and cause crashes.
-        if (!PermissionManager.hasPermissions(this)) {
-            supportFragmentManager.fragments.forEach { fragment ->
-                supportFragmentManager.beginTransaction().remove(fragment).commitNow()
-            }
-        }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        ThemeManager.applyAppTheme(this)
+        super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_home)
@@ -123,14 +119,12 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
             insets
         }
 
-        // initView() is now called from checkPermissions() after all permissions are granted
+        initView()
     }
 
     override fun onResume() {
         super.onResume()
-        if (!isFromPermissionRequest) {
-            checkPermissions(showCustomDialog = true)
-        }
+        checkPermissions(showCustomDialog = !isFromPermissionRequest)
         isFromPermissionRequest = false
     }
 
@@ -146,23 +140,19 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
         }
 
         if (missingPermissions.isNotEmpty()) {
-            binding.llContainer.visibility = View.INVISIBLE
             if (showCustomDialog) {
                 permissionDialog = PermissionManager.openPermissionDialog(this) {
                     isFromPermissionRequest = true
                     requestPermissionLauncher.launch(contactPermissions)
                 }
             } else {
-                // If we are here, we are likely in a sequence, but standard permissions are still missing.
-                // To be safe, we show the dialog instead of auto-launching to avoid system dialog loops.
                 permissionDialog = PermissionManager.openPermissionDialog(this) {
                     isFromPermissionRequest = true
                     requestPermissionLauncher.launch(contactPermissions)
                 }
             }
-        } else if (!PermissionManager.hasOverlayPermission(this)) {
+        } else if (!PermissionManager.hasOverlayPermission(this) && !SharedPreferenceManager.getBoolean(this, Constance.OVERLAY_PERMISSION_SKIP)) {
 
-            binding.llContainer.visibility = View.INVISIBLE
             if (showCustomDialog) {
                 permissionDialog = PermissionManager.openPermissionDialog(this) {
                     isFromPermissionRequest = true
@@ -181,8 +171,9 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
                 )
                 overlayPermissionLauncher.launch(intent)
             }
-        } else {
-            binding.llContainer.visibility = View.VISIBLE
+        }
+
+        if (PermissionManager.hasContactPermissions(this)) {
             initView()
         }
     }
@@ -217,39 +208,50 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
     }
 
     private fun setupFragments() {
+        val fragmentManager = supportFragmentManager
+        
+        // Try to find existing fragments by tag to handle activity recreation correctly
+        val existingRecents = fragmentManager.findFragmentByTag("recents") as? RecentsFragment
+        val existingContacts = fragmentManager.findFragmentByTag("contacts") as? ContactsFragment
+        val existingFavorites = fragmentManager.findFragmentByTag("favorites") as? FavoritesFragment
+        val existingKeypad = fragmentManager.findFragmentByTag("keypad") as? KeypadFragment
 
-        favoritesFragment = FavoritesFragment()
-        recentsFragment = RecentsFragment()
-        contactsFragment = ContactsFragment()
-        keypadFragment = KeypadFragment()
+        recentsFragment = existingRecents ?: RecentsFragment()
+        contactsFragment = existingContacts ?: ContactsFragment()
+        favoritesFragment = existingFavorites ?: FavoritesFragment()
+        keypadFragment = existingKeypad ?: KeypadFragment()
 
-        val transaction = supportFragmentManager.beginTransaction()
+        val transaction = fragmentManager.beginTransaction()
 
-        transaction.add(binding.llContainer.id, recentsFragment)
-        activeFragment = recentsFragment
-        updateTabUI(binding.llRecents)
-        transaction.commit()
+        // Add fragments if they are not already in the FragmentManager
+        if (!recentsFragment.isAdded) transaction.add(binding.llContainer.id, recentsFragment, "recents")
+        if (!contactsFragment.isAdded) transaction.add(binding.llContainer.id, contactsFragment, "contacts").hide(contactsFragment)
+        if (!favoritesFragment.isAdded) transaction.add(binding.llContainer.id, favoritesFragment, "favorites").hide(favoritesFragment)
+        if (!keypadFragment.isAdded) transaction.add(binding.llContainer.id, keypadFragment, "keypad").hide(keypadFragment)
 
-        Handler(Looper.getMainLooper()).postDelayed({
-            val lazyTransaction = supportFragmentManager.beginTransaction()
-            if (activeFragment != recentsFragment) lazyTransaction.add(
-                binding.llContainer.id,
-                recentsFragment
-            ).hide(recentsFragment)
-            if (activeFragment != contactsFragment) lazyTransaction.add(
-                binding.llContainer.id,
-                contactsFragment
-            ).hide(contactsFragment)
-            if (activeFragment != favoritesFragment) lazyTransaction.add(
-                binding.llContainer.id,
-                favoritesFragment
-            ).hide(favoritesFragment)
-            if (activeFragment != keypadFragment) lazyTransaction.add(
-                binding.llContainer.id,
-                keypadFragment
-            ).hide(keypadFragment)
-            lazyTransaction.commitAllowingStateLoss()
-        }, 500)
+        // Determine which fragment should be active
+        // If we are recreating, try to find the one that is not hidden
+        val restoredActive = when {
+            existingRecents != null && !existingRecents.isHidden -> existingRecents
+            existingContacts != null && !existingContacts.isHidden -> existingContacts
+            existingFavorites != null && !existingFavorites.isHidden -> existingFavorites
+            existingKeypad != null && !existingKeypad.isHidden -> existingKeypad
+            else -> recentsFragment
+        }
+
+        activeFragment = restoredActive
+        transaction.show(activeFragment)
+        
+        // Ensure the correct tab is highlighted
+        val selectedTab = when (activeFragment) {
+            favoritesFragment -> binding.llFavorite
+            contactsFragment -> binding.llContacts
+            keypadFragment -> binding.llKeypad
+            else -> binding.llRecents
+        }
+
+        transaction.commitNow()
+        updateTabUI(selectedTab)
     }
 
 
@@ -357,12 +359,5 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
         })
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        val intent = Intent(this, HomeActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        startActivity(intent)
-        finishAffinity()
-    }
 
 }

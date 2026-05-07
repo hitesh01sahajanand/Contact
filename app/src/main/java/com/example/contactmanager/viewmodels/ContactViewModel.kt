@@ -36,12 +36,20 @@ class ContactViewModel @Inject constructor(
     }
 
     init {
+        registerObserver()
+    }
+
+    private var isObserverRegistered = false
+
+    fun registerObserver() {
+        if (isObserverRegistered) return
         try {
             context.contentResolver.registerContentObserver(
                 ContactsContract.Contacts.CONTENT_URI,
                 true,
                 observer
             )
+            isObserverRegistered = true
         } catch (e: SecurityException) {
             e.printStackTrace()
         }
@@ -49,7 +57,9 @@ class ContactViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        context.contentResolver.unregisterContentObserver(observer)
+        if (isObserverRegistered) {
+            context.contentResolver.unregisterContentObserver(observer)
+        }
     }
 
     private var _allContactList = MutableLiveData<List<ContactListItem>>()
@@ -64,6 +74,7 @@ class ContactViewModel @Inject constructor(
     var currentSelectedAccount: String = "All Accounts"
 
     fun loadContacts(showLoader: Boolean = true) {
+        registerObserver()
         when (currentSelectedAccount) {
             "All Accounts" -> loadAllContacts(showLoader)
             "Device Only" -> getContactsByDevice(showLoader)
@@ -71,30 +82,44 @@ class ContactViewModel @Inject constructor(
         }
     }
 
+    private var loadJob: kotlinx.coroutines.Job? = null
+
     fun loadAllContacts(showLoader: Boolean = true) {
         if (showLoader) _isLoading.postValue(true)
-        viewModelScope.launch(Dispatchers.IO) {
-            val data = repository.getContactsByAccountWithHeaders()
-            _allContactList.postValue(data)
-            if (showLoader) _isLoading.postValue(false)
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val data = repository.getContactsByAccountWithHeaders()
+                _allContactList.postValue(data)
+            } finally {
+                if (showLoader) _isLoading.postValue(false)
+            }
         }
     }
 
     fun getContactsByAccountWithHeaders(accountName: String, showLoader: Boolean = true) {
         if (showLoader) _isLoading.postValue(true)
-        viewModelScope.launch(Dispatchers.IO) {
-            val data = repository.getContactsByGoogleAccount(accountName)
-            _allContactList.postValue(data)
-            if (showLoader) _isLoading.postValue(false)
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val data = repository.getContactsByGoogleAccount(accountName)
+                _allContactList.postValue(data)
+            } finally {
+                if (showLoader) _isLoading.postValue(false)
+            }
         }
     }
 
     fun getContactsByDevice(showLoader: Boolean = true) {
         if (showLoader) _isLoading.postValue(true)
-        viewModelScope.launch(Dispatchers.IO) {
-            val data = repository.getContactsByDevice()
-            _allContactList.postValue(data)
-            if (showLoader) _isLoading.postValue(false)
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val data = repository.getContactsByDevice()
+                _allContactList.postValue(data)
+            } finally {
+                if (showLoader) _isLoading.postValue(false)
+            }
         }
     }
     /*fun getContactCount(account: String): String {

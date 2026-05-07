@@ -39,7 +39,6 @@ class KeypadFragment : Fragment(), OnClickHandler {
     private lateinit var binding: FragmentKeypadBinding
     private val viewModel: ContactViewModel by viewModels()
     private val speedDialViewModel: SpeedDialViewModel by viewModels()
-    private var contactList: ArrayList<ContactModel> = ArrayList()
 
     private lateinit var adapter: SuggestionAdapter
 
@@ -84,6 +83,21 @@ class KeypadFragment : Fragment(), OnClickHandler {
     }
 
 
+    override fun onResume() {
+        super.onResume()
+        if (PermissionManager.hasContactPermissions(requireActivity())) {
+            viewModel.loadAllContacts()
+        }
+    }
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        if (!hidden && PermissionManager.hasContactPermissions(requireActivity())) {
+            viewModel.loadAllContacts()
+        }
+    }
+
+
     private fun initView() {
         binding.onClickHandler = this
         binding.inHeader.onClickHandler = this
@@ -97,22 +111,30 @@ class KeypadFragment : Fragment(), OnClickHandler {
 
         adapter = SuggestionAdapter(onClick = { model ->
             binding.edtDisplayNumber.setText(model.number)
+        }, onFilterComplete = { count ->
+            val query = binding.edtDisplayNumber.text.toString().trim()
+            if (query.isEmpty()) {
+                binding.rvSuggestions.isVisible = false
+                binding.llOptionsSuggestions.isVisible = false
+            } else {
+                binding.rvSuggestions.isVisible = count > 0
+                binding.llOptionsSuggestions.isVisible = true
+            }
         })
 
         binding.rvSuggestions.adapter = adapter
         binding.rvSuggestions.layoutManager = LinearLayoutManager(requireActivity())
 
-        if (PermissionManager.hasPermissions(requireActivity())) {
+        if (PermissionManager.hasContactPermissions(requireActivity())) {
             viewModel.loadAllContacts()
         }
 
-        viewModel.allContactList.observe(requireActivity()) { allContacts ->
+        viewModel.allContactList.observe(viewLifecycleOwner) { allContacts ->
             if (allContacts.isNotEmpty()) {
                 val list = allContacts
                     .filterIsInstance<ContactListItem.Contact>()
                     .map { it.data }
-                contactList.addAll(ArrayList(list))
-                adapter.addAll(contactList)
+                adapter.addAll(ArrayList(list))
             } else {
                 binding.rvSuggestions.isVisible = false
                 binding.llOptionsSuggestions.isVisible = false
@@ -120,19 +142,12 @@ class KeypadFragment : Fragment(), OnClickHandler {
         }
 
         binding.edtDisplayNumber.addTextChangedListener { editable ->
-
             val query = editable.toString().trim()
-
             if (query.isEmpty()) {
                 binding.rvSuggestions.isVisible = false
                 binding.llOptionsSuggestions.isVisible = false
-                return@addTextChangedListener
             }
-
-            val result = adapter.filter(query)
-
-            binding.rvSuggestions.isVisible = result.isNotEmpty()
-            binding.llOptionsSuggestions.isVisible = true
+            adapter.filter(query)
         }
 
         binding.buttonDelete.setOnLongClickListener {

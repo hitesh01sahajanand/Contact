@@ -45,19 +45,29 @@ import android.media.ToneGenerator
 import android.view.MotionEvent
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
-import com.example.contactmanager.viewmodels.QuickResponseViewModel
 import com.example.contactmanager.models.QuickResponseModel
+import com.example.contactmanager.viewmodels.QuickResponseViewModel
+import com.example.contactmanager.repository.TagRepository
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.flow.collectLatest
 
 @AndroidEntryPoint
 class CallActivity : AppCompatActivity(), OnClickHandler {
+    @Inject
+    lateinit var tagRepository: TagRepository
     private lateinit var binding: ActivityCallBinding
     private var mProximityWakeLock: WakeLock? = null
     private var isMoreExpanded = false
     private val quickResponseViewModel: QuickResponseViewModel by viewModels()
     private var quickMessages = emptyList<QuickResponseModel>()
     private var toneGenerator: ToneGenerator? = null
+
+    // Local audio state — toggled immediately on click so UI is instant
+    private var isMuted = false
+    private var isSpeakerOn = false
+
+    private val tagMap = mutableMapOf<String, String?>()
 
     private val keyMap = mapOf(
         R.id.linear1 to '1',
@@ -221,16 +231,22 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
 
         override fun onAudioStateChanged() {
             runOnUiThread {
-                NewCallManager.inCallService?.callAudioState?.let {
-                    updateAudioUI(it)
+                NewCallManager.inCallService?.callAudioState?.let { state ->
+                    // Sync local state from system truth
+                    isSpeakerOn = state.route == CallAudioState.ROUTE_SPEAKER
+                    isMuted = state.isMuted
+                    applyAudioUI()
                 }
             }
         }
 
-        override fun onMuteChanged(isMuted: Boolean) {
+        override fun onMuteChanged(muteState: Boolean) {
             runOnUiThread {
-                NewCallManager.inCallService?.callAudioState?.let {
-                    updateAudioUI(it)
+                NewCallManager.inCallService?.callAudioState?.let { state ->
+                    // Sync local state from system truth
+                    isMuted = state.isMuted
+                    isSpeakerOn = state.route == CallAudioState.ROUTE_SPEAKER
+                    applyAudioUI()
                 }
             }
         }
@@ -256,8 +272,8 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         }
 
         // Keep visual buttons synced
-        updateHoldUI(call)
-        NewCallManager.inCallService?.callAudioState?.let { updateAudioUI(it) }
+//        updateHoldUI(call)
+//        NewCallManager.inCallService?.callAudioState?.let { updateAudioUI(it) }
 
         val phoneState = NewCallManager.getPhoneState()
         val isConference = call.isConference()
@@ -270,8 +286,7 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
             binding.inOutgoingCallLayout.llHoldNumber.isVisible = true
             val holdCall = phoneState.onHold
             val holdNumber = holdCall.details.handle?.schemeSpecificPart ?: "Unknown"
-            val holdName =
-                Common.getDisplayName(this, holdNumber, holdCall.details.callerDisplayName)
+            val holdName = getDisplayName(holdNumber, holdCall.details.callerDisplayName)
             binding.inOutgoingCallLayout.tvHoldNumber.text =
                 "$holdName - ${getString(R.string.hold)}"
         } else {
@@ -315,7 +330,7 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
 
         val state = NewCallManager.getState()
         var number = call.details.handle?.schemeSpecificPart ?: "Unknown"
-        var name = Common.getDisplayName(this, number, call.details.callerDisplayName)
+        var name = getDisplayName(number, call.details.callerDisplayName)
 
         if (call.isConference()) {
             name = "Conference Call"
@@ -323,14 +338,23 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                 NewCallManager.getConferenceCalls().joinToString(", ") { conferenceCall ->
                     val handleNumber =
                         conferenceCall.details.handle?.schemeSpecificPart ?: "Unknown"
-                    Common.getDisplayName(
-                        this,
+                    getDisplayName(
                         handleNumber,
                         conferenceCall.details.callerDisplayName
                     )
                 }
             number = participants.ifEmpty { "Multiple Participants" }
         }
+
+        val accountHandle = call.details.accountHandle
+        val subId = accountHandle?.id?.toIntOrNull() ?: -1
+        val simLabel = Common.getSimLabel(this, subId)
+
+        binding.inIncomingLayout.tvIncomingSimNumber.text = simLabel
+        binding.inIncomingLayout.tvIncomingSimNumber.isVisible = simLabel.isNotEmpty()
+
+        binding.inOutgoingCallLayout.tvOutgoingSimNumber.text = simLabel
+        binding.inOutgoingCallLayout.tvOutgoingSimNumber.isVisible = simLabel.isNotEmpty()
 
         when (state) {
             Call.STATE_RINGING -> {
@@ -381,7 +405,11 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                 binding.inOutgoingCallLayout.tvNumber.text = number
             }
 
-            Call.STATE_DISCONNECTED, Call.STATE_DISCONNECTING -> {
+            Call.STATE_DISCONNECTING -> {
+                binding.inOutgoingCallLayout.chronometer.stop()
+            }
+
+            Call.STATE_DISCONNECTED -> {
                 binding.inOutgoingCallLayout.chronometer.stop()
                 if (NewCallManager.getPhoneState() is NewCallManager.NoCall) {
                     finish()
@@ -396,7 +424,7 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
             binding.inIncomingLayout.llRemindMe.id -> {
                 val call = NewCallManager.getPrimaryCall()
                 val number = call?.details?.handle?.schemeSpecificPart ?: "Unknown"
-                val name = Common.getDisplayName(this, number, call?.details?.callerDisplayName)
+                val name = getDisplayName(number, call?.details?.callerDisplayName)
 
                 Common.showRemindMeDialog(this, name, number, onReminderSet = {
                     NewCallManager.reject()
@@ -407,7 +435,6 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                 Common.showQuickMessageDialog(this, quickMessages, onItemClick = { messages ->
                     if (messages.isNotBlank()) {
                         sendSMSMessage(messages)
-                        NewCallManager.reject()
                     }
                 })
             }
@@ -478,20 +505,23 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
 
             binding.inOutgoingCallLayout.llSpeaker.id -> {
                 val service = NewCallManager.inCallService ?: return
-
-                val isSpeaker = service.callAudioState.route == CallAudioState.ROUTE_SPEAKER
-
+                // Toggle local state immediately — don't read callAudioState (it's still old)
+                isSpeakerOn = !isSpeakerOn
                 service.setAudioRoute(
-                    if (isSpeaker)
-                        CallAudioState.ROUTE_WIRED_OR_EARPIECE   // 📞 Earpiece
-                    else
+                    if (isSpeakerOn)
                         CallAudioState.ROUTE_SPEAKER             // 📢 Loudspeaker
+                    else
+                        CallAudioState.ROUTE_WIRED_OR_EARPIECE   // 📞 Earpiece
                 )
+                applyAudioUI()
             }
 
             binding.inOutgoingCallLayout.llMute.id -> {
                 val service = NewCallManager.inCallService ?: return
-                service.setMuted(!service.callAudioState.isMuted)
+                // Toggle local state immediately — don't read callAudioState (it's still old)
+                isMuted = !isMuted
+                service.setMuted(isMuted)
+                applyAudioUI()
             }
 
             binding.inOutgoingCallLayout.ivRejectCall.id -> {
@@ -580,52 +610,52 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
     private fun sendSMSMessage(msg: String) {
         try {
             val call = NewCallManager.getPrimaryCall() ?: return
-            val number = call.details.handle.schemeSpecificPart
+            val number = call.details.handle?.schemeSpecificPart ?: return
 
-            val intent = Intent(Intent.ACTION_SENDTO).apply {
-                data = "smsto:$number".toUri()
-                putExtra("sms_body", msg)
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            // Open the SMS app immediately so the user can see the message.
+            try {
+                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                    data = "smsto:$number".toUri()
+                    putExtra("sms_body", msg)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                startActivity(intent)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-            startActivity(intent)
+
+            // Reject the call AFTER the SMS app has started and the transition is complete.
+            // This prevents race conditions in the TelecomManager on certain devices where 
+            // the rejection signal is dropped if the activity is finishing/transitioning simultaneously.
+            CoroutineScope(Dispatchers.Main).launch {
+                delay(1000)
+                NewCallManager.reject()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-    private fun updateAudioUI(state: CallAudioState) {
-
-        val iconActiveColor = ContextCompat.getColor(this, R.color.white)
+    /**
+     * Apply mute/speaker UI using local state variables [isMuted] and [isSpeakerOn].
+     * These are toggled immediately on click so there's no async delay on the first tap.
+     * System callbacks (onAudioStateChanged / onMuteChanged) sync the local vars back.
+     */
+    private fun applyAudioUI() {
+        val iconActiveColor  = ContextCompat.getColor(this, R.color.white)
         val iconInactiveColor = ContextCompat.getColor(this, R.color.black_color)
-
-        val cardActiveColor = ContextCompat.getColor(this, R.color.black_color)
+        val cardActiveColor  = ContextCompat.getColor(this, R.color.grey_color)
         val cardInactiveColor = ContextCompat.getColor(this, R.color.bg_color)
 
-        val route = state.route
-
-        val isSpeaker = route == CallAudioState.ROUTE_SPEAKER
-        val isBluetooth = route == CallAudioState.ROUTE_BLUETOOTH
-        val isEarpiece = route == CallAudioState.ROUTE_WIRED_OR_EARPIECE
-
-        val isMuted = state.isMuted
-
-        // 🔊 Speaker
+        // 🔊 Speaker — gray card + white icon when ON
         binding.inOutgoingCallLayout.ivSpeaker.setColorFilter(
-            if (isSpeaker) iconActiveColor else iconInactiveColor
+            if (isSpeakerOn) iconActiveColor else iconInactiveColor
         )
         binding.inOutgoingCallLayout.cvSpeaker.setCardBackgroundColor(
-            if (isSpeaker) cardActiveColor else cardInactiveColor
+            if (isSpeakerOn) cardActiveColor else cardInactiveColor
         )
 
-        // 🎧 Bluetooth
-        /*binding.inOutgoingCallLayout.ivBluetooth.setColorFilter(
-            if (isBluetooth) iconActiveColor else iconInactiveColor
-        )
-        binding.inOutgoingCallLayout.cvBluetooth.setCardBackgroundColor(
-            if (isBluetooth) cardActiveColor else cardInactiveColor
-        )*/
-
-        // 🎤 Mute
+        // 🎤 Mute — gray card + white icon when muted
         binding.inOutgoingCallLayout.ivMute.setColorFilter(
             if (isMuted) iconActiveColor else iconInactiveColor
         )
@@ -730,6 +760,34 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         updateProximitySensor()
     }
 
+
+    private fun getDisplayName(number: String, callerDisplayName: String?): String {
+        val contactName = Common.getContactName(this, number)
+        if (contactName != number) {
+            return contactName
+        }
+
+        val tag = tagMap[number]
+        if (!tag.isNullOrBlank()) {
+            return tag
+        }
+
+        if (!tagMap.containsKey(number) && number != "Unknown") {
+            tagMap[number] = null // Mark as fetching
+            lifecycleScope.launch {
+                val fetchedTag = tagRepository.getTag(number)
+                tagMap[number] = fetchedTag
+                if (!fetchedTag.isNullOrBlank()) {
+                    updateUI()
+                }
+            }
+        }
+
+        if (!callerDisplayName.isNullOrBlank() && callerDisplayName != number) {
+            return callerDisplayName
+        }
+        return number
+    }
 
     private fun updateProximitySensor() {
         val state = NewCallManager.getState()

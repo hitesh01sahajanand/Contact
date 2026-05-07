@@ -5,6 +5,8 @@ import android.telecom.Call
 import android.telecom.InCallService
 import android.telecom.VideoProfile
 import java.util.concurrent.CopyOnWriteArraySet
+import android.os.Handler
+import android.os.Looper
 
 class NewCallManager {
 
@@ -99,7 +101,8 @@ class NewCallManager {
                 2 -> {
                     val active = nonDisconnected.find { it.getStateCompat() == Call.STATE_ACTIVE }
                     val newCall =
-                        nonDisconnected.find { it.getStateCompat() == Call.STATE_CONNECTING || it.getStateCompat() == Call.STATE_DIALING || it.getStateCompat() == Call.STATE_RINGING }
+                        nonDisconnected.find { it.getStateCompat() == Call.STATE_RINGING }
+                            ?: nonDisconnected.find { it.getStateCompat() == Call.STATE_CONNECTING || it.getStateCompat() == Call.STATE_DIALING }
                     val onHold = nonDisconnected.find { it.getStateCompat() == Call.STATE_HOLDING }
 
                     if (active != null && newCall != null) {
@@ -146,16 +149,46 @@ class NewCallManager {
         }
 
         fun reject() {
-            if (call != null) {
-                val state = getState()
-                if (state == Call.STATE_RINGING) {
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                        call!!.reject(Call.REJECT_REASON_DECLINED)
-                    } else {
-                        call!!.reject(false, null)
+            // Collect all ringing calls and reject/disconnect them to ensure the network signals are sent
+            val ringingCalls = calls.filter { it.getStateCompat() == Call.STATE_RINGING }
+            if (ringingCalls.isNotEmpty()) {
+                ringingCalls.forEach { ringingCall ->
+                    try {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                            ringingCall.reject(Call.REJECT_REASON_DECLINED)
+                        } else {
+                            @Suppress("DEPRECATION")
+                            ringingCall.reject(false, null)
+                        }
+                    } catch (e: Exception) {
+                        try {
+                            @Suppress("DEPRECATION")
+                            ringingCall.reject(false, null)
+                        } catch (e2: Exception) {
+                            e2.printStackTrace()
+                        }
                     }
-                } else if (state != Call.STATE_DISCONNECTED && state != Call.STATE_DISCONNECTING) {
-                    call!!.disconnect()
+                    // Force disconnect as well after a short delay to ensure network signal is sent.
+                    // Some devices (Samsung, Pixel) may cancel the reject signal if disconnect() is called immediately.
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        try {
+                            if (ringingCall.getStateCompat() != Call.STATE_DISCONNECTED) {
+                                ringingCall.disconnect()
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }, 200L)
+                }
+            } else {
+                // If no ringing calls, disconnect the primary call (active/dialing/etc)
+                try {
+                    val primaryCall = call
+                    if (primaryCall != null && primaryCall.getStateCompat() != Call.STATE_DISCONNECTED) {
+                        primaryCall.disconnect()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
             }
         }

@@ -179,6 +179,7 @@
                             android:layout_height="wrap_content"
                             android:background="@null"
                             android:hint="@string/first_name"
+                            android:singleLine="true"
                             android:imeOptions="actionNext"
                             android:padding="@dimen/_13sdp"
                             android:textColor="@color/black_color"

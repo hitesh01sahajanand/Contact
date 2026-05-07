@@ -10,10 +10,37 @@ import com.example.contactmanager.databinding.SuggestionDesignBinding
 import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
 
-class SuggestionAdapter(private val onClick: (ContactModel) -> Unit) :
-    RecyclerView.Adapter<SuggestionAdapter.SuggestionHolder>() {
+class SuggestionAdapter(
+    private val onClick: (ContactModel) -> Unit,
+    private val onFilterComplete: (Int) -> Unit
+) :
+    RecyclerView.Adapter<SuggestionAdapter.SuggestionHolder>(), android.widget.Filterable {
     var contactList: ArrayList<ContactModel> = ArrayList()
     private var filteredList: MutableList<ContactModel> = mutableListOf()
+
+    override fun getFilter(): android.widget.Filter {
+        return object : android.widget.Filter() {
+            override fun performFiltering(constraint: CharSequence?): FilterResults {
+                val charString = constraint?.toString()?.trim() ?: ""
+                val filtered = if (charString.isEmpty()) {
+                    contactList
+                } else {
+                    contactList.filter {
+                        it.number?.contains(charString, ignoreCase = true) == true
+                    }
+                }
+                return FilterResults().apply { values = filtered }
+            }
+
+            @Suppress("UNCHECKED_CAST")
+            override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
+                filteredList = (results?.values as? List<ContactModel>)?.toMutableList() ?: mutableListOf()
+                notifyDataSetChanged()
+                onFilterComplete(filteredList.size)
+            }
+        }
+    }
+
     override fun onCreateViewHolder(
         parent: ViewGroup, p1: Int
     ): SuggestionHolder {
@@ -25,11 +52,13 @@ class SuggestionAdapter(private val onClick: (ContactModel) -> Unit) :
     override fun onBindViewHolder(
         holder: SuggestionHolder, p1: Int
     ) {
-        val itemData = filteredList[p1]
-        holder.setData(itemData, p1)
-        holder.itemView.setOnClickListener {
-            itemData.number?.let {
-                onClick(itemData)
+        if (p1 < filteredList.size) {
+            val itemData = filteredList[p1]
+            holder.setData(itemData, p1)
+            holder.itemView.setOnClickListener {
+                itemData.number?.let {
+                    onClick(itemData)
+                }
             }
         }
     }
@@ -47,19 +76,8 @@ class SuggestionAdapter(private val onClick: (ContactModel) -> Unit) :
     }
 
     fun filter(query: String): List<ContactModel> {
-
-        val searchText = query.trim()
-
-        filteredList = if (searchText.isEmpty()) {
-            contactList.toMutableList()
-        } else {
-            contactList.filter {
-                it.number?.contains(searchText, ignoreCase = true) == true
-            }.toMutableList()
-        }
-
-        notifyDataSetChanged()
-        return filteredList
+        filter.filter(query)
+        return filteredList // Note: this will return the OLD list until publishResults is called, but KeypadFragment only uses it for visibility which might be a problem.
     }
 
     class SuggestionHolder(private val binding: SuggestionDesignBinding) :

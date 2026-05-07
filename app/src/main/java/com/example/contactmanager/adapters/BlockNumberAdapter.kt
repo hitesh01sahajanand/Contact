@@ -60,12 +60,12 @@ class BlockNumberAdapter(
                 binding.ivContactPhoto.visibility = View.GONE
                 binding.tvContactName.visibility = View.VISIBLE
 
-
-                val initials = if (displayName == blockModel.phoneNumber) {
-                    displayName.take(3)
-                } else {
-                    displayName.firstOrNull()?.uppercase() ?: ""
-                }
+                val initials = displayName
+                    .trim()
+                    .split(" ")
+                    .filter { it.isNotEmpty() }
+                    .take(2)
+                    .joinToString("") { it.first().uppercase() }
                 binding.tvContactName.text = initials.removePrefix("+")
 
                 val colorIndex =

@@ -26,12 +26,14 @@ import com.example.contactmanager.R
 import com.example.contactmanager.activities.language.LanguageActivity
 import com.example.contactmanager.databinding.ActivityPermissionBinding
 import com.example.contactmanager.utils.OnClickHandler
+import com.example.contactmanager.utils.ThemeManager
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class PermissionActivity : AppCompatActivity(), OnClickHandler {
     private lateinit var binding: ActivityPermissionBinding
     override fun onCreate(savedInstanceState: Bundle?) {
+        ThemeManager.applyAppTheme(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_permission)

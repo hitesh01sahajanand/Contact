@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -21,18 +20,21 @@ import com.example.contactmanager.activities.permissions.PermissionActivity
 import com.example.contactmanager.databinding.ActivityMainBinding
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.SharedPreferenceManager
+import com.example.contactmanager.utils.ThemeManager
 
 @SuppressLint("CustomSplashScreen")
 class SplashActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { _ ->
-        proceedToNext()
-    }
+
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { _ ->
+            proceedToNext()
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        ThemeManager.applyAppTheme(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
@@ -61,11 +63,14 @@ class SplashActivity : AppCompatActivity() {
         binding.lavSplashLogo.playAnimation()
     }
 
-    private fun checkNotificationPermission() {
+    /*private fun checkNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this,
                     Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.CALL_PHONE
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
                 proceedToNext()
@@ -75,10 +80,41 @@ class SplashActivity : AppCompatActivity() {
         } else {
             proceedToNext()
         }
+    }*/
+
+    private fun checkNotificationPermission() {
+
+        val permissions = mutableListOf<String>()
+
+        // Notification Permission (Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
+        // Call Permission
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CALL_PHONE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissions.add(Manifest.permission.CALL_PHONE)
+        }
+
+        if (permissions.isNotEmpty()) {
+            requestPermissionLauncher.launch(permissions.toTypedArray())
+        } else {
+            proceedToNext()
+        }
     }
 
     private fun proceedToNext() {
-        val isLogIN = SharedPreferenceManager.getBoolean(this, Constance.IS_LOG_IN,false)
+        val isLogIN = SharedPreferenceManager.getBoolean(this, Constance.IS_LOG_IN, false)
         val options = ActivityOptions.makeCustomAnimation(
             this,
             android.R.anim.fade_in,

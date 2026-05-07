@@ -107,6 +107,7 @@ class RecentAdapter(
         originalList.addAll(newList)
         notifyDataSetChanged()
     }
+
     fun showLoader() {
         if (filteredList.lastOrNull() !is CallHistoryListItems.Loader) {
             filteredList.add(CallHistoryListItems.Loader)
@@ -250,7 +251,7 @@ class RecentAdapter(
             binding.root.layoutParams = params
 
             binding.cbSelect.isVisible = isSelectionMode
-            binding.ivCollapseCallType.isVisible = !isSelectionMode
+            binding.cvCallType.visibility = if (!isSelectionMode) View.VISIBLE else View.INVISIBLE
             binding.cbSelect.isChecked = selectedEntries.contains(data)
             binding.cbSelect.isClickable = false
             binding.cbSelect.isFocusable = false
@@ -371,6 +372,10 @@ class RecentAdapter(
                         )
                     )
                 }
+
+                val simLabel = Common.getSimLabel(context, data.simId)
+                tvSimNumber.text = simLabel
+                tvSimNumber.isVisible = simLabel.isNotEmpty()
 
 
                 tvBlockText.text =

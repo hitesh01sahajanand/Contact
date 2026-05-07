@@ -3,7 +3,6 @@ package com.example.contactmanager.activities.history
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -13,7 +12,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.contactmanager.R
@@ -135,6 +133,7 @@ class HistoryActivity : AppCompatActivity(), OnClickHandler {
                             title = getString(R.string.unblock_contact),
                             description = getString(R.string.you_will_be_able_to_receive_call),
                             btnOkay = getString(R.string.unblock),
+                            isImageVisible = true,
                             onItemClick = {
                                 recentViewModel.unblockNumber(number)
                                 binding.tvBlock.text = getString(R.string.block)
@@ -145,6 +144,7 @@ class HistoryActivity : AppCompatActivity(), OnClickHandler {
                             title = getString(R.string.block_contact),
                             description = getString(R.string.you_will_be_able_to_receive_call),
                             btnOkay = getString(R.string.block),
+                            isImageVisible = true,
                             onItemClick = {
                                 recentViewModel.blockNumber(number)
                                 binding.tvBlock.text = getString(R.string.unblock)

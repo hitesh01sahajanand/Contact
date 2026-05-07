@@ -9,6 +9,7 @@ import android.util.Log
 import com.example.contactmanager.database.BlockDao
 import com.example.contactmanager.models.BlockModel
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.PermissionManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -33,7 +35,7 @@ class BlockRepository @Inject constructor(
         
         // 2. Save to system storage (if supported and permitted)
         try {
-            if (BlockedNumberContract.canCurrentUserBlockNumbers(context)) {
+            if (PermissionManager.isDefaultDialer(context) && BlockedNumberContract.canCurrentUserBlockNumbers(context)) {
                 val values = ContentValues().apply {
                     put(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER, clean)
                 }
@@ -52,7 +54,7 @@ class BlockRepository @Inject constructor(
         
         // 2. Delete from system storage
         try {
-            if (BlockedNumberContract.canCurrentUserBlockNumbers(context)) {
+            if (PermissionManager.isDefaultDialer(context) && BlockedNumberContract.canCurrentUserBlockNumbers(context)) {
                 context.contentResolver.delete(
                     BlockedNumberContract.BlockedNumbers.CONTENT_URI,
                     "${BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER} = ?",
@@ -67,7 +69,7 @@ class BlockRepository @Inject constructor(
     suspend fun isBlocked(number: String): Boolean {
         // First check system storage if available
         try {
-            if (BlockedNumberContract.isBlocked(context, number)) {
+            if (PermissionManager.isDefaultDialer(context) && BlockedNumberContract.isBlocked(context, number)) {
                 return true
             }
         } catch (e: Exception) {
@@ -82,29 +84,56 @@ class BlockRepository @Inject constructor(
         }
     }
 
-    fun getAllBlockedNumbers(): Flow<List<BlockModel>> {
+    fun getAllBlockedNumbers(refreshTrigger: Flow<Unit> = kotlinx.coroutines.flow.emptyFlow()): Flow<List<BlockModel>> {
         return callbackFlow {
-            val observer = object : ContentObserver(null) {
-                override fun onChange(selfChange: Boolean) {
-                    launch {
-                        send(fetchBlockedNumbers())
+            var observer: ContentObserver? = null
+
+            fun registerObserver() {
+                try {
+                    if (PermissionManager.isDefaultDialer(context)) {
+                        observer?.let { context.contentResolver.unregisterContentObserver(it) }
+                        observer = object : ContentObserver(null) {
+                            override fun onChange(selfChange: Boolean) {
+                                launch {
+                                    send(fetchBlockedNumbers())
+                                }
+                            }
+                        }
+                        context.contentResolver.registerContentObserver(
+                            BlockedNumberContract.BlockedNumbers.CONTENT_URI,
+                            true,
+                            observer!!
+                        )
                     }
+                } catch (e: Exception) {
+                    Log.e("BlockRepository", "Failed to register content observer: ${e.message}")
                 }
             }
 
-            context.contentResolver.registerContentObserver(
-                BlockedNumberContract.BlockedNumbers.CONTENT_URI,
-                true,
-                observer
-            )
-
-            // Initial fetch
+            // Initial registration and fetch
+            registerObserver()
             launch {
                 send(fetchBlockedNumbers())
             }
 
+            // Observe local database changes
+            launch {
+                blockDao.getAllBlockedNumbers().collect {
+                    delay(200) // Small delay to allow system sync
+                    send(fetchBlockedNumbers())
+                }
+            }
+
+            // Observe manual refresh trigger
+            launch {
+                refreshTrigger.collect {
+                    registerObserver() // Re-register if role changed
+                    send(fetchBlockedNumbers())
+                }
+            }
+
             awaitClose {
-                context.contentResolver.unregisterContentObserver(observer)
+                observer?.let { context.contentResolver.unregisterContentObserver(it) }
             }
         }.flowOn(Dispatchers.IO)
     }
@@ -114,22 +143,24 @@ class BlockRepository @Inject constructor(
         
         // 1. Fetch from system storage
         try {
-            val cursor = context.contentResolver.query(
-                BlockedNumberContract.BlockedNumbers.CONTENT_URI,
-                arrayOf(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER),
-                null, null, null
-            )
-            cursor?.use {
-                while (it.moveToNext()) {
-                    val number = it.getString(it.getColumnIndexOrThrow(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER))
-                    val contact = Common.getContactByNumber(context, number)
-                    list.add(
-                        BlockModel(
-                            phoneNumber = number,
-                            name = contact?.displayName,
-                            photoUri = contact?.userThumbnail
+            if (PermissionManager.isDefaultDialer(context)) {
+                val cursor = context.contentResolver.query(
+                    BlockedNumberContract.BlockedNumbers.CONTENT_URI,
+                    arrayOf(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER),
+                    null, null, null
+                )
+                cursor?.use {
+                    while (it.moveToNext()) {
+                        val number = it.getString(it.getColumnIndexOrThrow(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER))
+                        val contact = Common.getContactByNumber(context, number)
+                        list.add(
+                            BlockModel(
+                                phoneNumber = number,
+                                name = contact?.displayName,
+                                photoUri = contact?.userThumbnail
+                            )
                         )
-                    )
+                    }
                 }
             }
         } catch (e: Exception) {

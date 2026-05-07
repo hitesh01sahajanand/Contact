@@ -87,49 +87,54 @@ class StorageLocationActivity : AppCompatActivity(), OnClickHandler {
             null
         )
 
-        var simCount = 0
+        val uniqueAccounts = mutableSetOf<Pair<String, String>>()
         cursor?.use {
+            val accountNameIndex = it.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_NAME)
+            val accountTypeIndex = it.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE)
             while (it.moveToNext()) {
-                val accountName =
-                    it.getString(it.getColumnIndexOrThrow(ContactsContract.RawContacts.ACCOUNT_NAME))
-                        ?: ""
-                val accountType =
-                    it.getString(it.getColumnIndexOrThrow(ContactsContract.RawContacts.ACCOUNT_TYPE))
-                        ?: ""
+                val accountName = if (accountNameIndex != -1) it.getString(accountNameIndex) ?: "" else ""
+                val accountType = if (accountTypeIndex != -1) it.getString(accountTypeIndex) ?: "" else ""
+                uniqueAccounts.add(Pair(accountName, accountType))
+            }
+        }
 
-                val isGoogle = accountType == "com.google"
-                val isWhatsApp = accountType.contains("whatsapp", ignoreCase = true)
-                val isTelegram = accountType.contains("telegram", ignoreCase = true)
-                val isEmail =
-                    accountName.contains("@") && accountType.contains("exchange", ignoreCase = true)
-                val isSim = accountType.contains("sim", ignoreCase = true) || accountType.contains(
-                    "adn",
-                    ignoreCase = true
-                )
+        var simCount = 0
+        for (account in uniqueAccounts) {
+            val accountName = account.first
+            val accountType = account.second
 
-                val displayName = when {
-                    isGoogle -> accountName
-                    isWhatsApp -> "WhatsApp"
-                    isTelegram -> "Telegram"
-                    isSim -> {
-                        simCount++
-                        if (accountName.contains(
-                                "sim",
-                                ignoreCase = true
-                            ) && accountName.any { it.isDigit() }
-                        ) {
-                            accountName.uppercase()
-                        } else {
-                            "SIM $simCount"
-                        }
+            val isGoogle = accountType == "com.google"
+            val isWhatsApp = accountType.contains("whatsapp", ignoreCase = true)
+            val isTelegram = accountType.contains("telegram", ignoreCase = true)
+            val isEmail =
+                accountName.contains("@") && accountType.contains("exchange", ignoreCase = true)
+            val isSim = accountType.contains("sim", ignoreCase = true) || accountType.contains(
+                "adn",
+                ignoreCase = true
+            )
+
+            val displayName = when {
+                isGoogle -> accountName
+                isWhatsApp -> "WhatsApp"
+                isTelegram -> "Telegram"
+                isSim -> {
+                    simCount++
+                    if (accountName.contains(
+                            "sim",
+                            ignoreCase = true
+                        ) && accountName.any { it.isDigit() }
+                    ) {
+                        accountName.uppercase()
+                    } else {
+                        "SIM $simCount"
                     }
-
-                    !isGoogle && !isWhatsApp && !isTelegram && !isEmail && !isSim -> "Device"
-                    else -> accountName.ifEmpty { "Device" }
                 }
 
-                result.add(Pair(displayName, accountType))
+                !isGoogle && !isWhatsApp && !isTelegram && !isEmail && !isSim -> "Device"
+                else -> accountName.ifEmpty { "Device" }
             }
+
+            result.add(Pair(displayName, accountType))
         }
 
         // 🔹 Sorting logic

@@ -58,12 +58,21 @@ object PermissionManager {
     }
 
     fun hasPermissions(context: Context): Boolean {
-        return listOf(
-            Manifest.permission.READ_CALL_LOG,
+        return hasCallLogPermissions(context) && hasContactPermissions(context)
+    }
+
+    fun hasContactPermissions(context: Context): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context,
             Manifest.permission.READ_CONTACTS
-        ).all {
-            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-        }
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    fun hasCallLogPermissions(context: Context): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.READ_CALL_LOG
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     fun openPermissionDialog(context: Context, onClick: () -> Unit): Dialog {
@@ -90,6 +99,8 @@ object PermissionManager {
             context, Manifest.permission.READ_CONTACTS
         ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
             context, Manifest.permission.WRITE_CONTACTS
+        ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+            context, Manifest.permission.CALL_PHONE
         ) == PackageManager.PERMISSION_GRANTED
 
         val hasCallLogPermission = ContextCompat.checkSelfPermission(
@@ -98,7 +109,7 @@ object PermissionManager {
             context, Manifest.permission.WRITE_CALL_LOG
         ) == PackageManager.PERMISSION_GRANTED
 
-        val hasOverlayPermission = hasOverlayPermission(context)
+        val hasOverlayPermission = hasOverlayPermission(context) || SharedPreferenceManager.getBoolean(context, Constance.OVERLAY_PERMISSION_SKIP)
 
         alertBinding.llContact.visibility =
             if (hasContactPermission) android.view.View.GONE else android.view.View.VISIBLE

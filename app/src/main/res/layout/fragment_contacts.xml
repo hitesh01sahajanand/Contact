@@ -29,11 +29,9 @@
             android:layout_marginTop="@dimen/_3sdp"
             app:cardBackgroundColor="@color/bg_color"
             app:cardElevation="0dp"
-            app:cardPreventCornerOverlap="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/in_header"
-            app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Rounded"
             app:strokeColor="@android:color/transparent"
             app:strokeWidth="1dp">
 

@@ -20,7 +20,6 @@ import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager
 import com.example.contactmanager.viewmodels.BlockViewModel
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -56,20 +55,17 @@ class BlockNumbersActivity : AppCompatActivity(), OnClickHandler {
 
     private fun checkDefaultDialer() {
         if (!PermissionManager.isDefaultDialer(this)) {
-            showSetDefaultDialerDialog()
-        }
-    }
-
-    private fun showSetDefaultDialerDialog() {
-        MaterialAlertDialogBuilder(this).setTitle(getString(R.string.set_as_default_dialer))
-            .setMessage(getString(R.string.to_view_and_manage_system_block))
-            .setPositiveButton(getString(R.string.set_as_default)) { _, _ ->
+            Common.ensureDefaultDialer(this, onProceed = {
                 val intent = PermissionManager.getDefaultDialerIntent(this)
                 if (intent != null) {
                     defaultDialerLauncher.launch(intent)
                 }
-            }.setNegativeButton(getString(R.string.not_now), null).setCancelable(false).show()
+            })
+        } else {
+            viewModel.refresh()
+        }
     }
+
 
     private fun initView() {
         binding.onClickHandler = this
@@ -84,33 +80,32 @@ class BlockNumbersActivity : AppCompatActivity(), OnClickHandler {
     private fun observeData() {
         lifecycleScope.launch {
             viewModel.allBlockedNumbers.collect { list ->
+                val isEmpty = list.isEmpty()
                 adapter.setBlockList(list)
-                binding.llBlockSpaceHolder.visibility =
-                    if (list.isEmpty()) View.VISIBLE else View.GONE
-                binding.cvBlockNumbers.visibility = if (list.isEmpty()) View.GONE else View.VISIBLE
-
-                if (list.isEmpty() && !PermissionManager.isDefaultDialer(this@BlockNumbersActivity)) {
-                    Toast.makeText(
-                        this@BlockNumbersActivity,
-                        getString(R.string.set_as_default_dialer_to_sync_system),
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+                
+                binding.llBlockSpaceHolder.visibility = if (isEmpty) View.VISIBLE else View.GONE
+                binding.cvBlockNumbers.visibility = if (isEmpty) View.GONE else View.VISIBLE
             }
         }
     }
 
     private fun showUnblockDialog(blockModel: BlockModel) {
         if (!PermissionManager.isDefaultDialer(this)) {
-            showSetDefaultDialerDialog()
+            Common.ensureDefaultDialer(this, onProceed = {
+                val intent = PermissionManager.getDefaultDialerIntent(this)
+                if (intent != null) {
+                    defaultDialerLauncher.launch(intent)
+                }
+            })
             return
         }
 
         Common.alertDialog(
             context = this,
-            title = getString(R.string.block_contact),
+            title = getString(R.string.unblock_contact),
             description = getString(R.string.you_will_be_able_to_receive_call),
             btnOkay = getString(R.string.unblock),
+            isImageVisible = true,
             onItemClick = {
                 viewModel.unblockNumber(blockModel.phoneNumber)
             })
@@ -120,6 +115,14 @@ class BlockNumbersActivity : AppCompatActivity(), OnClickHandler {
         when (view.id) {
             binding.ivBack.id -> {
                 onBackPressedDispatcher.onBackPressed()
+            }
+
+            binding.cvAdd.id -> {
+                Common.ensureDefaultDialer(this, onProceed = {
+                    Common.setBlockNumbersDialog(this, onItemClick = { number ->
+                        viewModel.blockNumber(number)
+                    })
+                })
             }
         }
     }
