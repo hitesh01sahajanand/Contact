@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.contactmanager.models.AccountModel
+import com.example.contactmanager.models.FullContactData
 import com.example.contactmanager.repository.NewContactRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -33,12 +34,12 @@ class NewContactViewModel @Inject constructor(
         }
     }
 
-    fun fetchContactEmail(contactId: String) {
+    /*fun fetchContactEmail(contactId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val email = repository.getContactEmail(contactId)
             _contactEmail.postValue(email ?: "")
         }
-    }
+    }*/
 
     private var _contactAccountInfo: MutableLiveData<Pair<String?, String?>> = MutableLiveData()
     val contactAccountInfo: LiveData<Pair<String?, String?>> = _contactAccountInfo
@@ -53,10 +54,18 @@ class NewContactViewModel @Inject constructor(
     private var _newContactId: MutableLiveData<String?> = MutableLiveData()
     val newContactId: LiveData<String?> = _newContactId
 
+    private var _fullContactData: MutableLiveData<FullContactData?> = MutableLiveData()
+    val fullContactData: LiveData<FullContactData?> = _fullContactData
+
+    fun fetchFullContactData(contactId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val data = repository.getFullContactData(contactId)
+            _fullContactData.postValue(data)
+        }
+    }
+
     fun saveOrUpdateContact(
-        name: String,
-        number: String,
-        email: String?,
+        contactData: FullContactData,
         selectedImageUri: Uri?,
         accountModel: AccountModel,
         isContactSaved: Boolean,
@@ -64,9 +73,7 @@ class NewContactViewModel @Inject constructor(
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.saveOrUpdateContact(
-                name = name,
-                number = number,
-                email = email,
+                contactData = contactData,
                 selectedImageUri = selectedImageUri,
                 accountModel = accountModel,
                 isContactSaved = isContactSaved,

@@ -63,9 +63,11 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
     private var quickMessages = emptyList<QuickResponseModel>()
     private var toneGenerator: ToneGenerator? = null
 
-    // Local audio state — toggled immediately on click so UI is instant
+    // Local audio / button state — toggled immediately on click so UI is instant
     private var isMuted = false
     private var isSpeakerOn = false
+    private var isOnHold = false
+    private var isKeypadOpen = false
 
     private val tagMap = mutableMapOf<String, String?>()
 
@@ -235,7 +237,7 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                     // Sync local state from system truth
                     isSpeakerOn = state.route == CallAudioState.ROUTE_SPEAKER
                     isMuted = state.isMuted
-                    applyAudioUI()
+                    applyButtonUI()
                 }
             }
         }
@@ -246,7 +248,7 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                     // Sync local state from system truth
                     isMuted = state.isMuted
                     isSpeakerOn = state.route == CallAudioState.ROUTE_SPEAKER
-                    applyAudioUI()
+                    applyButtonUI()
                 }
             }
         }
@@ -393,6 +395,9 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                         android.os.SystemClock.elapsedRealtime()
                 }
                 binding.inOutgoingCallLayout.chronometer.start()
+                // Resume from hold — clear hold state
+                isOnHold = false
+                applyButtonUI()
             }
 
             Call.STATE_HOLDING -> {
@@ -403,6 +408,8 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                 binding.inIncomingLayout.root.isVisible = false
                 binding.inOutgoingCallLayout.tvNumberName.text = name
                 binding.inOutgoingCallLayout.tvNumber.text = number
+                isOnHold = true
+                applyButtonUI()
             }
 
             Call.STATE_DISCONNECTING -> {
@@ -467,6 +474,7 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
 
             binding.inOutgoingCallLayout.llHold.id -> {
                 NewCallManager.toggleHold()
+                // isOnHold will be synced via onStateChanged -> updateUI
             }
 
             binding.inOutgoingCallLayout.llVideoCall.id -> {
@@ -476,10 +484,12 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
             binding.inOutgoingCallLayout.llMore.id -> {
                 isMoreExpanded = !isMoreExpanded
                 updateUI()
+                applyButtonUI()
             }
 
             binding.inOutgoingCallLayout.llKeypad.id -> {
-                if (binding.inOutgoingCallLayout.llAllButtons.isVisible) {
+                isKeypadOpen = !isKeypadOpen
+                if (isKeypadOpen) {
                     binding.inOutgoingCallLayout.llAllButtons.isVisible = false
                     binding.inOutgoingCallLayout.ivRejectCall.isVisible = false
                     binding.inOutgoingCallLayout.keyboard.isVisible = true
@@ -488,20 +498,16 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                     binding.inOutgoingCallLayout.ivRejectCall.isVisible = true
                     binding.inOutgoingCallLayout.llAllButtons.isVisible = true
                 }
+                applyButtonUI()
             }
 
             binding.inOutgoingCallLayout.llClose.id -> {
-                if (binding.inOutgoingCallLayout.llAllButtons.isVisible) {
-                    binding.inOutgoingCallLayout.llAllButtons.isVisible = false
-                    binding.inOutgoingCallLayout.ivRejectCall.isVisible = false
-                    binding.inOutgoingCallLayout.keyboard.isVisible = true
-                } else {
-                    binding.inOutgoingCallLayout.keyboard.isVisible = false
-                    binding.inOutgoingCallLayout.ivRejectCall.isVisible = true
-                    binding.inOutgoingCallLayout.llAllButtons.isVisible = true
-                }
+                isKeypadOpen = false
+                binding.inOutgoingCallLayout.keyboard.isVisible = false
+                binding.inOutgoingCallLayout.ivRejectCall.isVisible = true
+                binding.inOutgoingCallLayout.llAllButtons.isVisible = true
+                applyButtonUI()
             }
-
 
             binding.inOutgoingCallLayout.llSpeaker.id -> {
                 val service = NewCallManager.inCallService ?: return
@@ -513,7 +519,7 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                     else
                         CallAudioState.ROUTE_WIRED_OR_EARPIECE   // 📞 Earpiece
                 )
-                applyAudioUI()
+                applyButtonUI()
             }
 
             binding.inOutgoingCallLayout.llMute.id -> {
@@ -521,7 +527,7 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                 // Toggle local state immediately — don't read callAudioState (it's still old)
                 isMuted = !isMuted
                 service.setMuted(isMuted)
-                applyAudioUI()
+                applyButtonUI()
             }
 
             binding.inOutgoingCallLayout.ivRejectCall.id -> {
@@ -637,50 +643,78 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
     }
 
     /**
-     * Apply mute/speaker UI using local state variables [isMuted] and [isSpeakerOn].
-     * These are toggled immediately on click so there's no async delay on the first tap.
-     * System callbacks (onAudioStateChanged / onMuteChanged) sync the local vars back.
+     * Apply toggle UI for ALL buttons in ll_all_buttons.
+     * Active state  → grey card background + white icon tint.
+     * Inactive state → normal bg_color card + black icon tint.
+     *
+     * State variables:
+     *   [isMuted]        — microphone muted
+     *   [isSpeakerOn]    — loudspeaker active
+     *   [isOnHold]       — call on hold
+     *   [isKeypadOpen]   — in-call keypad visible
+     *   [isMoreExpanded] — row-1 buttons expanded
      */
-    private fun applyAudioUI() {
-        val iconActiveColor  = ContextCompat.getColor(this, R.color.white)
-        val iconInactiveColor = ContextCompat.getColor(this, R.color.black_color)
-        val cardActiveColor  = ContextCompat.getColor(this, R.color.grey_color)
-        val cardInactiveColor = ContextCompat.getColor(this, R.color.bg_color)
+    private fun applyButtonUI() {
+        val iconActive   = ContextCompat.getColor(this, R.color.white)
+        val iconInactive = ContextCompat.getColor(this, R.color.black_color)
+        val cardActive   = ContextCompat.getColor(this, R.color.grey_color)
+        val cardInactive = ContextCompat.getColor(this, R.color.bg_color)
 
-        // 🔊 Speaker — gray card + white icon when ON
-        binding.inOutgoingCallLayout.ivSpeaker.setColorFilter(
-            if (isSpeakerOn) iconActiveColor else iconInactiveColor
-        )
-        binding.inOutgoingCallLayout.cvSpeaker.setCardBackgroundColor(
-            if (isSpeakerOn) cardActiveColor else cardInactiveColor
+        fun applyButton(
+            card: com.google.android.material.card.MaterialCardView,
+            icon: android.widget.ImageView,
+            isActive: Boolean
+        ) {
+            card.setCardBackgroundColor(if (isActive) cardActive else cardInactive)
+            icon.setColorFilter(if (isActive) iconActive else iconInactive)
+        }
+
+        // 🎤 Mute
+        applyButton(
+            binding.inOutgoingCallLayout.cvMute,
+            binding.inOutgoingCallLayout.ivMute,
+            isMuted
         )
 
-        // 🎤 Mute — gray card + white icon when muted
-        binding.inOutgoingCallLayout.ivMute.setColorFilter(
-            if (isMuted) iconActiveColor else iconInactiveColor
+        // 🔊 Speaker
+        applyButton(
+            binding.inOutgoingCallLayout.cvSpeaker,
+            binding.inOutgoingCallLayout.ivSpeaker,
+            isSpeakerOn
         )
-        binding.inOutgoingCallLayout.cvMute.setCardBackgroundColor(
-            if (isMuted) cardActiveColor else cardInactiveColor
+
+        // ⏸ Hold
+        applyButton(
+            binding.inOutgoingCallLayout.cvHold,
+            binding.inOutgoingCallLayout.ivHold,
+            isOnHold
         )
+
+        // ⌨ Keypad — active while keypad is open
+        binding.inOutgoingCallLayout.cvKeypad.setCardBackgroundColor(
+            if (isKeypadOpen) cardActive else cardInactive
+        )
+        // Keypad icon does not have a dedicated ImageView id, colour the card only
+
+
+        applyButton(
+            binding.inOutgoingCallLayout.cvMore,
+            binding.inOutgoingCallLayout.ivMore,
+            isMoreExpanded
+        )
+        // ⋯ More — active while row-1 is expanded
+        /*binding.inOutgoingCallLayout.cvMore.setCardBackgroundColor(
+            if (isMoreExpanded) cardActive else cardInactive
+        )
+        binding.inOutgoingCallLayout.ivMore.setColorFilter(if (isActive) iconActive else iconInactive)*/
+
         updateProximitySensor()
     }
 
 
-    private fun updateHoldUI(call: Call) {
-        val isOnHold = NewCallManager.getState() == Call.STATE_HOLDING
-
-        val iconActiveColor = ContextCompat.getColor(this, R.color.white)
-        val iconInactiveColor = ContextCompat.getColor(this, R.color.black_color)
-
-        val cardActiveColor = ContextCompat.getColor(this, R.color.black_color)
-        val cardInactiveColor = ContextCompat.getColor(this, R.color.bg_color)
-
-        binding.inOutgoingCallLayout.ivHold.setColorFilter(
-            if (isOnHold) iconActiveColor else iconInactiveColor
-        )
-        binding.inOutgoingCallLayout.cvHold.setCardBackgroundColor(
-            if (isOnHold) cardActiveColor else cardInactiveColor
-        )
+    private fun updateHoldUI() {
+        isOnHold = NewCallManager.getState() == Call.STATE_HOLDING
+        applyButtonUI()
     }
 
     fun makeFullScreenImmersive() {

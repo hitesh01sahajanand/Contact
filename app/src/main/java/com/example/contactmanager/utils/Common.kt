@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -56,6 +57,7 @@ import com.example.contactmanager.adapters.QuickResponseAdapter
 import com.example.contactmanager.databinding.AddBlockNumbersDesignBinding
 import com.example.contactmanager.databinding.AlertDialogDesignBinding
 import com.example.contactmanager.databinding.AppThemeDialogBinding
+import com.example.contactmanager.databinding.CommonTypePopUpDesignBinding
 import com.example.contactmanager.databinding.ContactPopUpDesignBinding
 import com.example.contactmanager.databinding.DialerPopUpDesignBinding
 import com.example.contactmanager.databinding.EditQuickMessageBinding
@@ -72,7 +74,6 @@ import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.models.QuickResponseModel
 import com.example.contactmanager.receivers.ReminderReceiver
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -564,6 +565,112 @@ object Common {
         popUpBinding.tvOption2.setOnClickListener {
             option2Click()
             popupWindow.dismiss()
+        }
+    }
+
+
+    fun typePopUp(
+        context: Context,
+        anchorView: View,
+        title: String,
+        typeArray: Array<String>,
+        onItemClick: (String) -> Unit
+    ) {
+
+        val popUpBinding = CommonTypePopUpDesignBinding.inflate(
+            LayoutInflater.from(context),
+            null,
+            false
+        )
+
+        val popupWindow = PopupWindow(
+            popUpBinding.root,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            true
+        )
+
+        popupWindow.elevation = 10f
+
+        popUpBinding.tvType.text = title
+
+        val typeface = ResourcesCompat.getFont(context, R.font.fig_tree_medium)
+
+        typeArray.forEachIndexed { index, item ->
+
+            val radioButton = RadioButton(context).apply {
+
+                id = View.generateViewId()
+                text = item
+                textSize = 15f
+
+                typeface?.let {
+                    this.typeface = it
+                }
+
+                setTextColor(
+                    ContextCompat.getColor(context, R.color.black_color)
+                )
+
+                buttonTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(context, R.color.main_color)
+                )
+
+                setPadding(0, 12, 0, 12)
+
+                setOnClickListener {
+                    onItemClick(item)
+                    popupWindow.dismiss()
+                }
+            }
+
+            if (index == 0) {
+                radioButton.isChecked = true
+            }
+
+            popUpBinding.rgTypeItem.addView(radioButton)
+        }
+
+        // Measure popup size
+        popUpBinding.root.measure(
+            View.MeasureSpec.UNSPECIFIED,
+            View.MeasureSpec.UNSPECIFIED
+        )
+
+        val popupWidth = popUpBinding.root.measuredWidth
+        val popupHeight = popUpBinding.root.measuredHeight
+
+        val margin = (2 * context.resources.displayMetrics.density).toInt()
+        val xOffset = anchorView.width - popupWidth - margin
+
+        // Screen location
+        val location = IntArray(2)
+        anchorView.getLocationOnScreen(location)
+
+        val anchorY = location[1]
+
+        // Screen height
+        val screenHeight = Resources.getSystem().displayMetrics.heightPixels
+
+        // Remaining space below anchor
+        val spaceBelow = screenHeight - (anchorY + anchorView.height)
+
+        if (spaceBelow < popupHeight) {
+
+            // Show ABOVE
+            popupWindow.showAsDropDown(
+                anchorView,
+                xOffset,
+                -(anchorView.height + popupHeight)
+            )
+
+        } else {
+            // Show BELOW
+            popupWindow.showAsDropDown(
+                anchorView,
+                xOffset,
+                10
+            )
         }
     }
 

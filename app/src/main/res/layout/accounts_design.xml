@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingVertical="@dimen/_10sdp">
+        android:paddingVertical="@dimen/_8sdp">
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cv_profile"

@@ -60,6 +60,25 @@
             android:text="@string/change_ringtone"
             android:textColor="@color/black_color" />
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:layout_marginHorizontal="@dimen/_10sdp"
+            android:background="@color/border_color" />
+
+        <TextView
+            android:id="@+id/tv_Storage_location"
+            style="@style/TextStyle.Medium"
+            android:layout_width="@dimen/_140sdp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:background="@drawable/ripple_effect_bg"
+            android:padding="@dimen/_10sdp"
+            android:paddingTop="@dimen/_10sdp"
+            android:paddingBottom="@dimen/_15sdp"
+            android:text="@string/storage_location"
+            android:textColor="@color/black_color" />
+
 
     </LinearLayout>
 </layout>

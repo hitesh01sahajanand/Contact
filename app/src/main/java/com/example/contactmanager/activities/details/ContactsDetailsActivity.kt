@@ -29,8 +29,10 @@ import com.example.contactmanager.activities.newContact.NewContactActivity
 import com.example.contactmanager.activities.setRingtone.SetRingtoneActivity
 import com.example.contactmanager.activities.storageLocation.StorageLocationActivity
 import com.example.contactmanager.databinding.ActivityContactsDetailsBinding
+import com.example.contactmanager.databinding.ItemDetailEntryBinding
 import com.example.contactmanager.databinding.MoreDetailDesignBinding
 import com.example.contactmanager.models.CallLogEntry
+import com.example.contactmanager.models.FullContactData
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
@@ -64,6 +66,10 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             initView()
         }
 
+        viewModel.fullContactData.observe(this) { data ->
+            data?.let { populateFullContactData(it) }
+        }
+
         // 👉 Display initial data from intent for instant loading
         showInitialData()
     }
@@ -89,6 +95,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
         contactId = intent.getStringExtra(Constance.DATA_FETCH)
         contactId?.let { id ->
             viewModel.getUpdatedContact(id)
+            viewModel.fetchFullContactData(id)
         }
     }
 
@@ -187,7 +194,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             }
 
 
-            binding.cvHistory.id -> {
+            binding.ivCallHistory.id -> {
                 contactDetail?.let {
                     val intent = Intent(this, HistoryActivity::class.java)
                     intent.putExtra("Number", it.stringNumber)
@@ -224,7 +231,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                 }
             }
 
-            binding.cvStorageLocation.id -> {
+            /*binding.cvStorageLocation.id -> {
                 val intent = Intent(this, StorageLocationActivity::class.java)
                 contactDetail?.let {
                     intent.putExtra("contact_id", it.contactId)
@@ -235,7 +242,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                     intent.putExtra("contact_photo_uri", it.stringPhotoUri)
                 }
                 startActivity(intent)
-            }
+            }*/
 
             binding.llMore.id -> {
 
@@ -342,10 +349,321 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                     popupWindow.dismiss()
                 }
 
+                popUpBinding.tvStorageLocation.setOnClickListener {
+                    val intent = Intent(this, StorageLocationActivity::class.java)
+                    contactDetail?.let {
+                        intent.putExtra("contact_id", it.contactId)
+                        val name =
+                            if (it.stringCallName.isNullOrEmpty()) it.stringNumber else it.stringCallName
+                        intent.putExtra("contact_name", name)
+                        intent.putExtra("contact_number", it.stringNumber)
+                        intent.putExtra("contact_photo_uri", it.stringPhotoUri)
+                    }
+                    startActivity(intent)
+                    popupWindow.dismiss()
+                }
+
             }
 
         }
     }
+
+    private fun populateFullContactData(data: FullContactData) {
+        // Update contactDetail with full info for top level actions
+        contactDetail?.let {
+            if (data.phones.isNotEmpty()) it.stringNumber = data.phones[0].value
+            it.stringCallName = buildString {
+                if (data.firstName.isNotEmpty()) append(data.firstName).append(" ")
+                if (data.middleName.isNotEmpty()) append(data.middleName).append(" ")
+                if (data.surname.isNotEmpty()) append(data.surname)
+            }.trim()
+            it.stringPhotoUri = data.photoUri
+        }
+
+        // Name Formatting Logic
+        val name = buildString {
+            if (data.firstName.isNotEmpty()) append(data.firstName).append(" ")
+            if (data.middleName.isNotEmpty()) append(data.middleName).append(" ")
+            if (data.surname.isNotEmpty()) append(data.surname)
+        }.trim()
+        
+        if (name.isNotEmpty()) {
+            binding.tvName.text = name
+        }
+
+        // Company
+        if (data.company.isNotEmpty()) {
+            binding.linearLayoutCompany.isVisible = true
+            binding.txtCompany.text = data.company
+        } else {
+            binding.linearLayoutCompany.isVisible = false
+        }
+
+        // Phones
+        binding.containerPhonetype.removeAllViews()
+        if (data.phones.isNotEmpty()) {
+            binding.linearLayoutCall.isVisible = true
+            binding.txtNumber.text = data.phones[0].value
+            binding.txtType.text = getPhoneTypeName(data.phones[0].type, data.phones[0].label)
+            
+            for (i in 1 until data.phones.size) {
+                addDetailEntry(
+                    binding.containerPhonetype,
+                    data.phones[i].value,
+                    getPhoneTypeName(data.phones[i].type, data.phones[i].label),
+                    R.drawable.ic_call_info
+                ) { Common.actionCall(data.phones[i].value, this) }
+            }
+        } else {
+            binding.linearLayoutCall.isVisible = false
+        }
+
+        // Emails
+        binding.containerEmail.removeAllViews()
+        if (data.emails.isNotEmpty()) {
+            binding.linearLayoutEmail.isVisible = true
+            binding.txtMail.text = data.emails[0].value
+            binding.txtEmailType.text = getEmailTypeName(data.emails[0].type, data.emails[0].label)
+            binding.imgMail.setOnClickListener { openEmail(data.emails[0].value) }
+
+            for (i in 1 until data.emails.size) {
+                addDetailEntry(
+                    binding.containerEmail,
+                    data.emails[i].value,
+                    getEmailTypeName(data.emails[i].type, data.emails[i].label),
+                    null
+                ) { openEmail(data.emails[i].value) }
+            }
+        } else {
+            binding.linearLayoutEmail.isVisible = false
+        }
+
+        // Addresses
+        binding.containerAddress.removeAllViews()
+        if (data.addresses.isNotEmpty()) {
+            binding.rrLayoutadres.isVisible = true
+            binding.txtAddress.text = data.addresses[0].value
+            binding.txtAddressType.text = getAddressTypeName(data.addresses[0].type, data.addresses[0].label)
+            binding.ivDirection.setOnClickListener { openMap(data.addresses[0].value) }
+
+            for (i in 1 until data.addresses.size) {
+                addDetailEntry(
+                    binding.containerAddress,
+                    data.addresses[i].value,
+                    getAddressTypeName(data.addresses[i].type, data.addresses[i].label),
+                    null
+                ) { openMap(data.addresses[i].value) }
+            }
+        } else {
+            binding.rrLayoutadres.isVisible = false
+        }
+
+        // Check if About section should be visible
+        val isAboutVisible = data.company.isNotEmpty() || data.websites.isNotEmpty() || 
+                            data.events.isNotEmpty() || data.notes.isNotEmpty() || 
+                            data.relations.isNotEmpty()
+        
+        binding.companyAddressView.isVisible = isAboutVisible
+
+        if (isAboutVisible) {
+            // Websites
+            binding.containerWebsite.removeAllViews()
+            if (data.websites.isNotEmpty()) {
+                binding.linearLayoutWebsite.isVisible = true
+                binding.txtWebsite.text = data.websites[0]
+                binding.imgLink.setOnClickListener { openWebsite(data.websites[0]) }
+
+                for (i in 1 until data.websites.size) {
+                    addDetailEntry(
+                        binding.containerWebsite,
+                        data.websites[i],
+                        getString(R.string.website),
+                        null
+                    ) { openWebsite(data.websites[i]) }
+                }
+            } else {
+                binding.linearLayoutWebsite.isVisible = false
+            }
+
+            // Birthdays
+            binding.containerBirthday.removeAllViews()
+            if (data.events.isNotEmpty()) {
+                binding.linearLayoutBirthday.isVisible = true
+                binding.txtBirthday.text = data.events[0].value
+                binding.txtBirthdayType.text = getEventTypeName(data.events[0].type, data.events[0].label)
+
+                for (i in 1 until data.events.size) {
+                    addDetailEntry(
+                        binding.containerBirthday,
+                        data.events[i].value,
+                        getEventTypeName(data.events[i].type, data.events[i].label),
+                        null
+                    ) {}
+                }
+            } else {
+                binding.linearLayoutBirthday.isVisible = false
+            }
+
+            // Related Persons
+            binding.containerRelatedPerson.removeAllViews()
+            if (data.relations.isNotEmpty()) {
+                binding.linearLayoutRelatedperson.isVisible = true
+                binding.txtRelatedperson.text = data.relations[0].value
+                binding.txtTypeperson.text = getRelationTypeName(data.relations[0].type, data.relations[0].label)
+
+                for (i in 1 until data.relations.size) {
+                    addDetailEntry(
+                        binding.containerRelatedPerson,
+                        data.relations[i].value,
+                        getRelationTypeName(data.relations[i].type, data.relations[i].label),
+                        null
+                    ) {}
+                }
+            } else {
+                binding.linearLayoutRelatedperson.isVisible = false
+            }
+
+            // Notes
+            if (data.notes.isNotEmpty()) {
+                binding.linearLayoutNotes.isVisible = true
+                binding.txtNotes.text = data.notes
+            } else {
+                binding.linearLayoutNotes.isVisible = false
+            }
+        }
+    }
+
+    private fun addDetailEntry(
+        container: LinearLayout,
+        value: String,
+        type: String,
+        iconRes: Int?,
+        onClick: () -> Unit
+    ) {
+        val itemBinding = ItemDetailEntryBinding.inflate(
+            LayoutInflater.from(this),
+            container,
+            false
+        )
+        itemBinding.tvValue.text = value
+        itemBinding.tvType.text = type
+        /*if (iconRes != null) {
+            itemBinding.ivAction.isVisible = true
+            itemBinding.ivAction.setImageResource(iconRes)
+        } else {
+            itemBinding.ivAction.isVisible = false
+        }*/
+        itemBinding.llMain.setOnClickListener { onClick() }
+        container.addView(itemBinding.root)
+    }
+
+    private fun openMap(address: String) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW,
+                "geo:0,0?q=${android.net.Uri.encode(address)}".toUri())
+            intent.setPackage("com.google.android.apps.maps")
+            startActivity(intent)
+        } catch (e: Exception) {
+            try {
+                val intent = Intent(Intent.ACTION_VIEW,
+                    "geo:0,0?q=${android.net.Uri.encode(address)}".toUri())
+                startActivity(intent)
+            } catch (ex: Exception) {
+                Toast.makeText(this, "No map application found", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun openWebsite(url: String) {
+        var website = url
+        if (!website.startsWith("http://") && !website.startsWith("https://")) {
+            website = "http://$website"
+        }
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, website.toUri())
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "No browser found", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun openEmail(email: String) {
+        try {
+            val intent = Intent(Intent.ACTION_SENDTO, "mailto:$email".toUri())
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "No email application found", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Type name helpers (Copied from NewContactActivity)
+    private fun getPhoneTypeName(type: Int, label: String?) =
+        if (type == ContactsContract.CommonDataKinds.Phone.TYPE_CUSTOM) label
+            ?: getString(R.string.custom) else getString(
+            when (type) {
+                ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE -> R.string.mobile
+                ContactsContract.CommonDataKinds.Phone.TYPE_HOME -> R.string.home
+                ContactsContract.CommonDataKinds.Phone.TYPE_WORK -> R.string.work
+                ContactsContract.CommonDataKinds.Phone.TYPE_MAIN -> R.string.main
+                ContactsContract.CommonDataKinds.Phone.TYPE_FAX_WORK -> R.string.work_fax
+                ContactsContract.CommonDataKinds.Phone.TYPE_FAX_HOME -> R.string.home_fax
+                ContactsContract.CommonDataKinds.Phone.TYPE_PAGER -> R.string.pager
+                else -> R.string.other
+            }
+        )
+
+    private fun getEmailTypeName(type: Int, label: String?) =
+        if (type == ContactsContract.CommonDataKinds.Email.TYPE_CUSTOM) label
+            ?: getString(R.string.custom) else getString(
+            when (type) {
+                ContactsContract.CommonDataKinds.Email.TYPE_HOME -> R.string.home
+                ContactsContract.CommonDataKinds.Email.TYPE_WORK -> R.string.work
+                ContactsContract.CommonDataKinds.Email.TYPE_MOBILE -> R.string.mobile
+                else -> R.string.other
+            }
+        )
+
+    private fun getAddressTypeName(type: Int, label: String?) =
+        if (type == ContactsContract.CommonDataKinds.StructuredPostal.TYPE_CUSTOM) label
+            ?: getString(R.string.custom) else getString(
+            when (type) {
+                ContactsContract.CommonDataKinds.StructuredPostal.TYPE_HOME -> R.string.home
+                ContactsContract.CommonDataKinds.StructuredPostal.TYPE_WORK -> R.string.work
+                else -> R.string.other
+            }
+        )
+
+    private fun getEventTypeName(type: Int, label: String?) =
+        if (type == ContactsContract.CommonDataKinds.Event.TYPE_CUSTOM) label
+            ?: getString(R.string.custom) else getString(
+            when (type) {
+                ContactsContract.CommonDataKinds.Event.TYPE_BIRTHDAY -> R.string.birthday
+                ContactsContract.CommonDataKinds.Event.TYPE_ANNIVERSARY -> R.string.anniversary
+                else -> R.string.other
+            }
+        )
+
+    private fun getRelationTypeName(type: Int, label: String?) =
+        if (type == ContactsContract.CommonDataKinds.Relation.TYPE_CUSTOM) label
+            ?: getString(R.string.custom) else getString(
+            when (type) {
+                ContactsContract.CommonDataKinds.Relation.TYPE_ASSISTANT -> R.string.assistant
+                ContactsContract.CommonDataKinds.Relation.TYPE_BROTHER -> R.string.brother
+                ContactsContract.CommonDataKinds.Relation.TYPE_CHILD -> R.string.child
+                ContactsContract.CommonDataKinds.Relation.TYPE_DOMESTIC_PARTNER -> R.string.domestic_partner
+                ContactsContract.CommonDataKinds.Relation.TYPE_FATHER -> R.string.father
+                ContactsContract.CommonDataKinds.Relation.TYPE_FRIEND -> R.string.friend
+                ContactsContract.CommonDataKinds.Relation.TYPE_MANAGER -> R.string.manager
+                ContactsContract.CommonDataKinds.Relation.TYPE_MOTHER -> R.string.mother
+                ContactsContract.CommonDataKinds.Relation.TYPE_PARENT -> R.string.parent
+                ContactsContract.CommonDataKinds.Relation.TYPE_PARTNER -> R.string.partner
+                ContactsContract.CommonDataKinds.Relation.TYPE_REFERRED_BY -> R.string.referred_by
+                ContactsContract.CommonDataKinds.Relation.TYPE_RELATIVE -> R.string.relative
+                ContactsContract.CommonDataKinds.Relation.TYPE_SISTER -> R.string.sister
+                ContactsContract.CommonDataKinds.Relation.TYPE_SPOUSE -> R.string.spouse
+                else -> R.string.other
+            }
+        )
 
     fun isContactFavorite(context: Context, contactId: String): Boolean {
 

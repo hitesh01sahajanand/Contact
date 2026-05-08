@@ -64,7 +64,7 @@
                     android:layout_width="@dimen/_100sdp"
                     android:layout_height="@dimen/_100sdp"
                     android:layout_gravity="center"
-                    android:layout_marginTop="@dimen/_20sdp"
+                    android:layout_marginTop="@dimen/_30sdp"
                     app:cardBackgroundColor="@color/color_1"
                     app:cardElevation="0dp"
                     app:cardPreventCornerOverlap="true"
@@ -173,12 +173,13 @@
                             android:gravity="center"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                             android:orientation="vertical"
+                            android:padding="@dimen/_4sdp"
                             android:visibility="gone">
 
                             <com.google.android.material.card.MaterialCardView
                                 android:id="@+id/cv_swap"
-                                android:layout_width="@dimen/_50sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_width="@dimen/_46sdp"
+                                android:layout_height="@dimen/_46sdp"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardElevation="0dp"
                                 app:cardPreventCornerOverlap="true"
@@ -190,7 +191,7 @@
                                     android:id="@+id/iv_swap"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
-                                    android:padding="@dimen/_15sdp"
+                                    android:padding="@dimen/_14sdp"
                                     android:src="@drawable/ic_swap_call"
                                     app:tint="@color/black_color" />
                             </com.google.android.material.card.MaterialCardView>
@@ -223,12 +224,13 @@
                             android:foreground="@drawable/custom_button_ripple"
                             android:gravity="center"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
-                            android:orientation="vertical">
+                            android:orientation="vertical"
+                            android:padding="@dimen/_4sdp">
 
                             <com.google.android.material.card.MaterialCardView
                                 android:id="@+id/cv_hold"
-                                android:layout_width="@dimen/_50sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_width="@dimen/_46sdp"
+                                android:layout_height="@dimen/_46sdp"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardElevation="0dp"
                                 app:cardPreventCornerOverlap="true"
@@ -240,7 +242,7 @@
                                     android:id="@+id/iv_hold"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
-                                    android:padding="@dimen/_15sdp"
+                                    android:padding="@dimen/_14sdp"
                                     android:src="@drawable/ic_hold"
                                     app:tint="@color/black_color" />
                             </com.google.android.material.card.MaterialCardView>
@@ -273,12 +275,13 @@
                             android:foreground="@drawable/custom_button_ripple"
                             android:gravity="center"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
-                            android:orientation="vertical">
+                            android:orientation="vertical"
+                            android:padding="@dimen/_4sdp">
 
                             <com.google.android.material.card.MaterialCardView
                                 android:id="@+id/cv_video_call"
-                                android:layout_width="@dimen/_50sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_width="@dimen/_46sdp"
+                                android:layout_height="@dimen/_46sdp"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardElevation="0dp"
                                 app:cardPreventCornerOverlap="true"
@@ -290,7 +293,7 @@
                                     android:id="@+id/iv_video_call"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
-                                    android:padding="@dimen/_15sdp"
+                                    android:padding="@dimen/_14sdp"
                                     android:src="@drawable/ic_video_call"
                                     app:tint="@color/black_color" />
                             </com.google.android.material.card.MaterialCardView>
@@ -426,12 +429,13 @@
                             android:foreground="@drawable/custom_button_ripple"
                             android:gravity="center"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
-                            android:orientation="vertical">
+                            android:orientation="vertical"
+                            android:padding="@dimen/_4sdp">
 
                             <com.google.android.material.card.MaterialCardView
                                 android:id="@+id/cv_add_call"
-                                android:layout_width="@dimen/_50sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_width="@dimen/_46sdp"
+                                android:layout_height="@dimen/_46sdp"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardElevation="0dp"
                                 app:cardPreventCornerOverlap="true"
@@ -443,7 +447,7 @@
                                     android:id="@+id/iv_add_call"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
-                                    android:padding="@dimen/_16sdp"
+                                    android:padding="@dimen/_14sdp"
                                     android:src="@drawable/ic_add_call" />
                             </com.google.android.material.card.MaterialCardView>
 
@@ -486,12 +490,13 @@
                             android:gravity="center"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                             android:orientation="vertical"
+                            android:padding="@dimen/_4sdp"
                             android:visibility="visible">
 
                             <com.google.android.material.card.MaterialCardView
                                 android:id="@+id/cv_keypad"
-                                android:layout_width="@dimen/_50sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_width="@dimen/_46sdp"
+                                android:layout_height="@dimen/_46sdp"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardElevation="0dp"
                                 app:cardPreventCornerOverlap="true"
@@ -502,7 +507,7 @@
                                 <ImageView
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
-                                    android:padding="@dimen/_15sdp"
+                                    android:padding="@dimen/_14sdp"
                                     android:src="@drawable/ic_keypad"
                                     app:tint="@color/black_color" />
                             </com.google.android.material.card.MaterialCardView>
@@ -536,12 +541,13 @@
                             android:foreground="@drawable/custom_button_ripple"
                             android:gravity="center"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
-                            android:orientation="vertical">
+                            android:orientation="vertical"
+                            android:padding="@dimen/_4sdp">
 
                             <com.google.android.material.card.MaterialCardView
                                 android:id="@+id/cv_mute"
-                                android:layout_width="@dimen/_50sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_width="@dimen/_46sdp"
+                                android:layout_height="@dimen/_46sdp"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardElevation="0dp"
                                 app:cardPreventCornerOverlap="true"
@@ -553,7 +559,7 @@
                                     android:id="@+id/iv_mute"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
-                                    android:padding="@dimen/_15sdp"
+                                    android:padding="@dimen/_14sdp"
                                     android:src="@drawable/ic_mute"
                                     app:tint="@color/black_color" />
                             </com.google.android.material.card.MaterialCardView>
@@ -587,12 +593,13 @@
                             android:foreground="@drawable/custom_button_ripple"
                             android:gravity="center"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
-                            android:orientation="vertical">
+                            android:orientation="vertical"
+                            android:padding="@dimen/_4sdp">
 
                             <com.google.android.material.card.MaterialCardView
                                 android:id="@+id/cv_speaker"
-                                android:layout_width="@dimen/_50sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_width="@dimen/_46sdp"
+                                android:layout_height="@dimen/_46sdp"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardElevation="0dp"
                                 app:cardPreventCornerOverlap="true"
@@ -604,7 +611,7 @@
                                     android:id="@+id/iv_speaker"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
-                                    android:padding="@dimen/_15sdp"
+                                    android:padding="@dimen/_14sdp"
                                     android:src="@drawable/ic_speaker"
                                     app:tint="@color/black_color" />
                             </com.google.android.material.card.MaterialCardView>
@@ -639,12 +646,13 @@
                             android:gravity="center"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                             android:orientation="vertical"
+                            android:padding="@dimen/_4sdp"
                             android:visibility="visible">
 
                             <com.google.android.material.card.MaterialCardView
                                 android:id="@+id/cv_more"
-                                android:layout_width="@dimen/_50sdp"
-                                android:layout_height="@dimen/_50sdp"
+                                android:layout_width="@dimen/_46sdp"
+                                android:layout_height="@dimen/_46sdp"
                                 app:cardBackgroundColor="@color/bg_color"
                                 app:cardElevation="0dp"
                                 app:cardPreventCornerOverlap="true"
@@ -653,9 +661,10 @@
                                 app:strokeWidth="1dp">
 
                                 <ImageView
+                                    android:id="@+id/iv_more"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
-                                    android:padding="@dimen/_15sdp"
+                                    android:padding="@dimen/_14sdp"
                                     android:src="@drawable/ic_more" />
                             </com.google.android.material.card.MaterialCardView>
 
@@ -998,7 +1007,7 @@
                     android:id="@+id/iv_reject_call"
                     android:layout_width="@dimen/_60sdp"
                     android:layout_height="@dimen/_60sdp"
-                    android:layout_marginBottom="@dimen/_10sdp"
+                    android:layout_marginBottom="@dimen/_20sdp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                     android:src="@drawable/ic_call_reject"

@@ -56,6 +56,34 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cv_save"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="@dimen/_5sdp"
+                android:layout_weight="1"
+                android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
+                app:cardCornerRadius="@dimen/_10sdp"
+                app:cardElevation="0dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    style="@style/TextStyle.Medium"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:paddingHorizontal="@dimen/_20sdp"
+                    android:paddingVertical="@dimen/_10sdp"
+                    android:text="@string/save"
+                    android:textColor="@color/black_color" />
+
+            </androidx.cardview.widget.CardView>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
 
@@ -64,7 +92,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginTop="@dimen/_10sdp"
-            app:layout_constraintBottom_toTopOf="@+id/ll_save_cancel"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/ll_header">
@@ -104,8 +132,8 @@
 
 
                         <ImageView
-                            android:layout_width="@dimen/_14sdp"
-                            android:layout_height="@dimen/_14sdp"
+                            android:layout_width="@dimen/_12sdp"
+                            android:layout_height="@dimen/_12sdp"
                             android:layout_gravity="center_vertical"
                             android:src="@drawable/ic_down_arrow"
                             app:tint="@color/black_color" />
@@ -123,11 +151,11 @@
 
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/cv_add_photo"
-                        android:layout_width="@dimen/_100sdp"
-                        android:layout_height="@dimen/_100sdp"
+                        android:layout_width="@dimen/_90sdp"
+                        android:layout_height="@dimen/_90sdp"
                         android:layout_gravity="center"
                         android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                        app:cardBackgroundColor="@color/light_blue_color"
+                        app:cardBackgroundColor="@color/white"
                         app:cardElevation="0dp"
                         app:cardPreventCornerOverlap="true"
                         app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
@@ -135,204 +163,903 @@
                         app:strokeWidth="1dp">
 
                         <ImageView
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:padding="@dimen/_30sdp"
-                            android:scaleType="centerCrop"
-                            android:src="@drawable/ic_user" />
-
-                        <ImageView
                             android:id="@+id/iv_contact_photo"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:scaleType="centerCrop" />
+
+                        <ImageView
+                            android:id="@+id/iv_photo"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:padding="@dimen/_30sdp"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/ic_add_photo"
+                            app:tint="@color/black_color" />
                     </com.google.android.material.card.MaterialCardView>
+
+                    <TextView
+                        style="@style/TextStyle.Medium"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="@dimen/_10sdp"
+                        android:gravity="center"
+                        android:text="@string/add_photo"
+                        android:textColor="@color/black_color" />
 
                 </LinearLayout>
 
-                <androidx.cardview.widget.CardView
+                <LinearLayout
+                    android:id="@+id/lay1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginHorizontal="@dimen/_10sdp"
-                    app:cardCornerRadius="@dimen/_10sdp"
-                    app:cardElevation="0dp">
+                    android:layout_marginHorizontal="@dimen/_12sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/bg_create2"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/_10sdp"
+                    android:visibility="visible">
+
+                    <ImageView
+                        android:layout_width="@dimen/_25sdp"
+                        android:layout_height="@dimen/_25sdp"
+                        android:layout_marginTop="@dimen/_5sdp"
+                        android:padding="@dimen/_4sdp"
+                        android:src="@drawable/ic_contact_profile" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="@dimen/_20sdp"
-                            android:layout_height="@dimen/_20sdp"
-                            android:layout_marginStart="@dimen/_10sdp"
-                            android:src="@drawable/ic_profile"
-                            app:tint="@color/black_color" />
+                        android:orientation="vertical">
 
                         <EditText
-                            android:id="@+id/edt_first_name"
+                            android:id="@+id/et_name"
                             style="@style/TextStyle.Regular"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="@dimen/_3sdp"
                             android:background="@null"
+                            android:backgroundTint="@color/white"
                             android:hint="@string/first_name"
+                            android:inputType="textCapWords"
+                            android:paddingHorizontal="@dimen/_3sdp"
+                            android:paddingVertical="@dimen/_8sdp"
                             android:singleLine="true"
-                            android:imeOptions="actionNext"
-                            android:padding="@dimen/_13sdp"
+                            android:textColor="@color/black_color"
+                            android:textColorHint="@color/grey_color" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_1sdp"
+                            android:layout_marginStart="@dimen/_3sdp"
+                            android:background="@color/border_color" />
+
+                        <EditText
+                            android:id="@+id/et_name1"
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="@dimen/_3sdp"
+                            android:background="@null"
+                            android:backgroundTint="@color/white"
+                            android:hint="@string/middle_name"
+                            android:inputType="textCapWords"
+                            android:paddingHorizontal="@dimen/_5sdp"
+                            android:paddingVertical="@dimen/_8sdp"
+                            android:singleLine="true"
+                            android:textColor="@color/black_color"
+                            android:textColorHint="@color/grey_color" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_1sdp"
+                            android:layout_marginStart="@dimen/_3sdp"
+                            android:background="@color/border_color" />
+
+
+                        <EditText
+                            android:id="@+id/et_name2"
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="@dimen/_3sdp"
+                            android:background="@null"
+                            android:backgroundTint="@color/white"
+                            android:hint="@string/surname"
+                            android:inputType="textCapWords"
+                            android:paddingHorizontal="@dimen/_5sdp"
+                            android:paddingVertical="@dimen/_8sdp"
+                            android:singleLine="true"
+                            android:textColor="@color/black_color"
+                            android:textColorHint="@color/grey_color" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_1sdp"
+                            android:layout_marginStart="@dimen/_3sdp"
+                            android:background="@color/border_color" />
+
+                        <EditText
+                            android:id="@+id/et_company"
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="@dimen/_3sdp"
+                            android:background="@null"
+                            android:backgroundTint="@color/white"
+                            android:hint="@string/company"
+                            android:inputType="textCapWords"
+                            android:paddingHorizontal="@dimen/_5sdp"
+                            android:paddingVertical="@dimen/_8sdp"
+                            android:singleLine="true"
                             android:textColor="@color/black_color"
                             android:textColorHint="@color/grey_color" />
 
                     </LinearLayout>
 
-                </androidx.cardview.widget.CardView>
 
-                <androidx.cardview.widget.CardView
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/lyNumber"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:layout_marginHorizontal="@dimen/_12sdp"
                     android:layout_marginTop="@dimen/_10sdp"
-                    app:cardCornerRadius="@dimen/_10sdp"
-                    app:cardElevation="0dp">
+                    android:background="@drawable/bg_create2"
+                    android:orientation="vertical"
+                    android:padding="@dimen/_10sdp"
+                    android:visibility="visible">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:gravity="center_vertical"
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="@dimen/_20sdp"
-                            android:layout_height="@dimen/_20sdp"
-                            android:layout_marginStart="@dimen/_10sdp"
-                            android:src="@drawable/ic_edit_call"
+                            android:layout_width="@dimen/_25sdp"
+                            android:layout_height="@dimen/_25sdp"
+                            android:layout_marginTop="@dimen/_5sdp"
+                            android:padding="@dimen/_4sdp"
+                            android:src="@drawable/ic_contact_call" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                                <EditText
+                                    android:id="@+id/et_number"
+                                    style="@style/TextStyle.Regular"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginHorizontal="@dimen/_3sdp"
+                                    android:layout_weight="1"
+                                    android:background="@null"
+                                    android:backgroundTint="@color/white"
+                                    android:hint="@string/number"
+                                    android:inputType="number"
+                                    android:paddingHorizontal="@dimen/_5sdp"
+                                    android:paddingVertical="@dimen/_8sdp"
+                                    android:singleLine="true"
+                                    android:textColor="@color/black_color"
+                                    android:textColorHint="@color/grey_color" />
+
+                                <LinearLayout
+                                    android:id="@+id/rrnumber_type"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center"
+                                    android:onClick="@{(v) -> OnClickHandler.onClick(v)}">
+
+                                    <TextView
+                                        android:id="@+id/txt_type"
+                                        style="@style/TextStyle.Regular"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:includeFontPadding="false"
+                                        android:paddingStart="@dimen/_10sdp"
+                                        android:paddingEnd="@dimen/_5sdp"
+                                        android:text="@string/mobile"
+                                        android:textColor="@color/black_color" />
+
+                                    <ImageView
+                                        android:id="@+id/iv_downnumber"
+                                        android:layout_width="@dimen/_12sdp"
+                                        android:layout_height="@dimen/_12sdp"
+                                        android:layout_gravity="center"
+                                        android:src="@drawable/ic_contact_arrow_down"
+                                        android:visibility="visible"
+                                        app:tint="@color/black_color" />
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/_1sdp"
+                                android:layout_marginStart="@dimen/_3sdp"
+                                android:background="@color/border_color" />
+
+
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/container_phonetype"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+
+                    <LinearLayout
+                        android:id="@+id/newPhoneNumberAdd"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="@dimen/_10sdp"
+                        android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                        android:orientation="horizontal"
+                        android:paddingVertical="@dimen/_8sdp">
+
+                        <ImageView
+                            android:layout_width="@dimen/_10sdp"
+                            android:layout_height="@dimen/_10sdp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_add"
                             app:tint="@color/black_color" />
 
-                        <EditText
-                            android:id="@+id/edt_phone"
+                        <TextView
                             style="@style/TextStyle.Regular"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:background="@null"
-                            android:hint="@string/phone"
-                            android:imeOptions="actionNext"
-                            android:inputType="phone"
-                            android:padding="@dimen/_13sdp"
-                            android:textColor="@color/black_color"
-                            android:textColorHint="@color/grey_color" />
-
+                            android:layout_marginStart="@dimen/_12sdp"
+                            android:text="@string/add_number_to_contact"
+                            android:textColor="@color/black_color" />
                     </LinearLayout>
 
-                </androidx.cardview.widget.CardView>
+                </LinearLayout>
 
-                <androidx.cardview.widget.CardView
+
+                <LinearLayout
+                    android:id="@+id/lyEmail"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
                     android:layout_marginHorizontal="@dimen/_10sdp"
-                    android:layout_marginTop="@dimen/_10sdp"
-                    app:cardCornerRadius="@dimen/_10sdp"
-                    app:cardElevation="0dp">
+                    android:layout_marginTop="@dimen/_12sdp"
+                    android:background="@drawable/bg_create2"
+                    android:orientation="vertical"
+                    android:padding="@dimen/_10sdp"
+                    android:visibility="visible">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <ImageView
-                            android:layout_width="@dimen/_20sdp"
-                            android:layout_height="@dimen/_20sdp"
-                            android:layout_marginStart="@dimen/_10sdp"
-                            android:src="@drawable/ic_email"
-                            app:tint="@color/black_color" />
 
-                        <EditText
-                            android:id="@+id/edt_email"
+                        <ImageView
+                            android:layout_width="@dimen/_25sdp"
+                            android:layout_height="@dimen/_25sdp"
+                            android:layout_marginTop="@dimen/_5sdp"
+                            android:padding="@dimen/_4sdp"
+                            android:src="@drawable/ic_contact_sms" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                                <EditText
+                                    android:id="@+id/et_email"
+                                    style="@style/TextStyle.Regular"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginHorizontal="@dimen/_3sdp"
+                                    android:layout_weight="1"
+                                    android:background="@null"
+                                    android:backgroundTint="@color/white"
+                                    android:hint="@string/email"
+                                    android:paddingHorizontal="@dimen/_3sdp"
+                                    android:paddingVertical="@dimen/_8sdp"
+                                    android:singleLine="true"
+                                    android:textColor="@color/black_color"
+                                    android:textColorHint="@color/grey_color" />
+
+                                <LinearLayout
+                                    android:id="@+id/rremail_type"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center"
+                                    android:onClick="@{(v) -> OnClickHandler.onClick(v)}">
+
+                                    <TextView
+                                        android:id="@+id/txt_email_type"
+                                        style="@style/TextStyle.Regular"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:includeFontPadding="false"
+                                        android:paddingStart="@dimen/_10sdp"
+                                        android:paddingEnd="@dimen/_5sdp"
+                                        android:text="@string/home"
+                                        android:textColor="@color/black_color" />
+
+                                    <ImageView
+                                        android:id="@+id/iv_downmail"
+                                        android:layout_width="@dimen/_12sdp"
+                                        android:layout_height="@dimen/_12sdp"
+                                        android:layout_gravity="center"
+                                        android:src="@drawable/ic_contact_arrow_down"
+                                        android:visibility="visible" />
+                                </LinearLayout>
+
+                            </LinearLayout>
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/_1sdp"
+                                android:layout_marginStart="@dimen/_3sdp"
+                                android:background="@color/border_color" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/container_email"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+
+                    <LinearLayout
+                        android:id="@+id/newEmailNumberAdd"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="@dimen/_10sdp"
+                        android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                        android:orientation="horizontal"
+                        android:paddingVertical="@dimen/_8sdp">
+
+                        <ImageView
+                            android:layout_width="@dimen/_10sdp"
+                            android:layout_height="@dimen/_10sdp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_add" />
+
+                        <TextView
                             style="@style/TextStyle.Regular"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:background="@null"
-                            android:hint="@string/email"
-                            android:imeOptions="actionDone"
-                            android:inputType="textEmailAddress"
-                            android:padding="@dimen/_13sdp"
-                            android:textColor="@color/black_color"
-                            android:textColorHint="@color/grey_color" />
-
+                            android:layout_marginStart="@dimen/_12sdp"
+                            android:text="@string/add_email_to_contact"
+                            android:textColor="@color/black_color" />
                     </LinearLayout>
 
-                </androidx.cardview.widget.CardView>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/lyAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_12sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/bg_create2"
+                    android:orientation="vertical"
+                    android:padding="@dimen/_10sdp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="@dimen/_25sdp"
+                            android:layout_height="@dimen/_25sdp"
+                            android:layout_marginTop="@dimen/_5sdp"
+                            android:padding="@dimen/_4sdp"
+                            android:src="@drawable/ic_contact_location" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                                <EditText
+                                    android:id="@+id/et_address"
+                                    style="@style/TextStyle.Regular"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginHorizontal="@dimen/_5sdp"
+                                    android:layout_weight="1"
+                                    android:background="@null"
+                                    android:backgroundTint="@color/white"
+                                    android:hint="@string/address"
+                                    android:inputType="textCapWords"
+                                    android:paddingHorizontal="@dimen/_3sdp"
+                                    android:paddingVertical="@dimen/_8sdp"
+                                    android:singleLine="true"
+                                    android:textColor="@color/black_color"
+                                    android:textColorHint="@color/grey_color" />
+
+                                <LinearLayout
+                                    android:id="@+id/rr_adrestype"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center"
+                                    android:onClick="@{(v) -> OnClickHandler.onClick(v)}">
+
+                                    <TextView
+                                        android:id="@+id/txt_address_type"
+                                        style="@style/TextStyle.Regular"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:includeFontPadding="false"
+                                        android:paddingStart="@dimen/_10sdp"
+                                        android:paddingEnd="@dimen/_5sdp"
+                                        android:text="@string/home"
+                                        android:textColor="@color/black_color" />
+
+                                    <ImageView
+                                        android:id="@+id/iv_downadres"
+                                        android:layout_width="@dimen/_12sdp"
+                                        android:layout_height="@dimen/_12sdp"
+                                        android:layout_gravity="center"
+                                        android:src="@drawable/ic_contact_arrow_down"
+                                        android:visibility="visible"
+                                        app:tint="@color/black_color" />
+                                </LinearLayout>
+
+                            </LinearLayout>
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/_1sdp"
+                                android:layout_marginStart="@dimen/_3sdp"
+                                android:background="@color/border_color" />
+
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/container_address"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+
+                    <LinearLayout
+                        android:id="@+id/newAddressAdd"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="@dimen/_10sdp"
+                        android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                        android:orientation="horizontal"
+                        android:paddingVertical="@dimen/_8sdp">
+
+                        <ImageView
+                            android:layout_width="@dimen/_10sdp"
+                            android:layout_height="@dimen/_10sdp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_add"
+                            app:tint="@color/black_color" />
+
+                        <TextView
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/_12sdp"
+                            android:text="@string/add_address_to_contact"
+                            android:textColor="@color/black_color" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/lySelectDateOfBirth"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_12sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/bg_create2"
+                    android:orientation="vertical"
+                    android:padding="@dimen/_10sdp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+
+                        <ImageView
+                            android:layout_width="@dimen/_25sdp"
+                            android:layout_height="@dimen/_25sdp"
+                            android:layout_marginTop="@dimen/_5sdp"
+                            android:padding="@dimen/_4sdp"
+                            android:src="@drawable/ic_contact_cake" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:gravity="center"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:id="@+id/select_birthday"
+                                    style="@style/TextStyle.Regular"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center"
+                                    android:layout_marginHorizontal="@dimen/_5sdp"
+                                    android:layout_weight="1"
+                                    android:backgroundTint="@color/white"
+                                    android:hint="@string/select_date_of_birth"
+                                    android:paddingHorizontal="@dimen/_5sdp"
+                                    android:paddingVertical="@dimen/_8sdp"
+                                    android:singleLine="true"
+                                    android:textColor="@color/black_color"
+                                    android:textColorHint="@color/grey_color" />
+
+                                <LinearLayout
+                                    android:id="@+id/rv_bday"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center"
+                                    android:layout_marginStart="@dimen/_12sdp"
+                                    android:onClick="@{(v) -> OnClickHandler.onClick(v)}">
+
+                                    <TextView
+                                        android:id="@+id/txt_birthday_type"
+                                        style="@style/TextStyle.Regular"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:includeFontPadding="false"
+                                        android:paddingStart="@dimen/_10sdp"
+                                        android:paddingEnd="@dimen/_5sdp"
+                                        android:text="@string/birthday"
+                                        android:textColor="@color/black_color" />
+
+                                    <ImageView
+                                        android:layout_width="@dimen/_12sdp"
+                                        android:layout_height="@dimen/_12sdp"
+                                        android:layout_gravity="center"
+                                        android:src="@drawable/ic_contact_arrow_down"
+                                        android:visibility="visible" />
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/_1sdp"
+                                android:layout_marginStart="@dimen/_3sdp"
+                                android:background="@color/border_color" />
+
+
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/container_birthday"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+
+                    <LinearLayout
+                        android:id="@+id/newBirthdayAdd"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="@dimen/_10sdp"
+                        android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                        android:orientation="horizontal"
+                        android:paddingVertical="@dimen/_8sdp">
+
+                        <ImageView
+                            android:layout_width="@dimen/_10sdp"
+                            android:layout_height="@dimen/_10sdp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_add"
+                            app:tint="@color/black_color" />
+
+                        <TextView
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/_12sdp"
+                            android:text="@string/add_date_of_birth_to_contact"
+                            android:textColor="@color/black_color" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/lyNote"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_12sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/bg_create2"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/_8sdp">
+
+                    <ImageView
+                        android:layout_width="@dimen/_25sdp"
+                        android:layout_height="@dimen/_25sdp"
+                        android:layout_gravity="center"
+                        android:padding="@dimen/_4sdp"
+                        android:src="@drawable/ic_contact_note" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <EditText
+                                android:id="@+id/et_note"
+                                style="@style/TextStyle.Regular"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginHorizontal="@dimen/_3sdp"
+                                android:layout_weight="1"
+                                android:background="@null"
+                                android:hint="@string/notes"
+                                android:inputType="textCapSentences"
+                                android:paddingHorizontal="@dimen/_5sdp"
+                                android:paddingVertical="@dimen/_8sdp"
+                                android:singleLine="true"
+                                android:textColor="@color/black_color"
+                                android:textColorHint="@color/grey_color" />
+
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/lyWebsite"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_12sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:background="@drawable/bg_create2"
+                    android:orientation="vertical"
+                    android:padding="@dimen/_10sdp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+
+                        <ImageView
+                            android:layout_width="@dimen/_25sdp"
+                            android:layout_height="@dimen/_25sdp"
+                            android:layout_marginTop="@dimen/_5sdp"
+                            android:padding="@dimen/_4sdp"
+                            android:src="@drawable/ic_contact_website" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                                <EditText
+                                    android:id="@+id/et_website"
+                                    style="@style/TextStyle.Regular"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginHorizontal="@dimen/_3sdp"
+                                    android:layout_weight="1"
+                                    android:background="@null"
+                                    android:hint="@string/website"
+                                    android:paddingHorizontal="@dimen/_3sdp"
+                                    android:paddingVertical="@dimen/_8sdp"
+                                    android:singleLine="true"
+                                    android:textColor="@color/black_color"
+                                    android:textColorHint="@color/grey_color" />
+
+                            </LinearLayout>
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/_1sdp"
+                                android:layout_marginStart="@dimen/_3sdp"
+                                android:background="@color/border_color" />
+
+
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/container_website"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+
+                    <LinearLayout
+                        android:id="@+id/add_more_website"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="@dimen/_10sdp"
+                        android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                        android:orientation="horizontal"
+                        android:paddingVertical="@dimen/_5sdp">
+
+                        <ImageView
+                            android:layout_width="@dimen/_10sdp"
+                            android:layout_height="@dimen/_10sdp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_add"
+                            app:tint="@color/black_color" />
+
+                        <TextView
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/_12sdp"
+                            android:text="@string/add_website_to_contact"
+                            android:textColor="@color/black_color" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/lyRelatedPerson"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_12sdp"
+                    android:layout_marginVertical="@dimen/_10sdp"
+                    android:background="@drawable/bg_create2"
+                    android:orientation="vertical"
+                    android:padding="@dimen/_10sdp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="@dimen/_25sdp"
+                            android:layout_height="@dimen/_25sdp"
+                            android:layout_marginTop="@dimen/_5sdp"
+                            android:padding="@dimen/_4sdp"
+                            android:src="@drawable/ic_contact_relation" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                                <EditText
+                                    android:id="@+id/et_relationperson"
+                                    style="@style/TextStyle.Regular"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginHorizontal="@dimen/_3sdp"
+                                    android:layout_weight="1"
+                                    android:background="@null"
+                                    android:backgroundTint="@color/white"
+                                    android:hint="@string/related_person"
+                                    android:inputType="number"
+                                    android:paddingHorizontal="@dimen/_3sdp"
+                                    android:paddingVertical="@dimen/_8sdp"
+                                    android:singleLine="true"
+                                    android:textColor="@color/black_color"
+                                    android:textColorHint="@color/grey_color" />
+
+
+                                <LinearLayout
+                                    android:id="@+id/rr_relatedperson"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginBottom="@dimen/_5sdp"
+                                    android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                                    android:paddingTop="@dimen/_10sdp">
+
+                                    <TextView
+                                        android:id="@+id/txt_relationtype"
+                                        style="@style/TextStyle.Regular"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:includeFontPadding="false"
+                                        android:paddingStart="@dimen/_10sdp"
+                                        android:paddingEnd="@dimen/_5sdp"
+                                        android:text="@string/assistant"
+                                        android:textColor="@color/black_color" />
+
+                                    <ImageView
+                                        android:id="@+id/iv_downrelated"
+                                        android:layout_width="@dimen/_12sdp"
+                                        android:layout_height="@dimen/_12sdp"
+                                        android:layout_gravity="center"
+                                        android:src="@drawable/ic_contact_arrow_down"
+                                        android:visibility="visible" />
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/_1sdp"
+                                android:layout_marginStart="@dimen/_3sdp"
+                                android:background="@color/border_color" />
+
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/container_reletion"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+
+                    <LinearLayout
+                        android:id="@+id/newRelationAdd"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="@dimen/_10sdp"
+                        android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                        android:orientation="horizontal"
+                        android:paddingVertical="@dimen/_5sdp">
+
+                        <ImageView
+                            android:layout_width="@dimen/_10sdp"
+                            android:layout_height="@dimen/_10sdp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_add" />
+
+                        <TextView
+                            style="@style/TextStyle.Regular"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/_12sdp"
+                            android:text="@string/add_related_to_contact"
+                            android:textColor="@color/black_color" />
+                    </LinearLayout>
+                </LinearLayout>
 
 
             </LinearLayout>
 
 
         </androidx.core.widget.NestedScrollView>
-
-        <LinearLayout
-            android:id="@+id/ll_save_cancel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/_10sdp"
-            android:orientation="horizontal"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent">
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cv_cancel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginEnd="@dimen/_5sdp"
-                android:layout_weight="1"
-                android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                app:cardCornerRadius="@dimen/_10sdp"
-                app:cardElevation="0dp">
-
-                <TextView
-                    style="@style/TextStyle.Medium"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:padding="@dimen/_10sdp"
-                    android:text="@string/cancel"
-                    android:textColor="@color/black_color" />
-
-            </androidx.cardview.widget.CardView>
-
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cv_save"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginStart="@dimen/_5sdp"
-                android:layout_weight="1"
-                android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                app:cardCornerRadius="@dimen/_10sdp"
-                app:cardElevation="0dp">
-
-                <TextView
-                    style="@style/TextStyle.Medium"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:padding="@dimen/_10sdp"
-                    android:text="@string/save"
-                    android:textColor="@color/black_color" />
-
-            </androidx.cardview.widget.CardView>
-
-        </LinearLayout>
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

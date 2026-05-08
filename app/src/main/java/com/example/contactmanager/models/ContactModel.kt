@@ -111,3 +111,24 @@ data class ContactModel(
         }
     }
 }
+
+data class ContactDetail(
+    val value: String,
+    val type: Int,
+    val label: String? = null
+)
+
+data class FullContactData(
+    val firstName: String = "",
+    val middleName: String = "",
+    val surname: String = "",
+    val company: String = "",
+    val phones: List<ContactDetail> = emptyList(),
+    val emails: List<ContactDetail> = emptyList(),
+    val addresses: List<ContactDetail> = emptyList(),
+    val events: List<ContactDetail> = emptyList(),
+    val websites: List<String> = emptyList(),
+    val relations: List<ContactDetail> = emptyList(),
+    val notes: String = "",
+    val photoUri: String? = null
+)
