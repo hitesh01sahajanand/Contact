@@ -7,12 +7,14 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
+import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.RecyclerView
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -135,6 +137,9 @@ class ContactsFragment : Fragment(), OnClickHandler {
         binding.rvAllContacts.adapter = allContactsAdapter
         binding.rvAllContacts.layoutManager = LinearLayoutManager(requireActivity())
 
+        val itemTouchHelper = allContactsAdapter.getItemTouchHelper(requireActivity())
+        itemTouchHelper.attachToRecyclerView(binding.rvAllContacts)
+
         viewModel.allContactList.observe(viewLifecycleOwner) { allContacts ->
             allContactsAdapter.addAll(allContacts)
             updateAccountUI()
@@ -145,13 +150,13 @@ class ContactsFragment : Fragment(), OnClickHandler {
             updateVisibility()
         }
 
-        val letters = ('A'..'Z') + "#"
+        val letters = (('A'..'Z').map { it.toString() } + "#")
 
         val sizeInPx = resources.getDimension(com.intuit.sdp.R.dimen._11sdp)
         binding.indexBar.removeAllViews()
         letters.forEach { letter ->
             val tv = TextView(context).apply {
-                text = letter.toString()
+                text = letter
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, sizeInPx)
                 setTextColor(ContextCompat.getColor(context, R.color.main_color))
                 typeface = ResourcesCompat.getFont(context, R.font.fig_tree_semi_bold)
@@ -161,18 +166,92 @@ class ContactsFragment : Fragment(), OnClickHandler {
             binding.indexBar.addView(tv)
         }
 
+        var isTouchingIndexBar = false
+
         binding.indexBar.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                    isTouchingIndexBar = true
+                    binding.cvIndexBubble.isVisible = true
+                    val y = event.y
+                    val itemHeight = binding.indexBar.height.toFloat() / binding.indexBar.childCount
+                    var index = (y / itemHeight).toInt()
 
-            val y = event.y
-            val itemHeight = binding.indexBar.height / binding.indexBar.childCount
-            val index = (y / itemHeight).toInt()
+                    if (index < 0) index = 0
+                    if (index >= binding.indexBar.childCount) index = binding.indexBar.childCount - 1
 
-            if (index in 0 until binding.indexBar.childCount) {
-                val letter = (binding.indexBar.getChildAt(index) as TextView).text.toString()
-                scrollToLetter(letter)
+                    val textView = binding.indexBar.getChildAt(index) as TextView
+                    val letter = textView.text.toString()
+                    binding.tvIndexBubble.text = letter
+
+                    val childCenterY = textView.top + (textView.height / 2)
+                    val middleOfIndexBar = binding.indexBar.height / 2f
+                    binding.cvIndexBubble.translationY = childCenterY - middleOfIndexBar
+
+                    scrollToLetter(letter)
+                }
+
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    isTouchingIndexBar = false
+                    binding.cvIndexBubble.postDelayed({
+                        if (!isTouchingIndexBar) {
+                            binding.cvIndexBubble.isVisible = false
+                        }
+                    }, 500)
+                }
             }
             true
         }
+
+        binding.rvAllContacts.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                if (newState == RecyclerView.SCROLL_STATE_IDLE && !isTouchingIndexBar) {
+                    binding.cvIndexBubble.postDelayed({
+                        if (recyclerView.scrollState == RecyclerView.SCROLL_STATE_IDLE && !isTouchingIndexBar) {
+                            binding.cvIndexBubble.isVisible = false
+                        }
+                    }, 500)
+                } else if (newState == RecyclerView.SCROLL_STATE_DRAGGING || newState == RecyclerView.SCROLL_STATE_SETTLING) {
+//                    binding.cvIndexBubble.isVisible = true
+                }
+            }
+
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                if (isTouchingIndexBar) return
+
+                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+                if (firstVisibleItemPosition != RecyclerView.NO_POSITION) {
+                    val list = allContactsAdapter.getCurrentList()
+                    if (firstVisibleItemPosition < list.size) {
+                        val item = list[firstVisibleItemPosition]
+                        val letter = when (item) {
+                            is ContactListItem.Header -> item.title
+                            is ContactListItem.Contact -> item.data.displayName?.firstOrNull()
+                                ?.uppercaseChar()?.toString() ?: "#"
+
+                            else -> null
+                        }
+
+                        if (letter != null) {
+                            val index = letters.indexOf(letter)
+                            if (index != -1) {
+                                val textView = binding.indexBar.getChildAt(index) as? TextView
+                                if (textView != null) {
+                                    binding.tvIndexBubble.text = letter
+                                    val childCenterY = textView.top + (textView.height / 2)
+                                    val middleOfIndexBar = binding.indexBar.height / 2f
+                                    binding.cvIndexBubble.translationY =
+                                        childCenterY - middleOfIndexBar
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        })
 
         binding.edtSearch.addTextChangedListener { editable ->
             val query = editable.toString()
@@ -326,5 +405,10 @@ class ContactsFragment : Fragment(), OnClickHandler {
             else -> email.substringBefore("@")
         }
         tvTitle?.text = title
+    }
+    fun clearSearch() {
+        if (::binding.isInitialized) {
+            binding.edtSearch.setText("")
+        }
     }
 }

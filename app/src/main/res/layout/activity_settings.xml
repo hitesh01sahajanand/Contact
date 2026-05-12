@@ -685,6 +685,17 @@
                             android:text="@string/change_ringtone"
                             android:textColor="@color/black_color" />
 
+                        <TextView
+                            android:id="@+id/tv_ringtone_name"
+                            style="@style/TextStyle.Small"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxWidth="@dimen/_100sdp"
+                            android:singleLine="true"
+                            android:text="Default"
+                            android:textColor="@color/setting_grey_color" />
+
                         <ImageView
                             android:layout_width="@dimen/_16sdp"
                             android:layout_height="@dimen/_16sdp"

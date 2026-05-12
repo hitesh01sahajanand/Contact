@@ -189,8 +189,11 @@ class RecentsFragment : Fragment(), OnClickHandler {
             }
         }
 
-        binding.cbSelectAll.setOnClickListener {
-            if (binding.cbSelectAll.isChecked) {
+        binding.llAll.setOnClickListener {
+            val isChecked = !binding.cbSelectAll.isChecked
+            binding.cbSelectAll.isChecked = isChecked
+
+            if (isChecked) {
                 adapter.selectAll()
             } else {
                 adapter.deselectAll()
@@ -308,7 +311,7 @@ class RecentsFragment : Fragment(), OnClickHandler {
 
         val showLoading = isLoading || recentList == null
         binding.pbLoading.isVisible = showLoading
-        
+
         if (showLoading) {
             binding.llHistorySpaceHolder.isVisible = false
             binding.rvRecents.isVisible = false
@@ -417,6 +420,11 @@ class RecentsFragment : Fragment(), OnClickHandler {
         filterBinding.llOutGoingCalls.setOnClickListener {
             onClick(context.getString(R.string.outgoing_calls))
             dialog.dismiss()
+        }
+    }
+    fun clearSearch() {
+        if (::binding.isInitialized) {
+            binding.edtSearch.setText("")
         }
     }
 }

@@ -49,4 +49,9 @@ class AppModule {
     fun provideQuickResponseDao(database: AppDatabase): com.example.contactmanager.database.QuickResponseDao {
         return database.quickResponseDao()
     }
+
+    @Provides
+    fun provideReminderDao(database: AppDatabase): com.example.contactmanager.database.ReminderDao {
+        return database.reminderDao()
+    }
 }

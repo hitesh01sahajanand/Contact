@@ -11,6 +11,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.provider.Settings
+import android.provider.ContactsContract
 import android.util.Log
 import android.view.View
 import android.webkit.MimeTypeMap
@@ -28,6 +29,7 @@ import com.example.contactmanager.R
 import com.example.contactmanager.adapters.RingtonesAdapter
 import com.example.contactmanager.databinding.ActivitySetRingtoneBinding
 import com.example.contactmanager.models.RingtoneModel
+import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 
 class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
@@ -38,6 +40,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
     private var selectedRingtone: RingtoneModel? = null
     private var currentPlayingPosition = -1
     private var pendingRingtoneUri: Uri? = null
+    private var contactId: String? = null
 
     private val pickRingtoneLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -112,6 +115,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        contactId = intent.getStringExtra(Constance.CONTACT_ID)
 
         if (!Settings.System.canWrite(this)) {
             val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
@@ -134,6 +138,38 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
         initView()
         loadSystemRingtones()
         displayCurrentRingtone()
+        updateHeaderTitle()
+    }
+
+    private fun updateHeaderTitle() {
+        if (contactId != null) {
+            val name = getContactNameById(contactId!!)
+            if (!name.isNullOrEmpty()) {
+                binding.tvHeaderTitle.text = "${getString(R.string.set_ringtone)} for $name"
+            }
+        }
+    }
+
+    private fun getContactNameById(id: String): String? {
+        val projection = arrayOf(ContactsContract.Contacts.DISPLAY_NAME)
+        val selection = "${ContactsContract.Contacts._ID} = ?"
+        val selectionArgs = arrayOf(id)
+
+        return try {
+            contentResolver.query(
+                ContactsContract.Contacts.CONTENT_URI,
+                projection,
+                selection,
+                selectionArgs,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    cursor.getString(0)
+                } else null
+            }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private fun initView() {
@@ -157,11 +193,19 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
             Log.e("TAG", "loadSystemRingtones: ${e.message}")
             null
         } ?: return
-        val currentUri = try {
-            RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
-        } catch (e: SecurityException) {
-            Log.e("TAG", "loadSystemRingtones: ${e.message}")
-            null
+        val currentUri = if (contactId != null) {
+            getContactRingtoneUri(contactId!!) ?: try {
+                RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
+            } catch (e: SecurityException) {
+                null
+            }
+        } else {
+            try {
+                RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
+            } catch (e: SecurityException) {
+                Log.e("TAG", "loadSystemRingtones: ${e.message}")
+                null
+            }
         }
         ringtoneList.clear()
         while (cursor.moveToNext()) {
@@ -208,11 +252,19 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
     }
 
     private fun displayCurrentRingtone() {
-        val currentUri = try {
-            RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
-        } catch (e: SecurityException) {
-            Log.e("TAG", "displayCurrentRingtone: ${e.message}")
-            null
+        val currentUri = if (contactId != null) {
+            getContactRingtoneUri(contactId!!) ?: try {
+                RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
+            } catch (e: SecurityException) {
+                null
+            }
+        } else {
+            try {
+                RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
+            } catch (e: SecurityException) {
+                Log.e("TAG", "displayCurrentRingtone: ${e.message}")
+                null
+            }
         }
 
         if (currentUri == null) {
@@ -261,6 +313,29 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                 if (c.moveToFirst()) {
                     val idx = c.getColumnIndex(MediaStore.Audio.Media.TITLE)
                     if (idx >= 0) c.getString(idx) else null
+                } else null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun getContactRingtoneUri(id: String): Uri? {
+        val projection = arrayOf(ContactsContract.Contacts.CUSTOM_RINGTONE)
+        val selection = "${ContactsContract.Contacts._ID} = ?"
+        val selectionArgs = arrayOf(id)
+
+        return try {
+            contentResolver.query(
+                ContactsContract.Contacts.CONTENT_URI,
+                projection,
+                selection,
+                selectionArgs,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val ringtoneStr = cursor.getString(0)
+                    if (!ringtoneStr.isNullOrEmpty()) Uri.parse(ringtoneStr) else null
                 } else null
             }
         } catch (e: Exception) {
@@ -381,34 +456,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
         }
 
         try {
-            RingtoneManager.setActualDefaultRingtoneUri(
-                this,
-                RingtoneManager.TYPE_RINGTONE,
-                stagedUri
-            )
-
-            Toast.makeText(this, "Ringtone set: $safeName", Toast.LENGTH_SHORT).show()
-
-            pendingRingtoneUri = null
-            loadSystemRingtones()
-            adapter.clearSelection()
-            selectedRingtone = null
-            displayCurrentRingtone()
-
-        } catch (e: SecurityException) {
-            Log.e("SetRingtone", "Permission error: ${e.message}")
-
-            pendingRingtoneUri = stagedUri
-            val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
-            intent.data = "package:$packageName".toUri()
-            startActivity(intent)
-
-            Toast.makeText(
-                this,
-                getString(R.string.please_ensure_modify_system_settings_is_enabled),
-                Toast.LENGTH_LONG
-            ).show()
-
+            setSystemRingtone(stagedUri)
         } catch (e: Exception) {
             Log.e("SetRingtone", "Error: ${e.message}")
             Toast.makeText(this, "Failed to set ringtone: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -485,12 +533,22 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
         }
 
         stopAllPlayback()
-        val currentUri = try {
-            RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
-        } catch (e: SecurityException) {
-            Log.e("TAG", "handleTopPlayPause: ${e.message}")
-            null
-        } ?: run {
+        val currentUri = if (contactId != null) {
+            getContactRingtoneUri(contactId!!) ?: try {
+                RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
+            } catch (e: SecurityException) {
+                null
+            }
+        } else {
+            try {
+                RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
+            } catch (e: SecurityException) {
+                Log.e("TAG", "handleTopPlayPause: ${e.message}")
+                null
+            }
+        }
+
+        if (currentUri == null) {
             Toast.makeText(
                 this,
                 getString(R.string.no_ringtone_found_or_permission_missing), Toast.LENGTH_SHORT
@@ -546,7 +604,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
     }
 
     private fun setSystemRingtone(uri: Uri) {
-        if (!Settings.System.canWrite(this)) {
+        if (contactId == null && !Settings.System.canWrite(this)) {
             pendingRingtoneUri = uri
             val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
             intent.data = "package:$packageName".toUri()
@@ -559,11 +617,25 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
         }
 
         try {
-            RingtoneManager.setActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE, uri)
-            Toast.makeText(this, getString(R.string.ringtone_set_successfully), Toast.LENGTH_SHORT)
-                .show()
+            if (contactId != null) {
+                val values = ContentValues()
+                values.put(ContactsContract.Contacts.CUSTOM_RINGTONE, uri.toString())
+                contentResolver.update(
+                    ContactsContract.Contacts.CONTENT_URI,
+                    values,
+                    "${ContactsContract.Contacts._ID}=?",
+                    arrayOf(contactId)
+                )
+                Toast.makeText(this, getString(R.string.ringtone_set_successfully), Toast.LENGTH_SHORT)
+                    .show()
+            } else {
+                RingtoneManager.setActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE, uri)
+                Toast.makeText(this, getString(R.string.ringtone_set_successfully), Toast.LENGTH_SHORT)
+                    .show()
+            }
             pendingRingtoneUri = null
             displayCurrentRingtone()
+            loadSystemRingtones()
         } catch (e: SecurityException) {
             Log.e("TAG", "setSystemRingtone: ${e.message}")
             pendingRingtoneUri = uri
@@ -604,13 +676,21 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                     ).show()
                     return
                 }
-                val currentDefault = try {
-                    RingtoneManager.getActualDefaultRingtoneUri(
-                        this, RingtoneManager.TYPE_RINGTONE
-                    )
-                } catch (e: SecurityException) {
-                    Log.e("TAG", "onClick: ${e.message}")
-                    null
+                val currentDefault = if (contactId != null) {
+                    getContactRingtoneUri(contactId!!) ?: try {
+                        RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
+                    } catch (e: SecurityException) {
+                        null
+                    }
+                } else {
+                    try {
+                        RingtoneManager.getActualDefaultRingtoneUri(
+                            this, RingtoneManager.TYPE_RINGTONE
+                        )
+                    } catch (e: SecurityException) {
+                        Log.e("TAG", "onClick: ${e.message}")
+                        null
+                    }
                 }
                 if (selected.uri.toString() == currentDefault?.toString()) {
                     Toast.makeText(

@@ -5,8 +5,9 @@ import android.os.Build
 import android.provider.Settings
 import android.telecom.Call
 import android.telecom.InCallService
+import android.util.Log
 import androidx.core.app.ServiceCompat
-import com.example.contactmanager.ApplicationClass
+import com.example.contactmanager.Advertisement.MyApplication
 import com.example.contactmanager.activities.call.CallActivity
 import com.example.contactmanager.repository.BlockRepository
 import com.example.contactmanager.repository.TagRepository
@@ -61,7 +62,7 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
 
     override fun onAudioStateChanged() {}
     override fun onPrimaryCallChanged(call: Call) {
-        (applicationContext as ApplicationClass).appCall = call
+        (applicationContext as MyApplication).appCall = call
         refreshNotification()
     }
 
@@ -113,6 +114,9 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
         }
     }
 
+    // Track call connect time so we can compute duration in EndCallActivity
+    private var callConnectTimeMillis: Long = 0L
+
     private val callListener = object : Call.Callback() {
         override fun onStateChanged(call: Call, state: Int) {
             super.onStateChanged(call, state)
@@ -120,6 +124,10 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
             if (state != Call.STATE_RINGING) {
                 ringtonePlayer.stopRinging()
                 FlashLightUtils.getInstance(this@InCallMainService).stopBlinking()
+            }
+            // Record the moment the call becomes active
+            if (state == Call.STATE_ACTIVE && callConnectTimeMillis == 0L) {
+                callConnectTimeMillis = System.currentTimeMillis()
             }
             if (state == Call.STATE_DISCONNECTED) {
                 ServiceCompat.stopForeground(
@@ -153,7 +161,7 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
             }
 
             // Proceed with normal logic only if NOT blocked
-            (applicationContext as ApplicationClass).appCall = call
+            (applicationContext as MyApplication).appCall = call
             NewCallManager.inCallService = this@InCallMainService
             NewCallManager.onCallAdded(call)
             call.registerCallback(callListener)
@@ -164,7 +172,7 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
 
             // Start ringtone & vibration for incoming ringing calls
             if (isIncomingRinging) {
-                ringtonePlayer.startRinging()
+                ringtonePlayer.startRinging(number)
             }
 
             if (isIncomingRinging && SharedPreferenceManager.getBoolean(
@@ -178,12 +186,12 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
 
             // High priority for incoming call, low for outgoing/ongoing
             val lowPriority = !isIncomingRinging
-            
+
             val contactName = Common.getContactName(this@InCallMainService, number)
             val tag = if (contactName == number) {
                 withContext(Dispatchers.IO) { tagRepository.getTag(number) }
             } else null
-            
+
             val notification = callNotificationManager.setupNotification(lowPriority, tag)
 
             try {
@@ -242,16 +250,20 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
 
     override fun onCallRemoved(call: Call) {
         super.onCallRemoved(call)
+        val number = call.details?.handle?.schemeSpecificPart ?: ""
         ringtonePlayer.stopRinging()
         FlashLightUtils.getInstance(this).stopBlinking()
         call.unregisterCallback(callListener)
 
-        // Check for missed call
         val disconnectCauseCode = call.details?.disconnectCause?.code
-        if (call.state == Call.STATE_RINGING || disconnectCauseCode == android.telecom.DisconnectCause.MISSED) {
-            val number = call.details?.handle?.schemeSpecificPart ?: "Unknown"
+
+        val isMissed = call.state == Call.STATE_RINGING
+                || disconnectCauseCode == android.telecom.DisconnectCause.MISSED
+
+
+        // Show missed-call notification
+        if (isMissed && number.isNotEmpty()) {
             CoroutineScope(Dispatchers.IO).launch {
-                // If no system contact name, look up the user's saved tag from DB
                 val contactName = Common.getContactName(this@InCallMainService, number)
                 val tag = if (contactName == number) tagRepository.getTag(number) else null
                 withContext(Dispatchers.Main) {
@@ -262,7 +274,7 @@ class InCallMainService : InCallService(), NewCallManager.CallManagerListener {
 
         val wasPrimaryCall = call == NewCallManager.getPrimaryCall()
         if (wasPrimaryCall) {
-            (applicationContext as ApplicationClass).appCall = null
+            (applicationContext as MyApplication).appCall = null
         }
         NewCallManager.onCallRemoved(call)
 

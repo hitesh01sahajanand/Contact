@@ -61,7 +61,8 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
         Manifest.permission.WRITE_CONTACTS,
         Manifest.permission.READ_CALL_LOG,
         Manifest.permission.WRITE_CALL_LOG,
-        Manifest.permission.CALL_PHONE
+        Manifest.permission.CALL_PHONE,
+        Manifest.permission.READ_PHONE_STATE
     )
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -104,7 +105,6 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
         isFromPermissionRequest = true
         SharedPreferenceManager.putBoolean(this, Constance.OVERLAY_PERMISSION_SKIP, true)
     }
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -151,7 +151,11 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
                     requestPermissionLauncher.launch(contactPermissions)
                 }
             }
-        } else if (!PermissionManager.hasOverlayPermission(this) && !SharedPreferenceManager.getBoolean(this, Constance.OVERLAY_PERMISSION_SKIP)) {
+        } else if (!PermissionManager.hasOverlayPermission(this) && !SharedPreferenceManager.getBoolean(
+                this,
+                Constance.OVERLAY_PERMISSION_SKIP
+            )
+        ) {
 
             if (showCustomDialog) {
                 permissionDialog = PermissionManager.openPermissionDialog(this) {
@@ -199,17 +203,27 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
     }
 
     private fun handleIntent(intent: Intent?) {
-        if (intent?.getStringExtra("open_tab") == "recents") {
-            if (::recentsFragment.isInitialized) {
-                switchFragments(recentsFragment)
-                updateTabUI(binding.llRecents)
+        val openTab = intent?.getStringExtra("open_tab")
+        when (openTab) {
+            "recents" -> {
+                if (::recentsFragment.isInitialized) {
+                    switchFragments(recentsFragment)
+                    updateTabUI(binding.llRecents)
+                }
+            }
+
+            "contacts" -> {
+                if (::contactsFragment.isInitialized) {
+                    switchFragments(contactsFragment)
+                    updateTabUI(binding.llContacts)
+                }
             }
         }
     }
 
     private fun setupFragments() {
         val fragmentManager = supportFragmentManager
-        
+
         // Try to find existing fragments by tag to handle activity recreation correctly
         val existingRecents = fragmentManager.findFragmentByTag("recents") as? RecentsFragment
         val existingContacts = fragmentManager.findFragmentByTag("contacts") as? ContactsFragment
@@ -224,10 +238,26 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
         val transaction = fragmentManager.beginTransaction()
 
         // Add fragments if they are not already in the FragmentManager
-        if (!recentsFragment.isAdded) transaction.add(binding.llContainer.id, recentsFragment, "recents")
-        if (!contactsFragment.isAdded) transaction.add(binding.llContainer.id, contactsFragment, "contacts").hide(contactsFragment)
-        if (!favoritesFragment.isAdded) transaction.add(binding.llContainer.id, favoritesFragment, "favorites").hide(favoritesFragment)
-        if (!keypadFragment.isAdded) transaction.add(binding.llContainer.id, keypadFragment, "keypad").hide(keypadFragment)
+        if (!recentsFragment.isAdded) transaction.add(
+            binding.llContainer.id,
+            recentsFragment,
+            "recents"
+        )
+        if (!contactsFragment.isAdded) transaction.add(
+            binding.llContainer.id,
+            contactsFragment,
+            "contacts"
+        ).hide(contactsFragment)
+        if (!favoritesFragment.isAdded) transaction.add(
+            binding.llContainer.id,
+            favoritesFragment,
+            "favorites"
+        ).hide(favoritesFragment)
+        if (!keypadFragment.isAdded) transaction.add(
+            binding.llContainer.id,
+            keypadFragment,
+            "keypad"
+        ).hide(keypadFragment)
 
         // Determine which fragment should be active
         // If we are recreating, try to find the one that is not hidden
@@ -241,7 +271,7 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
 
         activeFragment = restoredActive
         transaction.show(activeFragment)
-        
+
         // Ensure the correct tab is highlighted
         val selectedTab = when (activeFragment) {
             favoritesFragment -> binding.llFavorite
@@ -326,6 +356,13 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
 
     private fun switchFragments(target: Fragment) {
         if (activeFragment == target) return
+
+        when (target) {
+            is RecentsFragment -> target.clearSearch()
+            is ContactsFragment -> target.clearSearch()
+            is FavoritesFragment -> target.clearSearch()
+        }
+
         supportFragmentManager.beginTransaction().hide(activeFragment).show(target).commit()
         activeFragment = target
     }

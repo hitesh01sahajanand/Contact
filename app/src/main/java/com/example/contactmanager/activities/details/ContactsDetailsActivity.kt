@@ -23,6 +23,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import com.bumptech.glide.Glide
+import com.bumptech.glide.signature.ObjectKey
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.history.HistoryActivity
 import com.example.contactmanager.activities.newContact.NewContactActivity
@@ -99,38 +100,52 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
         }
     }
 
-    private fun initView() {
+    private fun initView(isBlockedForced: Boolean? = null) {
         binding.onClickHandler = this
 
         contactDetail?.let {
             val name = if (it.stringCallName.isNullOrEmpty()) it.stringNumber else it.stringCallName
             binding.tvName.text = name
-            binding.tvNumber.text = it.stringNumber
-            if (!it.stringPhotoUri.isNullOrEmpty()) {
+            binding.tvNumber.text = "${getString(R.string.mobile)} ${it.stringNumber}"
+            val isBlocked = isBlockedForced ?: Common.isNumberBlocked(this, it.stringNumber)
+            binding.ivBlock.isVisible = isBlocked
+
+            val color = Common.profileColors[1 % Common.profileColors.size]
+            binding.cvAddPhoto.setCardBackgroundColor(
+                ContextCompat.getColor(this, color)
+            )
+            val firstChar = name?.trim()
+                ?.split(" ")
+                ?.filter { data -> data.isNotEmpty() }
+                ?.take(2)
+                ?.map { data -> data[0].uppercaseChar() }
+                ?.joinToString("")
+
+            binding.tvFirstName.text = firstChar
+
+            if (isBlocked) {
+                binding.cvAddPhoto.setCardBackgroundColor(
+                    ContextCompat.getColor(
+                        this,
+                        R.color.white
+                    )
+                )
+                binding.tvFirstName.isVisible = false
+                binding.ivContactPhoto.isVisible = false
+            } else if (!it.stringPhotoUri.isNullOrEmpty()) {
+                binding.cvAddPhoto.setCardBackgroundColor(
+                    ContextCompat.getColor(
+                        this,
+                        R.color.white
+                    )
+                )
                 binding.tvFirstName.isVisible = false
                 binding.ivContactPhoto.isVisible = true
                 Glide.with(this)
                     .load(it.stringPhotoUri)
-                    .signature(
-                        com.bumptech.glide.signature.ObjectKey(
-                            System.currentTimeMillis().toString()
-                        )
-                    )
+                    .signature(ObjectKey(System.currentTimeMillis().toString()))
                     .into(binding.ivContactPhoto)
             } else {
-                val color = Common.profileColors[1 % Common.profileColors.size]
-                binding.cvAddPhoto.setCardBackgroundColor(
-                    ContextCompat.getColor(this, color)
-                )
-                val firstChar = name?.trim()
-                    ?.split(" ")
-                    ?.filter { data -> data.isNotEmpty() }
-                    ?.take(2)
-                    ?.map { data -> data[0].uppercaseChar() }
-                    ?.joinToString("")
-
-                binding.tvFirstName.text = firstChar
-
                 binding.ivContactPhoto.isVisible = false
                 binding.tvFirstName.isVisible = true
             }
@@ -166,6 +181,16 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                 // Refresh current ID if it was just a simple update
                 contactId?.let { viewModel.getUpdatedContact(it) }
             }
+        }
+    }
+
+    private val manageWriteSettingsLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (Settings.System.canWrite(this)) {
+            val intent = Intent(this, SetRingtoneActivity::class.java)
+            intent.putExtra(Constance.CONTACT_ID, contactId)
+            startActivity(intent)
         }
     }
 
@@ -230,19 +255,6 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                     Common.shareContact(this, it.stringNumber)
                 }
             }
-
-            /*binding.cvStorageLocation.id -> {
-                val intent = Intent(this, StorageLocationActivity::class.java)
-                contactDetail?.let {
-                    intent.putExtra("contact_id", it.contactId)
-                    val name =
-                        if (it.stringCallName.isNullOrEmpty()) it.stringNumber else it.stringCallName
-                    intent.putExtra("contact_name", name)
-                    intent.putExtra("contact_number", it.stringNumber)
-                    intent.putExtra("contact_photo_uri", it.stringPhotoUri)
-                }
-                startActivity(intent)
-            }*/
 
             binding.llMore.id -> {
 
@@ -315,6 +327,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                                     onItemClick = {
                                         recentViewModel.unblockNumber(model.stringNumber)
                                         popUpBinding.tvBlock.text = getString(R.string.block)
+                                        initView(false)
                                     })
                             } else {
                                 Common.alertDialog(
@@ -326,6 +339,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                                     onItemClick = {
                                         recentViewModel.blockNumber(model.stringNumber)
                                         popUpBinding.tvBlock.text = getString(R.string.unblock)
+                                        initView(true)
                                     })
                             }
                         }
@@ -335,11 +349,13 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
 
                 popUpBinding.tvChangeRingtone.setOnClickListener {
                     if (Settings.System.canWrite(this)) {
-                        startActivity(Intent(this, SetRingtoneActivity::class.java))
+                        val intent = Intent(this, SetRingtoneActivity::class.java)
+                        intent.putExtra(Constance.CONTACT_ID, contactId)
+                        startActivity(intent)
                     } else {
                         val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
                         intent.data = "package:$packageName".toUri()
-                        startActivity(intent)
+                        manageWriteSettingsLauncher.launch(intent)
                         Toast.makeText(
                             this,
                             getString(R.string.please_allow_modify_system_settings_to_change_ringtone),
@@ -386,7 +402,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             if (data.middleName.isNotEmpty()) append(data.middleName).append(" ")
             if (data.surname.isNotEmpty()) append(data.surname)
         }.trim()
-        
+
         if (name.isNotEmpty()) {
             binding.tvName.text = name
         }
@@ -405,14 +421,21 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             binding.linearLayoutCall.isVisible = true
             binding.txtNumber.text = data.phones[0].value
             binding.txtType.text = getPhoneTypeName(data.phones[0].type, data.phones[0].label)
-            
+            binding.llPhone.setOnClickListener {
+                Common.actionCall(
+                    data.phones[0].value,
+                    this,
+                    false
+                )
+            }
+
             for (i in 1 until data.phones.size) {
                 addDetailEntry(
                     binding.containerPhonetype,
                     data.phones[i].value,
                     getPhoneTypeName(data.phones[i].type, data.phones[i].label),
-                    R.drawable.ic_call_info
-                ) { Common.actionCall(data.phones[i].value, this) }
+                    null
+                ) { Common.actionCall(data.phones[i].value, this, false) }
             }
         } else {
             binding.linearLayoutCall.isVisible = false
@@ -424,7 +447,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             binding.linearLayoutEmail.isVisible = true
             binding.txtMail.text = data.emails[0].value
             binding.txtEmailType.text = getEmailTypeName(data.emails[0].type, data.emails[0].label)
-            binding.imgMail.setOnClickListener { openEmail(data.emails[0].value) }
+            binding.llEmail.setOnClickListener { openEmail(data.emails[0].value) }
 
             for (i in 1 until data.emails.size) {
                 addDetailEntry(
@@ -443,15 +466,16 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
         if (data.addresses.isNotEmpty()) {
             binding.rrLayoutadres.isVisible = true
             binding.txtAddress.text = data.addresses[0].value
-            binding.txtAddressType.text = getAddressTypeName(data.addresses[0].type, data.addresses[0].label)
-            binding.ivDirection.setOnClickListener { openMap(data.addresses[0].value) }
+            binding.txtAddressType.text =
+                getAddressTypeName(data.addresses[0].type, data.addresses[0].label)
+            binding.llLocation.setOnClickListener { openMap(data.addresses[0].value) }
 
             for (i in 1 until data.addresses.size) {
                 addDetailEntry(
                     binding.containerAddress,
                     data.addresses[i].value,
                     getAddressTypeName(data.addresses[i].type, data.addresses[i].label),
-                    null
+                    R.drawable.ic_location
                 ) { openMap(data.addresses[i].value) }
             }
         } else {
@@ -459,10 +483,10 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
         }
 
         // Check if About section should be visible
-        val isAboutVisible = data.company.isNotEmpty() || data.websites.isNotEmpty() || 
-                            data.events.isNotEmpty() || data.notes.isNotEmpty() || 
-                            data.relations.isNotEmpty()
-        
+        val isAboutVisible = data.company.isNotEmpty() || data.websites.isNotEmpty() ||
+                data.events.isNotEmpty() || data.notes.isNotEmpty() ||
+                data.relations.isNotEmpty()
+
         binding.companyAddressView.isVisible = isAboutVisible
 
         if (isAboutVisible) {
@@ -471,7 +495,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             if (data.websites.isNotEmpty()) {
                 binding.linearLayoutWebsite.isVisible = true
                 binding.txtWebsite.text = data.websites[0]
-                binding.imgLink.setOnClickListener { openWebsite(data.websites[0]) }
+                binding.linearLayoutWebsite.setOnClickListener { openWebsite(data.websites[0]) }
 
                 for (i in 1 until data.websites.size) {
                     addDetailEntry(
@@ -490,7 +514,8 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             if (data.events.isNotEmpty()) {
                 binding.linearLayoutBirthday.isVisible = true
                 binding.txtBirthday.text = data.events[0].value
-                binding.txtBirthdayType.text = getEventTypeName(data.events[0].type, data.events[0].label)
+                binding.txtBirthdayType.text =
+                    getEventTypeName(data.events[0].type, data.events[0].label)
 
                 for (i in 1 until data.events.size) {
                     addDetailEntry(
@@ -509,7 +534,8 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             if (data.relations.isNotEmpty()) {
                 binding.linearLayoutRelatedperson.isVisible = true
                 binding.txtRelatedperson.text = data.relations[0].value
-                binding.txtTypeperson.text = getRelationTypeName(data.relations[0].type, data.relations[0].label)
+                binding.txtTypeperson.text =
+                    getRelationTypeName(data.relations[0].type, data.relations[0].label)
 
                 for (i in 1 until data.relations.size) {
                     addDetailEntry(
@@ -547,26 +573,30 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
         )
         itemBinding.tvValue.text = value
         itemBinding.tvType.text = type
-        /*if (iconRes != null) {
+        if (iconRes != null) {
             itemBinding.ivAction.isVisible = true
             itemBinding.ivAction.setImageResource(iconRes)
         } else {
             itemBinding.ivAction.isVisible = false
-        }*/
+        }
         itemBinding.llMain.setOnClickListener { onClick() }
         container.addView(itemBinding.root)
     }
 
     private fun openMap(address: String) {
         try {
-            val intent = Intent(Intent.ACTION_VIEW,
-                "geo:0,0?q=${android.net.Uri.encode(address)}".toUri())
+            val intent = Intent(
+                Intent.ACTION_VIEW,
+                "geo:0,0?q=${android.net.Uri.encode(address)}".toUri()
+            )
             intent.setPackage("com.google.android.apps.maps")
             startActivity(intent)
         } catch (e: Exception) {
             try {
-                val intent = Intent(Intent.ACTION_VIEW,
-                    "geo:0,0?q=${android.net.Uri.encode(address)}".toUri())
+                val intent = Intent(
+                    Intent.ACTION_VIEW,
+                    "geo:0,0?q=${android.net.Uri.encode(address)}".toUri()
+                )
                 startActivity(intent)
             } catch (ex: Exception) {
                 Toast.makeText(this, "No map application found", Toast.LENGTH_SHORT).show()

@@ -22,7 +22,6 @@ import com.example.contactmanager.activities.speedDial.SpeedDialActivity
 import com.example.contactmanager.adapters.SuggestionAdapter
 import com.example.contactmanager.databinding.FragmentKeypadBinding
 import com.example.contactmanager.models.ContactListItem
-import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.NewCallManager

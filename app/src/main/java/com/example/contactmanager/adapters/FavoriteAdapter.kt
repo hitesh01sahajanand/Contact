@@ -12,7 +12,6 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.contactmanager.databinding.FavoriteDesignBinding
-import com.example.contactmanager.models.ContactListItem
 import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
 import com.example.contactmanager.utils.Constance
@@ -22,6 +21,13 @@ class FavoriteAdapter(private val onClick: (ContactModel, String) -> Unit) :
     private val contactList = ArrayList<ContactModel>()
     private var filteredList: MutableList<ContactModel> = mutableListOf()
     private var expandedPosition = -1
+
+    var isSelectionMode = false
+    private val selectedEntries = mutableSetOf<ContactModel>()
+
+    var onSelectionModeChanged: ((Boolean) -> Unit)? = null
+    var onSelectionCountChanged: ((Int) -> Unit)? = null
+
     override fun onCreateViewHolder(
         parent: ViewGroup, p1: Int
     ): FavoriteDataHolder {
@@ -58,8 +64,7 @@ class FavoriteAdapter(private val onClick: (ContactModel, String) -> Unit) :
             contactList.toMutableList()
         } else {
             contactList.filter {
-                (it.displayName?.contains(searchText, ignoreCase = true) == true) ||
-                        it.displayName?.contains(searchText, ignoreCase = true) == true
+                (it.displayName?.contains(searchText, ignoreCase = true) == true)
             }.toMutableList()
         }
         notifyDataSetChanged()
@@ -69,35 +74,130 @@ class FavoriteAdapter(private val onClick: (ContactModel, String) -> Unit) :
         return filteredList
     }
 
+    fun selectAll() {
+        selectedEntries.addAll(filteredList)
+        onSelectionCountChanged?.invoke(selectedEntries.size)
+        notifyDataSetChanged()
+    }
+
+    fun deselectAll() {
+        selectedEntries.clear()
+        onSelectionCountChanged?.invoke(0)
+        notifyDataSetChanged()
+    }
+
+    fun clearSelection() {
+        isSelectionMode = false
+        selectedEntries.clear()
+        onSelectionModeChanged?.invoke(false)
+        notifyDataSetChanged()
+    }
+
+    fun getSelectedEntries(): List<ContactModel> {
+        return selectedEntries.toList()
+    }
+
     inner class FavoriteDataHolder(private val binding: FavoriteDesignBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun setData(
             itemData: ContactModel, position: Int
         ) {
             val isExpanded = position == expandedPosition
+            val context = binding.root.context
+
+            // 🔥 Check neighbors
+            val isNextExpanded = position + 1 == expandedPosition
+            val isPrevExpanded = position - 1 == expandedPosition
+
+            val isFirst = position == 0 || isPrevExpanded
+            val isLast = position == filteredList.size - 1 || isNextExpanded
+
+            val backgroundRes = when {
+                isExpanded -> com.example.contactmanager.R.drawable.bg_all_rounded
+                isFirst && isLast -> com.example.contactmanager.R.drawable.bg_all_rounded
+                isFirst -> com.example.contactmanager.R.drawable.bg_top_rounded
+                isLast -> com.example.contactmanager.R.drawable.bg_bottom_rounded
+                else -> com.example.contactmanager.R.drawable.bg_middle
+            }
+
+            binding.llMainView.setBackgroundResource(backgroundRes)
+
+            val params = binding.root.layoutParams as RecyclerView.LayoutParams
+            val vertical =
+                context.resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._10sdp)
+
+            if (isExpanded) {
+                binding.viewSep.isVisible = false
+                params.setMargins(0, vertical, 0, vertical)
+            } else {
+                // Separator should be hidden if this is the last in its visual group (includes if next is expanded)
+                binding.viewSep.isVisible = !isLast
+                params.setMargins(0, 0, 0, 0)
+            }
+
+            binding.root.layoutParams = params
 
             binding.run {
-                binding.viewSep.isVisible = position != filteredList.size - 1
                 llCollapseView.visibility = View.VISIBLE
                 llExpandedView.visibility = if (isExpanded) View.VISIBLE else View.GONE
 
+                cbSelect.isVisible = isSelectionMode
+                cbSelect.isChecked = selectedEntries.contains(itemData)
+
+                llMainView.setOnLongClickListener {
+                    if (!isSelectionMode) {
+                        isSelectionMode = true
+                        expandedPosition = -1
+                        selectedEntries.add(itemData)
+                        onSelectionModeChanged?.invoke(true)
+                        onSelectionCountChanged?.invoke(selectedEntries.size)
+                        notifyDataSetChanged()
+                    }
+                    true
+                }
+
                 llMainView.setOnClickListener {
-                    val previousPosition = expandedPosition
-                    expandedPosition = if (isExpanded) -1 else position
+                    if (isSelectionMode) {
+                        if (selectedEntries.contains(itemData)) {
+                            selectedEntries.remove(itemData)
+                        } else {
+                            selectedEntries.add(itemData)
+                        }
+                        onSelectionCountChanged?.invoke(selectedEntries.size)
+                        notifyItemChanged(position)
 
-                    val transition = TransitionSet()
-                        .addTransition(Fade())
-                        .addTransition(ChangeBounds())
-                        .setDuration(250)
+                        if (selectedEntries.isEmpty()) {
+                            isSelectionMode = false
+                            onSelectionModeChanged?.invoke(false)
+                            notifyDataSetChanged()
+                        }
+                    } else {
+                        val previousPosition = expandedPosition
+                        expandedPosition = if (isExpanded) -1 else position
 
-                    TransitionManager.beginDelayedTransition(llMainView, transition)
+                        val transition = TransitionSet()
+                            .addTransition(Fade())
+                            .addTransition(ChangeBounds())
+                            .setDuration(250)
 
-                    // refresh current item
-                    notifyItemChanged(position)
+                        TransitionManager.beginDelayedTransition(llMainView, transition)
 
-                    // refresh previous expanded item (IMPORTANT)
-                    if (previousPosition != -1) {
-                        notifyItemChanged(previousPosition)
+                        // Notify all affected items
+                        val itemsToNotify = mutableSetOf<Int>()
+                        if (previousPosition != -1) {
+                            itemsToNotify.add(previousPosition)
+                            itemsToNotify.add(previousPosition - 1)
+                            itemsToNotify.add(previousPosition + 1)
+                        }
+                        itemsToNotify.add(position)
+                        itemsToNotify.add(position - 1)
+                        itemsToNotify.add(position + 1)
+
+                        itemsToNotify.forEach { pos ->
+                            if (pos in 0 until itemCount) {
+                                notifyItemChanged(pos)
+                            }
+                        }
                     }
                 }
 
@@ -143,4 +243,4 @@ class FavoriteAdapter(private val onClick: (ContactModel, String) -> Unit) :
         }
 
     }
-}
+}

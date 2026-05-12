@@ -24,6 +24,7 @@
     </queries>
 
     <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
@@ -53,7 +54,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
     <application
-        android:name=".ApplicationClass"
+        android:name=".Advertisement.manegeAds.AdManege.MyAdAppController"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -63,6 +64,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ContanctManager">
+        <activity
+            android:name=".activities.endCall.EndCallActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:showOnLockScreen="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".activities.storageLocation.StorageLocationActivity"
             android:exported="false" />
@@ -203,6 +215,33 @@
         <receiver
             android:name=".receivers.CallActionReceiver"
             android:exported="false" />
+        <!--        <receiver-->
+        <!--            android:name=".receivers.PhoneStateReceiver"-->
+        <!--            android:exported="true">-->
+        <!--            <intent-filter>-->
+        <!--                <action android:name="android.intent.action.PHONE_STATE" />-->
+        <!--                <action android:name="android.intent.action.NEW_OUTGOING_CALL" />-->
+        <!--            </intent-filter>-->
+        <!--        </receiver>-->
+
+        <receiver
+            android:name=".receivers.PhoneStateReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter android:priority="998">
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
+                <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
+                <action android:name="android.intent.action.PHONE_STATE" />
+                <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.example.autostart.ACTION_IMPLICIT_BROADCAST" />
+                <action android:name="com.example.autostart.ACTION_EXPLICIT_BROADCAST" />
+
+                <category android:name="com.example.autostart.CATEGORY_AUTOSTART" />
+            </intent-filter>
+        </receiver>
 
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
@@ -219,6 +258,30 @@
                 android:value="true" />
         </service>
 
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="129383253777802" />
+        <meta-data
+            android:name="com.facebook.sdk.AutoLogAppEventsEnabled"
+            android:value="true" />
+        <meta-data
+            android:name="com.facebook.sdk.AutoInitEnabled"
+            android:value="true" />
+        <meta-data
+            android:name="android.webkit.WebView.EnableSafeBrowsing"
+            android:value="true" />
+        <meta-data
+            android:name="com.facebook.sdk.AdvertiserIDCollectionEnabled"
+            android:value="true" />
+
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="remove" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

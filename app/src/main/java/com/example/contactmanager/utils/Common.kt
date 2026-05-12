@@ -33,12 +33,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
+import android.widget.FrameLayout
+import android.view.Gravity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
@@ -84,6 +87,8 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import androidx.core.graphics.toColorInt
+import com.example.contactmanager.activities.home.HomeActivity
 
 object Common {
 
@@ -114,6 +119,15 @@ object Common {
             }
         }
         return false
+    }
+
+    fun openHomeActivity(activity: Activity, tab: String? = null) {
+        val intent = Intent(activity, HomeActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            tab?.let { putExtra("open_tab", it) }
+        }
+        activity.startActivity(intent)
+        activity.finishAndRemoveTask()
     }
 
     fun formatHeaderDate(date: Date?): String {
@@ -574,6 +588,7 @@ object Common {
         anchorView: View,
         title: String,
         typeArray: Array<String>,
+        selectedType: String,
         onItemClick: (String) -> Unit
     ) {
 
@@ -595,6 +610,8 @@ object Common {
         popUpBinding.tvType.text = title
 
         val typeface = ResourcesCompat.getFont(context, R.font.fig_tree_medium)
+
+        val selectedIndex = typeArray.indexOf(selectedType)
 
         typeArray.forEachIndexed { index, item ->
 
@@ -624,7 +641,11 @@ object Common {
                 }
             }
 
-            if (index == 0) {
+            if (selectedIndex != -1) {
+                if (index == selectedIndex) {
+                    radioButton.isChecked = true
+                }
+            } else if (index == 0) {
                 radioButton.isChecked = true
             }
 
@@ -1036,6 +1057,151 @@ object Common {
         return null
     }
 
+    fun getNumbersForContactByNumber(context: Context, number: String): List<Pair<String, String>> {
+        if (!PermissionManager.hasContactPermissions(context)) return emptyList()
+        val contact = getContactByNumber(context, number) ?: return emptyList()
+        val contactId = contact.contactId ?: return emptyList()
+
+        val numbers = mutableListOf<Pair<String, String>>()
+        val resolver = context.contentResolver
+        val uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+        val projection = arrayOf(
+            ContactsContract.CommonDataKinds.Phone.NUMBER,
+            ContactsContract.CommonDataKinds.Phone.TYPE,
+            ContactsContract.CommonDataKinds.Phone.LABEL
+        )
+        val selection = "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?"
+        val selectionArgs = arrayOf(contactId)
+
+        try {
+            resolver.query(uri, projection, selection, selectionArgs, null)?.use { cursor ->
+                val numIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                val typeIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE)
+                val labelIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.LABEL)
+
+                while (cursor.moveToNext()) {
+                    val num = cursor.getString(numIdx) ?: continue
+                    val type = cursor.getInt(typeIdx)
+                    val label = cursor.getString(labelIdx)
+                    val typeLabel = ContactsContract.CommonDataKinds.Phone.getTypeLabel(
+                        context.resources,
+                        type,
+                        label
+                    ).toString()
+                    numbers.add(num to typeLabel)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("Common", "Error fetching numbers: ${e.message}")
+        }
+
+        // De-duplicate by cleaned number
+        val uniqueNumbers = mutableListOf<Pair<String, String>>()
+        val seenClean = mutableSetOf<String>()
+        for (pair in numbers) {
+            val clean = cleanNumber(pair.first)
+            if (clean.isNotEmpty() && seenClean.add(clean)) {
+                uniqueNumbers.add(pair)
+            }
+        }
+        return uniqueNumbers
+    }
+
+    fun showNumberSelectionDialog(
+        context: Context,
+        contactName: String,
+        numbers: List<Pair<String, String>>,
+        onNumberSelected: (String) -> Unit
+    ) {
+        val dialog = Dialog(context)
+        val binding = SimSelectionDesignBinding.inflate(LayoutInflater.from(context))
+        dialog.setContentView(binding.root)
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+
+        val margin = (10 * context.resources.displayMetrics.density).toInt()
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        dialog.window?.setLayout(
+            screenWidth - (margin * 3),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        dialog.setCancelable(true)
+
+        binding.tvTitle.text = context.getString(R.string.contact_info)
+        binding.viewSep.isVisible = true
+
+        val typeface = ResourcesCompat.getFont(context, R.font.fig_tree_medium)
+        val semiBoldTypeface = ResourcesCompat.getFont(context, R.font.fig_tree_semi_bold)
+        val params = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        params.setMargins(0, 5, 0, 5)
+
+        numbers.forEach { (number, type) ->
+            val llItem = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                /* setPadding(
+                     (15 * context.resources.displayMetrics.density).toInt(),
+                     (12 * context.resources.displayMetrics.density).toInt(),
+                     (15 * context.resources.displayMetrics.density).toInt(),
+                     (12 * context.resources.displayMetrics.density).toInt()
+                 )*/
+                background = ContextCompat.getDrawable(context, R.drawable.ripple_effect_bg)
+                setOnClickListener {
+                    onNumberSelected(number)
+                    dialog.dismiss()
+                }
+            }
+
+            // Icon with circle background
+            val iconSize = (60 * context.resources.displayMetrics.density).toInt()
+
+            val ivIcon = ImageView(context).apply {
+                setImageResource(R.drawable.ic_add_contact)
+                val padding = (11 * context.resources.displayMetrics.density).toInt()
+                setPadding(padding, padding, padding, padding)
+                layoutParams = LinearLayout.LayoutParams(iconSize, iconSize)
+            }
+
+            // Vertical layout for text
+            val llText = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                ).apply {
+                    marginStart = (15 * context.resources.displayMetrics.density).toInt()
+                }
+            }
+
+            val tvNumberText = TextView(context).apply {
+                text = number
+                textSize = 17f
+                setTextColor(ContextCompat.getColor(context, R.color.black_color))
+                this.typeface = semiBoldTypeface ?: typeface
+            }
+
+            val tvTypeText = TextView(context).apply {
+                text = type
+                textSize = 14f
+                setTextColor(context.getColor(R.color.grey_color))
+                this.typeface = typeface
+            }
+
+            llText.addView(tvNumberText)
+            llText.addView(tvTypeText)
+
+            llItem.addView(ivIcon)
+            llItem.addView(llText)
+            binding.llSimContainer.addView(llItem, params)
+        }
+
+        dialog.show()
+    }
+
 
     fun showRemindMeDialog(
         context: Context,
@@ -1190,8 +1356,23 @@ object Common {
                 android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
-    fun actionCall(number: String?, context: Context) {
+    fun actionCall(number: String?, context: Context, showSelection: Boolean = true) {
         if (number.isNullOrEmpty()) return
+
+        if (showSelection && PermissionManager.hasContactPermissions(context)) {
+            val allNumbers = getNumbersForContactByNumber(context, number)
+            if (allNumbers.size > 1) {
+                val contact = getContactByNumber(context, number)
+                showNumberSelectionDialog(
+                    context,
+                    contact?.displayName ?: number,
+                    allNumbers
+                ) { selectedNumber ->
+                    actionCall(selectedNumber, context, false)
+                }
+                return
+            }
+        }
 
         if (NewCallManager.isNumberActive(number)) {
             Toast.makeText(
@@ -2005,6 +2186,35 @@ object Common {
             Log.e("TAG", "getContactName: ${e.message}")
         }
         return name
+    }
+
+    fun getContactRingtoneUri(context: Context, phoneNumber: String): Uri? {
+        try {
+            val uri = Uri.withAppendedPath(
+                ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
+                Uri.encode(phoneNumber)
+            )
+
+            val cursor = context.contentResolver.query(
+                uri,
+                arrayOf(ContactsContract.PhoneLookup.CUSTOM_RINGTONE),
+                null,
+                null,
+                null
+            )
+
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val ringtoneStr = it.getString(0)
+                    if (!ringtoneStr.isNullOrEmpty()) {
+                        return Uri.parse(ringtoneStr)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("TAG", "getContactRingtoneUri: ${e.message}")
+        }
+        return null
     }
 
     fun getDisplayName(context: Context, number: String, callerDisplayName: String?): String {

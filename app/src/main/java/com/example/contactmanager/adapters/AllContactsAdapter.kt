@@ -10,9 +10,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.RectF
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.example.contactmanager.utils.SharedPreferenceManager
 import com.bumptech.glide.Glide
 import com.example.contactmanager.R
 import com.example.contactmanager.databinding.AllContactDesignBinding
@@ -382,5 +388,115 @@ class AllContactsAdapter(
             }
 
         }
+    }
+    fun getItemTouchHelper(context: Context): ItemTouchHelper {
+        val swipeCallback = object :
+            ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean = false
+
+            override fun getMovementFlags(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder
+            ): Int {
+                val isSwipeEnabled =
+                    SharedPreferenceManager.getBoolean(context, Constance.SWIPE_ACTION, false)
+                val position = viewHolder.bindingAdapterPosition
+                val isExpanded = position == expandedPosition
+
+                if (!isSwipeEnabled || viewHolder !is ContactViewHolder || isExpanded) {
+                    return makeMovementFlags(0, 0)
+                }
+                return super.getMovementFlags(recyclerView, viewHolder)
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.bindingAdapterPosition
+                if (position == RecyclerView.NO_POSITION) return
+
+                val item = filteredList.getOrNull(position)
+                if (item is ContactListItem.Contact) {
+                    if (direction == ItemTouchHelper.RIGHT) {
+                        onClick(item.data, Constance.ACTION_CALL)
+                    } else if (direction == ItemTouchHelper.LEFT) {
+                        onClick(item.data, Constance.ACTION_SEND_MESSAGE)
+                    }
+                }
+                notifyItemChanged(position)
+            }
+
+            override fun onChildDraw(
+                c: Canvas,
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                dX: Float,
+                dY: Float,
+                actionState: Int,
+                isCurrentlyActive: Boolean
+            ) {
+                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+                    val itemView = viewHolder.itemView
+                    val paint = Paint()
+                    val cornerRadius =
+                        context.resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._10sdp)
+                            .toFloat()
+                    val iconSize =
+                        context.resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._32sdp)
+                    val horizontalMargin =
+                        context.resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._10sdp)
+
+                    if (dX > 0) { // Swiping Right (Call)
+                        paint.color = context.getColor(R.color.action_call_color)
+                        val background = RectF(
+                            itemView.left.toFloat(),
+                            itemView.top.toFloat(),
+                            itemView.left.toFloat() + dX,
+                            itemView.bottom.toFloat()
+                        )
+                        c.drawRoundRect(background, cornerRadius, cornerRadius, paint)
+
+                        val icon = ContextCompat.getDrawable(context, R.drawable.ic_call)
+                        icon?.let {
+                            val verticalMargin = (itemView.height - iconSize) / 2
+                            val top = itemView.top + verticalMargin
+                            val left = itemView.left + horizontalMargin
+                            it.setBounds(left, top, left + iconSize, top + iconSize)
+                            it.draw(c)
+                        }
+                    } else if (dX < 0) { // Swiping Left (Message)
+                        paint.color = context.getColor(R.color.action_message_color)
+                        val background = RectF(
+                            itemView.right.toFloat() + dX,
+                            itemView.top.toFloat(),
+                            itemView.right.toFloat(),
+                            itemView.bottom.toFloat()
+                        )
+                        c.drawRoundRect(background, cornerRadius, cornerRadius, paint)
+
+                        val icon = ContextCompat.getDrawable(context, R.drawable.ic_message)
+                        icon?.let {
+                            val verticalMargin = (itemView.height - iconSize) / 2
+                            val top = itemView.top + verticalMargin
+                            val right = itemView.right - horizontalMargin
+                            it.setBounds(right - iconSize, top, right, top + iconSize)
+                            it.draw(c)
+                        }
+                    }
+                }
+                super.onChildDraw(
+                    c,
+                    recyclerView,
+                    viewHolder,
+                    dX,
+                    dY,
+                    actionState,
+                    isCurrentlyActive
+                )
+            }
+        }
+        return ItemTouchHelper(swipeCallback)
     }
 }

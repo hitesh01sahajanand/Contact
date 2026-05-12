@@ -108,7 +108,6 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 val numberIndex =
                     cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
 
-                val contactsWithMultipleNumbers = mutableListOf<ContactModel>()
                 while (cursor.moveToNext()) {
                     if (cursor.isNull(idIndex)) continue
                     val contactId = cursor.getLong(idIndex).toString()
@@ -117,17 +116,8 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                     contactMap[contactId]?.let { contact ->
                         if (contact.number.isNullOrEmpty()) {
                             contact.number = phoneNumber
-                        } else if (contact.number != phoneNumber) {
-                            val additionalContact = contact.copy().apply {
-                                this.number = phoneNumber
-                            }
-                            contactsWithMultipleNumbers.add(additionalContact)
                         }
                     }
-                }
-                contactsWithMultipleNumbers.forEach {
-                    val uniqueKey = "${it.contactId}_${it.number}"
-                    contactMap[uniqueKey] = it
                 }
             }
 
@@ -306,7 +296,6 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                     cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
                 val rawIdIndex = cursor.getColumnIndex(ContactsContract.Data.RAW_CONTACT_ID)
 
-                val contactsWithMultipleNumbers = mutableListOf<ContactModel>()
                 while (cursor.moveToNext()) {
                     if (cursor.isNull(idIndex)) continue
                     val contactId = cursor.getLong(idIndex)
@@ -318,18 +307,9 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                         contactMap[contactId.toString()]?.let { contact ->
                             if (contact.number.isNullOrEmpty()) {
                                 contact.number = phoneNumber
-                            } else if (contact.number != phoneNumber) {
-                                val additionalContact = contact.copy().apply {
-                                    this.number = phoneNumber
-                                }
-                                contactsWithMultipleNumbers.add(additionalContact)
                             }
                         }
                     }
-                }
-                contactsWithMultipleNumbers.forEach {
-                    val uniqueKey = "${it.contactId}_${it.number}"
-                    contactMap[uniqueKey] = it
                 }
             }
 
@@ -528,7 +508,6 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                 val numberIndex =
                     cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
 
-                val contactsWithMultipleNumbers = mutableListOf<ContactModel>()
                 while (cursor.moveToNext()) {
                     if (cursor.isNull(idIndex)) continue
                     val contactId = cursor.getLong(idIndex)
@@ -540,17 +519,8 @@ class ContactRepository @Inject constructor(@param:ApplicationContext private va
                     contactMap[contactId.toString()]?.let { contact ->
                         if (contact.number.isNullOrEmpty()) {
                             contact.number = phoneNumber
-                        } else if (contact.number != phoneNumber) {
-                            val additionalContact = contact.copy().apply {
-                                this.number = phoneNumber
-                            }
-                            contactsWithMultipleNumbers.add(additionalContact)
                         }
                     }
-                }
-                contactsWithMultipleNumbers.forEach {
-                    val uniqueKey = "${it.contactId}_${it.number}"
-                    contactMap[uniqueKey] = it
                 }
             }
 

@@ -30,7 +30,7 @@
 
                 <TextView
                     android:id="@+id/tv_type"
-                    style="@style/TextStyle.Medium"
+                    style="@style/TextStyle.Regular"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/_1sdp"
@@ -38,13 +38,13 @@
                     android:textColor="@color/grey_color" />
             </LinearLayout>
 
-      <!--      <ImageView
+            <ImageView
                 android:id="@+id/iv_action"
                 android:layout_width="@dimen/_28sdp"
                 android:layout_height="@dimen/_28sdp"
                 android:layout_gravity="center"
                 android:padding="@dimen/_7sdp"
-                android:visibility="gone" />-->
+                android:visibility="gone" />
 
         </LinearLayout>
     </LinearLayout>

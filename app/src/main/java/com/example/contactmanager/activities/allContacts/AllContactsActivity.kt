@@ -59,6 +59,9 @@ class AllContactsActivity : AppCompatActivity(), OnClickHandler {
         binding.rvAllContacts.adapter = allContactsAdapter
         binding.rvAllContacts.layoutManager = LinearLayoutManager(this)
 
+        val itemTouchHelper = allContactsAdapter.getItemTouchHelper(this)
+        itemTouchHelper.attachToRecyclerView(binding.rvAllContacts)
+
         if (PermissionManager.hasPermissions(this)) {
             viewModelContact.loadAllContacts()
         }

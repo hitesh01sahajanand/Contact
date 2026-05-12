@@ -133,6 +133,7 @@
     <string name="tag">Tag</string>
     <string name="block">Block</string>
     <string name="delete">Delete</string>
+    <string name="unfavorite">Unfavorite</string>
     <string name="unblock_contact">Unblock Contact?</string>
     <string name="you_will_be_able_to_receive_call">You will be able to receive calls from this contact.</string>
     <string name="block_contact">Block Contact?</string>
@@ -240,6 +241,9 @@
     <string name="your_system_is_set_to_save">Your system is set to save contacts to Google by default. To save on Device Only, you must change this in System Settings or select a Google account.</string>
     <string name="open_settings">Open Settings</string>
     <string name="missed_call">Missed Call</string>
+    <string name="call_declined">Call Declined</string>
+    <string name="call_ended">Call Ended</string>
+    <string name="unknown">Unknown</string>
     <string name="always_ask">Always ask</string>
     <string name="add_photo">Add Photo</string>
     <string name="middle_name">Middle name</string>
@@ -289,4 +293,28 @@
     <string name="date">Date</string>
     <string name="contact_info">Contact Info</string>
     <string name="edit">Edit</string>
+    <string name="loading_ad">Loading AD!!</string>
+    <string name="no_connection">No Connection</string>
+    <string name="no_internet_connection">No internet connection found.\nCheck your connection.</string>
+    <string name="retry">Retry</string>
+    <string name="call">Call</string>
+    <string name="add_contact">Add Contact</string>
+    <string name="sms">SMS</string>
+    <string name="duration_02d_02d_02d">Duration : %02d:%02d:%02d</string>
+    <string name="duration_02d_02d">Duration : %02d:%02d</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="create_reminder">Create Reminder</string>
+    <string name="remind_me_about">Remind me about</string>
+    <string name="select_date_amp_time"><![CDATA[Select Date & Time]]></string>
+    <string name="send_mail">Send Mail</string>
+    <string name="calender">Calender</string>
+    <string name="web">Web</string>
+    <string name="please_enter_reminder_title">Please Enter Reminder Title</string>
+    <string name="please_select_a_future_time">Please select a future time</string>
+    <string name="reminder_set_successfully">Reminder set successfully</string>
+    <string name="call_back">Call back %1$s</string>
+    <string name="reminder_marked_as_done">Reminder marked as done</string>
+    <string name="reminder_title">Reminder Title</string>
+
 </resources>

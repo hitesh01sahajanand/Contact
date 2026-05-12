@@ -238,4 +238,57 @@
     <string name="local_storage_restricted">ローカルストレージは制限されています</string>
     <string name="your_system_is_set_to_save">システムはデフォルトで連絡先をGoogleに保存するよう設定されています。デバイスのみに保存するには、システム設定で変更するか、Googleアカウントを選択してください。</string>
     <string name="open_settings">設定を開く</string>
+
+
+    <string name="missed_call">不在着信</string>
+    <string name="always_ask">常に確認する</string>
+    <string name="add_photo">写真を追加</string>
+    <string name="middle_name">ミドルネーム</string>
+    <string name="surname">姓</string>
+    <string name="company">会社</string>
+    <string name="number">番号</string>
+    <string name="add_number_to_contact">連絡先に番号を追加</string>
+    <string name="home">自宅</string>
+    <string name="add_email_to_contact">連絡先にメールを追加</string>
+    <string name="address">住所</string>
+    <string name="add_address_to_contact">連絡先に住所を追加</string>
+    <string name="add_date_of_birth_to_contact">連絡先に生年月日を追加</string>
+    <string name="select_date_of_birth">生年月日を選択</string>
+    <string name="birthday">誕生日</string>
+    <string name="notes">メモ</string>
+    <string name="website">ウェブサイト</string>
+    <string name="add_website_to_contact">連絡先にウェブサイトを追加</string>
+    <string name="related_person">関連人物</string>
+    <string name="add_related_to_contact">連絡先に関連人物を追加</string>
+    <string name="work">勤務先</string>
+    <string name="main">メイン</string>
+    <string name="work_fax">勤務先FAX</string>
+    <string name="home_fax">自宅FAX</string>
+    <string name="pager">ポケベル</string>
+    <string name="other">その他</string>
+    <string name="custom">カスタム</string>
+    <string name="assistant">アシスタント</string>
+    <string name="brother">兄弟</string>
+    <string name="child">子供</string>
+    <string name="domestic_partner">内縁のパートナー</string>
+    <string name="father">父</string>
+    <string name="friend">友達</string>
+    <string name="manager">マネージャー</string>
+    <string name="mother">母</string>
+    <string name="partner">パートナー</string>
+    <string name="parent">親</string>
+    <string name="referred_by">紹介者</string>
+    <string name="relative">親戚</string>
+    <string name="sister">姉妹</string>
+    <string name="spouse">配偶者</string>
+    <string name="anniversary">記念日</string>
+    <string name="phone_type">電話タイプ</string>
+    <string name="address_type">住所タイプ</string>
+    <string name="email_type">メールタイプ</string>
+    <string name="birthday_type">誕生日タイプ</string>
+    <string name="relation_type">関係タイプ</string>
+    <string name="date">日付</string>
+    <string name="contact_info">連絡先情報</string>
+    <string name="edit">編集</string>
+
 </resources>

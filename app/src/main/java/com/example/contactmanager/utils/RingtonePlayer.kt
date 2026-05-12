@@ -19,14 +19,14 @@ class RingtonePlayer(private val context: Context) {
     private var mediaPlayer: MediaPlayer? = null
     private var vibrator: Vibrator? = null
 
-    fun startRinging() {
+    fun startRinging(number: String? = null) {
         stopRinging() // Safety: stop any previous playback
 
         startVibration()
-        startRingtone()
+        startRingtone(number)
     }
 
-    private fun startRingtone() {
+    private fun startRingtone(number: String?) {
         try {
             val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
@@ -36,7 +36,11 @@ class RingtonePlayer(private val context: Context) {
                 return
             }
 
-            val ringtoneUri = try {
+            val contactRingtoneUri = if (!number.isNullOrEmpty()) {
+                Common.getContactRingtoneUri(context, number)
+            } else null
+
+            val ringtoneUri = contactRingtoneUri ?: try {
                 RingtoneManager.getActualDefaultRingtoneUri(
                     context, RingtoneManager.TYPE_RINGTONE
                 )

@@ -26,6 +26,7 @@ class CallNotificationManager(private val context: Context) {
     companion object {
         const val CALL_CHANNEL_ID = "call_channel"
         const val MISSED_CALL_CHANNEL_ID = "missed_call_channel"
+        const val END_CALL_CHANNEL_ID = "end_call_channel"
         const val CALL_NOTIFICATION_ID = 1001
         const val MISSED_CALL_NOTIFICATION_ID = 1002
     }
@@ -54,8 +55,20 @@ class CallNotificationManager(private val context: Context) {
                 description = "Shows notifications for missed calls"
             }
 
+            val endCallChannel = NotificationChannel(
+                END_CALL_CHANNEL_ID,
+                "Call Ended",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Shows notifications when a call ends"
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                enableVibration(true)
+                enableLights(true)
+            }
+
             notificationManager.createNotificationChannel(callChannel)
             notificationManager.createNotificationChannel(missedCallChannel)
+            notificationManager.createNotificationChannel(endCallChannel)
         }
     }
 
@@ -199,5 +212,23 @@ class CallNotificationManager(private val context: Context) {
             .setContentIntent(activityPendingIntent)
 
         notificationManager.notify(MISSED_CALL_NOTIFICATION_ID + number.hashCode(), builder.build())
+    }
+
+    fun showEndCallNotification(number: String, startTime: Long, endTime: Long, callType: String, pendingIntent: PendingIntent) {
+
+        val builder = NotificationCompat.Builder(context, END_CALL_CHANNEL_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle("Call Ended")
+            .setContentText("Tap to view call details for $number")
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_CALL)
+            .setDefaults(Notification.DEFAULT_ALL)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setFullScreenIntent(pendingIntent, true)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setOngoing(false)
+
+        notificationManager.notify(CALL_NOTIFICATION_ID, builder.build())
     }
 }

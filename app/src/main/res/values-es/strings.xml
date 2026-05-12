@@ -239,4 +239,56 @@
     <string name="your_system_is_set_to_save">Tu sistema está configurado para guardar contactos en Google de forma predeterminada. Para guardar solo en el dispositivo, debes cambiar esto en la configuración del sistema o seleccionar una cuenta de Google.</string>
     <string name="open_settings">Abrir configuración</string>
 
+
+    <string name="missed_call">Llamada perdida</string>
+    <string name="always_ask">Preguntar siempre</string>
+    <string name="add_photo">Agregar foto</string>
+    <string name="middle_name">Segundo nombre</string>
+    <string name="surname">Apellido</string>
+    <string name="company">Empresa</string>
+    <string name="number">Número</string>
+    <string name="add_number_to_contact">Agregar número al contacto</string>
+    <string name="home">Casa</string>
+    <string name="add_email_to_contact">Agregar correo al contacto</string>
+    <string name="address">Dirección</string>
+    <string name="add_address_to_contact">Agregar dirección al contacto</string>
+    <string name="add_date_of_birth_to_contact">Agregar fecha de nacimiento al contacto</string>
+    <string name="select_date_of_birth">Seleccionar fecha de nacimiento</string>
+    <string name="birthday">Cumpleaños</string>
+    <string name="notes">Notas</string>
+    <string name="website">Sitio web</string>
+    <string name="add_website_to_contact">Agregar sitio web al contacto</string>
+    <string name="related_person">Persona relacionada</string>
+    <string name="add_related_to_contact">Agregar relación al contacto</string>
+    <string name="work">Trabajo</string>
+    <string name="main">Principal</string>
+    <string name="work_fax">Fax del trabajo</string>
+    <string name="home_fax">Fax de casa</string>
+    <string name="pager">Buscapersonas</string>
+    <string name="other">Otro</string>
+    <string name="custom">Personalizado</string>
+    <string name="assistant">Asistente</string>
+    <string name="brother">Hermano</string>
+    <string name="child">Hijo</string>
+    <string name="domestic_partner">Pareja doméstica</string>
+    <string name="father">Padre</string>
+    <string name="friend">Amigo</string>
+    <string name="manager">Gerente</string>
+    <string name="mother">Madre</string>
+    <string name="partner">Pareja</string>
+    <string name="parent">Padre/Madre</string>
+    <string name="referred_by">Referido por</string>
+    <string name="relative">Pariente</string>
+    <string name="sister">Hermana</string>
+    <string name="spouse">Cónyuge</string>
+    <string name="anniversary">Aniversario</string>
+    <string name="phone_type">Tipo de teléfono</string>
+    <string name="address_type">Tipo de dirección</string>
+    <string name="email_type">Tipo de correo</string>
+    <string name="birthday_type">Tipo de cumpleaños</string>
+    <string name="relation_type">Tipo de relación</string>
+    <string name="date">Fecha</string>
+    <string name="contact_info">Información de contacto</string>
+    <string name="edit">Editar</string>
+
 </resources>

@@ -239,4 +239,56 @@
     <string name="your_system_is_set_to_save">您的系统默认设置为将联系人保存到 Google。若仅保存到设备，请在系统设置中更改此设置或选择一个 Google 账户。</string>
     <string name="open_settings">打开设置</string>
 
+
+    <string name="missed_call">未接来电</string>
+    <string name="always_ask">始终询问</string>
+    <string name="add_photo">添加照片</string>
+    <string name="middle_name">中间名</string>
+    <string name="surname">姓氏</string>
+    <string name="company">公司</string>
+    <string name="number">号码</string>
+    <string name="add_number_to_contact">将号码添加到联系人</string>
+    <string name="home">家庭</string>
+    <string name="add_email_to_contact">将电子邮件添加到联系人</string>
+    <string name="address">地址</string>
+    <string name="add_address_to_contact">将地址添加到联系人</string>
+    <string name="add_date_of_birth_to_contact">将出生日期添加到联系人</string>
+    <string name="select_date_of_birth">选择出生日期</string>
+    <string name="birthday">生日</string>
+    <string name="notes">备注</string>
+    <string name="website">网站</string>
+    <string name="add_website_to_contact">将网站添加到联系人</string>
+    <string name="related_person">相关联系人</string>
+    <string name="add_related_to_contact">将关系添加到联系人</string>
+    <string name="work">工作</string>
+    <string name="main">主要</string>
+    <string name="work_fax">工作传真</string>
+    <string name="home_fax">家庭传真</string>
+    <string name="pager">寻呼机</string>
+    <string name="other">其他</string>
+    <string name="custom">自定义</string>
+    <string name="assistant">助理</string>
+    <string name="brother">兄弟</string>
+    <string name="child">孩子</string>
+    <string name="domestic_partner">同居伴侣</string>
+    <string name="father">父亲</string>
+    <string name="friend">朋友</string>
+    <string name="manager">经理</string>
+    <string name="mother">母亲</string>
+    <string name="partner">伴侣</string>
+    <string name="parent">父母</string>
+    <string name="referred_by">推荐人</string>
+    <string name="relative">亲属</string>
+    <string name="sister">姐妹</string>
+    <string name="spouse">配偶</string>
+    <string name="anniversary">纪念日</string>
+    <string name="phone_type">电话类型</string>
+    <string name="address_type">地址类型</string>
+    <string name="email_type">电子邮件类型</string>
+    <string name="birthday_type">生日类型</string>
+    <string name="relation_type">关系类型</string>
+    <string name="date">日期</string>
+    <string name="contact_info">联系信息</string>
+    <string name="edit">编辑</string>
+
 </resources>

@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
 //    alias(libs.plugins.kotlin.android)
@@ -82,5 +84,28 @@ dependencies {
 
     //load lotti file
     implementation("com.airbnb.android:lottie:6.4.0")
+
+    //FaceBook
+    implementation("com.facebook.android:facebook-android-sdk:18.2.3")
+    implementation("com.facebook.android:audience-network-sdk:6.21.0")
+    implementation("com.facebook.infer.annotation:infer-annotation:0.18.0")
+    implementation("com.google.ads.mediation:facebook:6.21.0.0")
+    implementation("com.facebook.shimmer:shimmer:0.5.0")
+
+    //google
+    implementation("com.google.android.gms:play-services-ads:23.3.0")
+
+    //firebase
+    implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
+    implementation("com.google.firebase:firebase-config")
+    implementation("com.google.firebase:firebase-crashlytics")
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-messaging")
+
+    //gson
+    implementation("com.google.code.gson:gson:2.13.1")
+
+    //onesignal
+    implementation("com.onesignal:OneSignal:5.1.6")
 
 }

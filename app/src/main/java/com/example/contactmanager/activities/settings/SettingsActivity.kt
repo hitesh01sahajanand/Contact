@@ -11,6 +11,7 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.media.MediaScannerConnection
 import android.net.Uri
+import android.media.RingtoneManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -68,6 +69,11 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
     private var importFileUri: Uri? = null
     private var availableAccounts = listOf<AvailableAccountModel>()
 
+    override fun onResume() {
+        super.onResume()
+        displayCurrentRingtone()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeManager.applyAppTheme(this)
         super.onCreate(savedInstanceState)
@@ -97,6 +103,14 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             }
         }
 
+    private val manageWriteSettingsLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (Settings.System.canWrite(this)) {
+            startActivity(Intent(this, SetRingtoneActivity::class.java))
+        }
+    }
+
     private fun initView() {
         binding.onClickHandler = this
 
@@ -110,6 +124,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
 
         val isConfirmDialog =
             SharedPreferenceManager.getBoolean(this, Constance.CONFIRM_DIALOG, false)
+        Log.e("TAG", "initView isConfirmDialog: ${isConfirmDialog}")
         binding.switchConfirmDialog.isChecked = isConfirmDialog
 
         binding.switchConfirmDialog.setOnCheckedChangeListener { _, isChecked ->
@@ -121,9 +136,10 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                             "package:$packageName".toUri()
                         )
                         startActivity(intent)
-                        SharedPreferenceManager.putBoolean(this, Constance.CONFIRM_DIALOG, true)
+
                     })
                 }
+                SharedPreferenceManager.putBoolean(this, Constance.CONFIRM_DIALOG, true)
             } else {
                 SharedPreferenceManager.putBoolean(this, Constance.CONFIRM_DIALOG, false)
             }
@@ -187,6 +203,24 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
         }
 
         updateSimPrefUI()
+        displayCurrentRingtone()
+    }
+
+    private fun displayCurrentRingtone() {
+        try {
+            val uri =
+                RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
+            if (uri != null) {
+                val ringtone = RingtoneManager.getRingtone(this, uri)
+                val name = ringtone?.getTitle(this)
+                binding.tvRingtoneName.text = name?.takeIf { it.isNotBlank() } ?: "Default"
+            } else {
+                binding.tvRingtoneName.text = "None"
+            }
+        } catch (e: Exception) {
+            Log.e("Settings", "displayCurrentRingtone: ${e.message}")
+            binding.tvRingtoneName.text = "Default"
+        }
     }
 
     override fun onClick(view: View) {
@@ -252,7 +286,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                 } else {
                     val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
                     intent.data = "package:$packageName".toUri()
-                    startActivity(intent)
+                    manageWriteSettingsLauncher.launch(intent)
                     Toast.makeText(
                         this,
                         getString(R.string.please_allow_modify_system_settings_to_change_ringtone),
@@ -1079,7 +1113,8 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                     this, Manifest.permission.CALL_PHONE
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
-                val subscriptionManager = getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+                val subscriptionManager =
+                    getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
                 val activeSimList = subscriptionManager?.activeSubscriptionInfoList
                 val selectedSim = activeSimList?.find { it.subscriptionId == simPref }
                 if (selectedSim != null) {

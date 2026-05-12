@@ -6,27 +6,35 @@
     </data>
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/_10sdp"
         android:background="@drawable/bg_all_rounded"
-        android:orientation="vertical"
-        android:padding="@dimen/_10sdp">
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/tv_type"
             style="@style/TextStyle.Medium"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_gravity="start"
             android:gravity="start"
+            android:padding="@dimen/_10sdp"
             android:text="Phone Type"
             android:textColor="@color/black_color" />
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="@color/border_color" />
+
         <RadioGroup
             android:id="@+id/rg_type_item"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_width="@dimen/_130sdp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:paddingHorizontal="@dimen/_8sdp"
+            android:paddingVertical="@dimen/_5sdp" />
 
     </LinearLayout>
 </layout>

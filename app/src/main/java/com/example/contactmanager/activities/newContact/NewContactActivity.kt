@@ -447,7 +447,14 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             R.id.container_reletion -> getRelationTypeArray()
             else -> emptyArray()
         }
-        Common.typePopUp(this, fieldBinding.llType, title, types) { fieldBinding.tvType.text = it }
+        Common.typePopUp(
+            context = this,
+            anchorView = fieldBinding.llType,
+            title = title,
+            typeArray = types,
+            selectedType = fieldBinding.tvType.text.toString(),
+            onItemClick = { fieldBinding.tvType.text = it }
+        )
     }
 
     override fun onClick(view: View) {
@@ -456,39 +463,49 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             binding.cvAddPhoto.id -> showImagePickerDialog()
             binding.cvSave.id -> saveContact()
             binding.rrnumberType.id -> Common.typePopUp(
-                this,
-                binding.rrnumberType,
-                getString(R.string.phone_type),
-                getPhoneTypeArray()
-            ) { binding.txtType.text = it }
+                context = this,
+                anchorView = binding.rrnumberType,
+                title = getString(R.string.phone_type),
+                typeArray = getPhoneTypeArray(),
+                selectedType = binding.txtType.text.toString(),
+                onItemClick = { binding.txtType.text = it }
+            )
 
             binding.rrAdrestype.id -> Common.typePopUp(
-                this,
-                binding.rrAdrestype,
-                getString(R.string.address_type),
-                getAddressTypeArray()
-            ) { binding.txtAddressType.text = it }
+                context = this,
+                anchorView = binding.rrAdrestype,
+                title = getString(R.string.address_type),
+                typeArray = getAddressTypeArray(),
+                selectedType = binding.txtAddressType.text.toString(),
+                onItemClick = { binding.txtAddressType.text = it }
+            )
 
             binding.rremailType.id -> Common.typePopUp(
-                this,
-                binding.rremailType,
-                getString(R.string.email_type),
-                getEmailTypeArray()
-            ) { binding.txtEmailType.text = it }
+                context = this,
+                anchorView = binding.rremailType,
+                title = getString(R.string.email_type),
+                typeArray = getEmailTypeArray(),
+                selectedType = binding.txtEmailType.text.toString(),
+                onItemClick = { binding.txtEmailType.text = it }
+            )
 
             binding.rrRelatedperson.id -> Common.typePopUp(
-                this,
-                binding.rrRelatedperson,
-                getString(R.string.relation_type),
-                getRelationTypeArray()
-            ) { binding.txtRelationtype.text = it }
+                context = this,
+                anchorView = binding.rrRelatedperson,
+                title = getString(R.string.relation_type),
+                typeArray = getRelationTypeArray(),
+                selectedType = binding.txtRelationtype.text.toString(),
+                onItemClick = { binding.txtRelationtype.text = it }
+            )
 
             binding.rvBday.id -> Common.typePopUp(
-                this,
-                binding.rvBday,
-                getString(R.string.birthday_type),
-                getBirthdayTypeArray()
-            ) { binding.txtBirthdayType.text = it }
+                context = this,
+                anchorView = binding.rvBday,
+                title = getString(R.string.birthday_type),
+                typeArray = getBirthdayTypeArray(),
+                selectedType = binding.txtBirthdayType.text.toString(),
+                onItemClick = { binding.txtBirthdayType.text = it }
+            )
 
             binding.newPhoneNumberAdd.id -> addNewField(
                 binding.containerPhonetype,

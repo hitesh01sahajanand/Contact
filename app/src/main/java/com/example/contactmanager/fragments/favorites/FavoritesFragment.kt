@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -28,7 +29,6 @@ class FavoritesFragment : Fragment(), OnClickHandler {
     private lateinit var binding: FragmentFavoritesBinding
     private lateinit var favoriteAdapter: FavoriteAdapter
     private val viewModel: FavoriteViewModel by viewModels()
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -61,10 +61,10 @@ class FavoritesFragment : Fragment(), OnClickHandler {
         viewModel.allFavoriteContacts.observe(viewLifecycleOwner) { favoriteList ->
             if (favoriteList.isNotEmpty()) {
                 favoriteAdapter.addAll(favoriteList)
-                binding.cvFavorite.isVisible = true
+                binding.rvFavorite.isVisible = true
                 binding.llFavoriteSpaceHolder.isVisible = false
             } else {
-                binding.cvFavorite.isVisible = false
+                binding.rvFavorite.isVisible = false
                 binding.llFavoriteSpaceHolder.isVisible = true
             }
         }
@@ -102,10 +102,52 @@ class FavoritesFragment : Fragment(), OnClickHandler {
         binding.rvFavorite.adapter = favoriteAdapter
         binding.rvFavorite.layoutManager = LinearLayoutManager(requireActivity())
 
+        val onBackPressedCallback = object : androidx.activity.OnBackPressedCallback(false) {
+            override fun handleOnBackPressed() {
+                favoriteAdapter.clearSelection()
+            }
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            onBackPressedCallback
+        )
+
+        favoriteAdapter.onSelectionModeChanged = { isSelectionMode ->
+            onBackPressedCallback.isEnabled = isSelectionMode
+            binding.llAllSelection.isVisible = isSelectionMode
+            binding.inHeader.root.isVisible = !isSelectionMode
+            if (!isSelectionMode) {
+                binding.cbSelectAll.isChecked = false
+            }
+        }
+
+        binding.llAll.setOnClickListener {
+            val isChecked = !binding.cbSelectAll.isChecked
+            binding.cbSelectAll.isChecked = isChecked
+
+            if (isChecked) {
+                favoriteAdapter.selectAll()
+            } else {
+                favoriteAdapter.deselectAll()
+            }
+        }
+
+        binding.tvDoneSelection.text = getString(R.string.unfavorite)
+        binding.tvDoneSelection.setOnClickListener {
+            val selected = favoriteAdapter.getSelectedEntries()
+            if (selected.isNotEmpty()) {
+                selected.forEach { it.isFavourite = 0 }
+                viewModel.updateFavoriteStatus(selected)
+                favoriteAdapter.clearSelection()
+            } else {
+                favoriteAdapter.clearSelection()
+            }
+        }
+
         binding.edtSearch.addTextChangedListener { editable ->
             val query = editable.toString()
             favoriteAdapter.filter(query)
-            binding.cvFavorite.isVisible = favoriteAdapter.getCurrentList().isNotEmpty()
+            binding.rvFavorite.isVisible = favoriteAdapter.getCurrentList().isNotEmpty()
             binding.llFavoriteSpaceHolder.isVisible = favoriteAdapter.getCurrentList().isEmpty()
         }
 
@@ -132,6 +174,11 @@ class FavoritesFragment : Fragment(), OnClickHandler {
                 )
             }
 
+        }
+    }
+    fun clearSearch() {
+        if (::binding.isInitialized) {
+            binding.edtSearch.setText("")
         }
     }
 }

@@ -48,10 +48,13 @@ class LanguageAdapter(
 
             if (selectedPosition == -1 && bindingAdapterPosition == 0) {
                 binding.lottiHandClick.visibility = View.VISIBLE
-                binding.lottiHandClick.setAnimation(R.raw.hand_click)
-                binding.lottiHandClick.playAnimation()
+                if (!binding.lottiHandClick.isAnimating) {
+                    binding.lottiHandClick.setAnimation(R.raw.hand_click)
+                    binding.lottiHandClick.playAnimation()
+                }
             } else {
                 binding.lottiHandClick.visibility = View.GONE
+                binding.lottiHandClick.cancelAnimation()
             }
 
             binding.ivFlag.setImageResource(itemData.flag)
@@ -70,12 +73,17 @@ class LanguageAdapter(
         }
 
         private fun updateSelection(position: Int) {
-            if (position == selectedPosition) return
+            if (position == selectedPosition) {
+                // Already selected, force UI to stay checked (prevent unselection)
+                notifyItemChanged(position)
+                return
+            }
 
             val oldPosition = selectedPosition
             selectedPosition = position
 
             if (oldPosition == -1) {
+                // If first time selection, hide animation on first item
                 notifyItemChanged(0)
             } else {
                 list[oldPosition].isSelected = false
