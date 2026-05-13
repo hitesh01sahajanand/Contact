@@ -15,6 +15,7 @@ import com.example.contactmanager.R
 import com.example.contactmanager.activities.speedDialSelect.SpeedDialSelectActivity
 import com.example.contactmanager.databinding.ActivitySpeedDialBinding
 import com.example.contactmanager.models.SpeedDialModel
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.viewmodels.SpeedDialViewModel
@@ -46,7 +47,7 @@ class SpeedDialActivity : AppCompatActivity(), OnClickHandler {
         if (result.resultCode == RESULT_OK) {
             val data = result.data
             val number = data?.getStringExtra(Constance.DATA_FETCH)
-            val name = data?.getStringExtra("NAME") ?: "Unknown"
+            val name = data?.getStringExtra("NAME") ?: getString(R.string.unknown)
             val photoUri = data?.getStringExtra("PHOTO_URI")
 
             if (number != null && currentSlot != -1) {
@@ -107,6 +108,7 @@ class SpeedDialActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.ll1Unselect.id -> openSpeedDialSelect(1)
             binding.ll2Unselect.id -> openSpeedDialSelect(2)

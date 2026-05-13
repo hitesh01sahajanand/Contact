@@ -2,7 +2,6 @@ package com.example.contactmanager.activities.blockNumbers
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -17,6 +16,7 @@ import com.example.contactmanager.adapters.BlockNumberAdapter
 import com.example.contactmanager.databinding.ActivityBlockNumbersBinding
 import com.example.contactmanager.models.BlockModel
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager
 import com.example.contactmanager.viewmodels.BlockViewModel
@@ -112,6 +112,7 @@ class BlockNumbersActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.ivBack.id -> {
                 onBackPressedDispatcher.onBackPressed()

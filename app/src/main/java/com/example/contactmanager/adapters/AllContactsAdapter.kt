@@ -1,24 +1,20 @@
 package com.example.contactmanager.adapters
 
-import android.transition.ChangeBounds
-import android.transition.Fade
-import android.transition.TransitionManager
-import android.transition.TransitionSet
-import android.util.Log
-import java.util.HashMap
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.Toast
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
+import android.transition.ChangeBounds
+import android.transition.Fade
+import android.transition.TransitionManager
+import android.transition.TransitionSet
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.example.contactmanager.utils.SharedPreferenceManager
 import com.bumptech.glide.Glide
 import com.example.contactmanager.R
 import com.example.contactmanager.databinding.AllContactDesignBinding
@@ -26,7 +22,9 @@ import com.example.contactmanager.databinding.HeaderItemDesignBinding
 import com.example.contactmanager.models.ContactListItem
 import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
+import com.example.contactmanager.utils.SharedPreferenceManager
 
 class AllContactsAdapter(
     private val isAllContact: Boolean = false,
@@ -116,13 +114,6 @@ class AllContactsAdapter(
 
         applyFilter()
     }
-
-    fun clearList() {
-        contactList.clear()
-        filteredList.clear()
-        notifyDataSetChanged()
-    }
-
     fun filter(query: String) {
         currentQuery = query
         applyFilter()
@@ -172,22 +163,6 @@ class AllContactsAdapter(
 
     fun getCurrentList(): List<ContactListItem> {
         return filteredList
-    }
-
-
-
-    fun getVisibleFavoriteContacts(): List<String> {
-        return contactList
-            .filterIsInstance<ContactListItem.Contact>()
-            .filter { it.data.isFavourite == 1 }
-            .mapNotNull { it.data.contactId }
-    }
-
-    fun getAllContacts(): List<ContactModel> {
-        return contactList
-            .filterIsInstance<ContactListItem.Contact>()
-            .map { it.data }
-            .distinctBy { it.contactId }
     }
 
     fun getChangedContacts(): List<ContactModel> {
@@ -341,18 +316,22 @@ class AllContactsAdapter(
 
                 if (!isAllContact) {
                     ivCall.setOnClickListener {
+                        if (!isValidClick()) return@setOnClickListener
                         onClick(data, Constance.ACTION_CALL)
                     }
 
                     ivMessage.setOnClickListener {
+                        if (!isValidClick()) return@setOnClickListener
                         onClick(data, Constance.ACTION_SEND_MESSAGE)
                     }
 
                     ivVideoCall.setOnClickListener {
+                        if (!isValidClick()) return@setOnClickListener
                         onClick(data, Constance.ACTION_VIDEO_CALL)
                     }
 
                     ivCallInfo.setOnClickListener {
+                        if (!isValidClick()) return@setOnClickListener
                         onClick(data, Constance.ACTION_INFO)
                     }
                 }

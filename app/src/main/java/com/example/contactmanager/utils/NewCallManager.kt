@@ -1,13 +1,12 @@
 package com.example.contactmanager.utils
 
 import android.annotation.SuppressLint
+import android.os.Handler
+import android.os.Looper
 import android.telecom.Call
 import android.telecom.InCallService
 import android.telecom.VideoProfile
 import java.util.concurrent.CopyOnWriteArraySet
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
 
 class NewCallManager {
 
@@ -52,8 +51,6 @@ class NewCallManager {
         }
 
         fun onCallRemoved(call: Call) {
-            val number = call.details.handle?.schemeSpecificPart ?: "Unknown"
-            Log.d("TAG", "launchEndCallActivity: NewCallManager onCallRemoved: $number")
             calls.remove(call)
             updateState()
         }
@@ -163,7 +160,7 @@ class NewCallManager {
                             @Suppress("DEPRECATION")
                             ringingCall.reject(false, null)
                         }
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         try {
                             @Suppress("DEPRECATION")
                             ringingCall.reject(false, null)

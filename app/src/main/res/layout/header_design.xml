@@ -14,6 +14,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="?actionBarSize"
+        android:layout_marginEnd="@dimen/_10sdp"
         android:background="@color/bg_color"
         android:orientation="horizontal">
 
@@ -32,13 +33,13 @@
             android:layout_width="@dimen/_35sdp"
             android:layout_height="@dimen/_35sdp"
             android:layout_gravity="center_vertical"
-            android:layout_marginEnd="@dimen/_10sdp"
             android:foreground="?attr/selectableItemBackground"
             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
             android:visibility="gone"
-            app:cardBackgroundColor="@color/white"
-            app:cardCornerRadius="@dimen/_10sdp"
+            app:cardBackgroundColor="@android:color/transparent"
             app:cardElevation="0dp"
+            app:cardPreventCornerOverlap="true"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
             app:strokeColor="@android:color/transparent">
 
             <ImageView
@@ -55,13 +56,13 @@
             android:layout_width="@dimen/_35sdp"
             android:layout_height="@dimen/_35sdp"
             android:layout_gravity="center_vertical"
-            android:layout_marginEnd="@dimen/_10sdp"
             android:foreground="?attr/selectableItemBackground"
             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
             android:visibility="gone"
-            app:cardBackgroundColor="@color/white"
-            app:cardCornerRadius="@dimen/_10sdp"
+            app:cardBackgroundColor="@android:color/transparent"
             app:cardElevation="0dp"
+            app:cardPreventCornerOverlap="true"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
             app:strokeColor="@android:color/transparent">
 
             <ImageView
@@ -78,13 +79,14 @@
             android:layout_width="@dimen/_35sdp"
             android:layout_height="@dimen/_35sdp"
             android:layout_gravity="center_vertical"
-            android:layout_marginEnd="@dimen/_10sdp"
             android:foreground="?attr/selectableItemBackground"
             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
             android:visibility="gone"
-            app:cardBackgroundColor="@color/white"
-            app:cardCornerRadius="@dimen/_10sdp"
+            app:cardBackgroundColor="@android:color/transparent"
             app:cardElevation="0dp"
+            app:cardPreventCornerOverlap="true"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.ContactManager.Circle"
+
             app:strokeColor="@android:color/transparent">
 
             <ImageView

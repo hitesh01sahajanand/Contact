@@ -3,6 +3,7 @@
     <color name="black">#FFFFFFFF</color>
     <color name="black_light">#D1D1D1</color>
     <color name="white">#262626</color>
+    <color name="white_">#FFFFFFFF</color>
     <color name="blue_color">#6DB1FF</color>
     <color name="divider_grey">#33FFFFFF</color>
 
@@ -16,10 +17,11 @@
     <color name="border_color">#333333</color>
     <color name="border_color_2">#3D3D3D</color>
     <color name="btn_color">#151515</color>
+    <color name="light_blu">#1A1A1A</color>
 
     <color name="block_bg_color">#2C1A1A</color>
     <color name="black_new_light">#B0B0B0</color>
-    <color name="light_blue">#e1ecfb</color>
+    <color name="light_blue">#1A1A1A</color>
     <color name="view_color2">#1A1A1A</color>
     <color name="line_color">#66CDD1D6</color>
 </resources>

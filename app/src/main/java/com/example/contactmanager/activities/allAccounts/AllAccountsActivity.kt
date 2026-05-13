@@ -15,6 +15,7 @@ import com.example.contactmanager.adapters.AllAccountAdapter
 import com.example.contactmanager.databinding.ActivityAllAccountsBinding
 import com.example.contactmanager.models.AccountModel
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.viewmodels.NewContactViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -58,15 +59,9 @@ class AllAccountsActivity : AppCompatActivity(), OnClickHandler {
         viewModel.googleAccount.observe(this) { list ->
 
             val accountList = mutableListOf<AccountModel>()
-            val name = "All Contacts"
+            val name = getString(R.string.all_contacts)
 
             binding.inAccountDesign.tvIdName.text = name
-            /*val color = Common.profileColors[1 % Common.profileColors.size]
-            binding.inAccountDesign.cvProfile.setCardBackgroundColor(
-                ContextCompat.getColor(binding.root.context, color)
-            )
-            val firstChar = name.firstOrNull()?.uppercase() ?: ""
-            binding.inAccountDesign.tvContactName.text = firstChar*/
 
             list.forEach {
                 val nameBitmap = Common.generateAvatar(it.first)
@@ -78,6 +73,7 @@ class AllAccountsActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.llBack.id -> {
                 onBackPressedDispatcher.onBackPressed()

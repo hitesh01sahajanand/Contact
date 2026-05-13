@@ -88,7 +88,7 @@ class ContactDetailsRepository @Inject constructor(
                     list.add(
                         CallLogEntry(
                             stringNumber = numberDb,
-                            stringType = Common.getCallType(type),
+                            stringType = Common.getCallType(context, type),
                             dateData = date,
                             stringDuration = duration,
                             stringCallName = name,
@@ -195,7 +195,10 @@ class ContactDetailsRepository @Inject constructor(
                     ContactsContract.Data.PHOTO_URI
                 ),
                 "${ContactsContract.Data.CONTACT_ID}=? AND ${ContactsContract.Data.MIMETYPE}=?",
-                arrayOf(contactId, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE),
+                arrayOf(
+                    contactId,
+                    ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE
+                ),
                 null
             )?.use { cursor ->
                 if (cursor.moveToFirst()) {
@@ -210,7 +213,10 @@ class ContactDetailsRepository @Inject constructor(
             if (name == null) {
                 resolver.query(
                     ContactsContract.Contacts.CONTENT_URI,
-                    arrayOf(ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts.PHOTO_URI),
+                    arrayOf(
+                        ContactsContract.Contacts.DISPLAY_NAME,
+                        ContactsContract.Contacts.PHOTO_URI
+                    ),
                     "${ContactsContract.Contacts._ID}=?",
                     arrayOf(contactId),
                     null
@@ -253,6 +259,7 @@ class ContactDetailsRepository @Inject constructor(
             null
         }
     }
+
     fun deleteContact(contactId: String) {
         try {
             val contentResolver = context.contentResolver

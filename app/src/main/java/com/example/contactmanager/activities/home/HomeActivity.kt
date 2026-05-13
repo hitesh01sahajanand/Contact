@@ -5,7 +5,6 @@ import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
-import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -18,10 +17,10 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.ImageViewCompat
@@ -33,13 +32,13 @@ import com.example.contactmanager.fragments.contacts.ContactsFragment
 import com.example.contactmanager.fragments.favorites.FavoritesFragment
 import com.example.contactmanager.fragments.keypad.KeypadFragment
 import com.example.contactmanager.fragments.recents.RecentsFragment
+import com.example.contactmanager.utils.Common.isValidClick
+import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager
-import dagger.hilt.android.AndroidEntryPoint
-import androidx.core.net.toUri
-import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.SharedPreferenceManager
 import com.example.contactmanager.utils.ThemeManager
+import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class HomeActivity : AppCompatActivity(), OnClickHandler {
@@ -325,6 +324,7 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
 
         when (view.id) {
             binding.llFavorite.id -> {

@@ -33,7 +33,7 @@
             android:layout_gravity="center"
             android:layout_marginTop="@dimen/_5sdp"
             android:gravity="start"
-            android:text="Add Block Number"
+            android:text="@string/add_block_number"
             android:textColor="@color/black_color"
             android:textSize="@dimen/_16sdp" />
 

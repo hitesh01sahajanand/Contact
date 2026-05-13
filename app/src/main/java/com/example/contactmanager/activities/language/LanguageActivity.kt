@@ -15,6 +15,7 @@ import com.example.contactmanager.activities.home.HomeActivity
 import com.example.contactmanager.adapters.LanguageAdapter
 import com.example.contactmanager.databinding.ActivityLanguageBinding
 import com.example.contactmanager.models.LanguageModel
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.LanguageManager
 import com.example.contactmanager.utils.OnClickHandler
@@ -26,7 +27,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class LanguageActivity : AppCompatActivity(), OnClickHandler {
     private lateinit var binding: ActivityLanguageBinding
     private lateinit var adapter: LanguageAdapter
- 
+
     val languageList = mutableListOf(
         LanguageModel(R.drawable.ic_flag_english, "English", "English", "United States", "en"),
         LanguageModel(R.drawable.ic_flag_india, "हिंदी", "Hindi", "India", "hi"),
@@ -41,7 +42,7 @@ class LanguageActivity : AppCompatActivity(), OnClickHandler {
         LanguageModel(R.drawable.ic_flag_chinese, "中文", "Chinese", "China", "zh"),
         LanguageModel(R.drawable.ic_flag_thai, "ไทย", "Thai", "Thailand", "th"),
     )
- 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeManager.applyAppTheme(this)
         super.onCreate(savedInstanceState)
@@ -72,6 +73,7 @@ class LanguageActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.cvDone.id -> {
                 val selectedLanguage = if (adapter.getSelectedPosition() != -1) {
@@ -82,12 +84,16 @@ class LanguageActivity : AppCompatActivity(), OnClickHandler {
 
                 if (selectedLanguage == null) {
                     // Optionally show a toast or message
-                    Toast.makeText(this, "Please select language", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        getString(R.string.please_select_language), Toast.LENGTH_SHORT
+                    ).show()
                     return
                 }
 
                 val currentLangCode = LanguageManager.getCurrentLanguage()
-                val isAlreadyLoggedIn = SharedPreferenceManager.getBoolean(this, Constance.IS_LOG_IN)
+                val isAlreadyLoggedIn =
+                    SharedPreferenceManager.getBoolean(this, Constance.IS_LOG_IN)
 
                 if (selectedLanguage.code == currentLangCode && isAlreadyLoggedIn) {
                     finish()

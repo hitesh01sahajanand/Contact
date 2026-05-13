@@ -5,7 +5,6 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.example.contactmanager.databinding.AccountsDesignBinding
 import com.example.contactmanager.models.AccountModel
 import com.example.contactmanager.utils.Common

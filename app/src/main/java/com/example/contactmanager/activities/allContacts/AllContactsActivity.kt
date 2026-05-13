@@ -16,6 +16,7 @@ import com.example.contactmanager.R
 import com.example.contactmanager.adapters.AllContactsAdapter
 import com.example.contactmanager.databinding.ActivityAllContactsBinding
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager
 import com.example.contactmanager.viewmodels.ContactViewModel
@@ -99,6 +100,7 @@ class AllContactsActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.tvDone.id -> {
                 val changedContacts = allContactsAdapter.getChangedContacts()

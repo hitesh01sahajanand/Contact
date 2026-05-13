@@ -5,11 +5,11 @@ import android.database.ContentObserver
 import android.os.Handler
 import android.os.Looper
 import android.provider.ContactsContract
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.contactmanager.R
 import com.example.contactmanager.models.ContactListItem
 import com.example.contactmanager.repository.ContactRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,7 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ContactViewModel @Inject constructor(
     private val repository: ContactRepository,
-    @param: ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val handler = Handler(Looper.getMainLooper())
@@ -71,13 +71,13 @@ class ContactViewModel @Inject constructor(
     private var _accountCounts = MutableLiveData<Map<String, Int>>()
     val accountCounts: LiveData<Map<String, Int>> = _accountCounts
 
-    var currentSelectedAccount: String = "All Accounts"
+    var currentSelectedAccount: String = context.getString(R.string.all_accounts)
 
     fun loadContacts(showLoader: Boolean = true) {
         registerObserver()
         when (currentSelectedAccount) {
-            "All Accounts" -> loadAllContacts(showLoader)
-            "Device Only" -> getContactsByDevice(showLoader)
+            context.getString(R.string.all_accounts) -> loadAllContacts(showLoader)
+            context.getString(R.string.device_only) -> getContactsByDevice(showLoader)
             else -> getContactsByAccountWithHeaders(currentSelectedAccount, showLoader)
         }
     }
@@ -122,14 +122,6 @@ class ContactViewModel @Inject constructor(
             }
         }
     }
-    /*fun getContactCount(account: String): String {
-        val list = when (account) {
-            "All Accounts" -> repository.getContactsByAccountWithHeaders()
-            "Device Only" -> repository.getContactsByDevice()
-            else -> repository.getContactsByGoogleAccount(account)
-        }
-        return list.filterIsInstance<ContactListItem.Contact>().size.toString()
-    }*/
 
     fun fetchAccountCounts(isMerge: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {

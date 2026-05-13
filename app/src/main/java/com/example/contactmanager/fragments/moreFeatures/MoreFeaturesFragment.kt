@@ -15,6 +15,7 @@ import com.example.contactmanager.activities.home.HomeActivity
 import com.example.contactmanager.databinding.FragmentMoreFeaturesBinding
 import com.example.contactmanager.R
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.OnClickHandler
 
 class MoreFeaturesFragment : Fragment(), OnClickHandler {
@@ -35,6 +36,7 @@ class MoreFeaturesFragment : Fragment(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.llContacts.id -> {
                 Common.openHomeActivity(requireActivity(), "contacts")
@@ -58,12 +60,15 @@ class MoreFeaturesFragment : Fragment(), OnClickHandler {
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     requireActivity().startActivity(intent)
                 } catch (e: ActivityNotFoundException) {
-                    Toast.makeText(requireActivity(), "No Calendar app found!", Toast.LENGTH_SHORT)
+                    Toast.makeText(
+                        requireActivity(),
+                        requireActivity().getString(R.string.no_calendar_app_found), Toast.LENGTH_SHORT
+                    )
                         .show()
                 } catch (e: Exception) {
                     Toast.makeText(
                         requireActivity(),
-                        "Error opening calendar: ${e.message}",
+                        requireActivity().getString(R.string.error_opening_calendar, e.message),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -95,7 +100,11 @@ class MoreFeaturesFragment : Fragment(), OnClickHandler {
                     requireActivity().startActivity(intent)
                     requireActivity().finish()
                 } catch (e: ActivityNotFoundException) {
-                    Toast.makeText(requireActivity(), "No browser found!", Toast.LENGTH_SHORT)
+                    Toast.makeText(
+                        requireActivity(),
+                        requireActivity().getString(R.string.no_browser_found),
+                        Toast.LENGTH_SHORT
+                    )
                         .show()
                 } catch (e: Exception) {
                     Toast.makeText(

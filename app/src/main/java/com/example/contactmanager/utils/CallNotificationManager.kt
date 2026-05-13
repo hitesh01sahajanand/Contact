@@ -77,7 +77,7 @@ class CallNotificationManager(private val context: Context) {
         val call = NewCallManager.getPrimaryCall() ?: return buildEmptyNotification()
 
         val state = NewCallManager.getState()
-        val number = call.details.handle?.schemeSpecificPart ?: "Unknown"
+        val number = call.details.handle?.schemeSpecificPart ?: context.getString(R.string.unknown)
 
         val contactName = Common.getContactName(context, number)
         val name = if (contactName != number) {
@@ -143,7 +143,12 @@ class CallNotificationManager(private val context: Context) {
 
         val builder = NotificationCompat.Builder(context, CALL_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_call)
-            .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher_round))
+            .setLargeIcon(
+                BitmapFactory.decodeResource(
+                    context.resources,
+                    R.mipmap.ic_launcher_round
+                )
+            )
             .setColor(ContextCompat.getColor(context, R.color.main_color))
             .setCustomContentView(remoteViews)
             .setCustomHeadsUpContentView(remoteViews)
@@ -171,9 +176,14 @@ class CallNotificationManager(private val context: Context) {
     private fun buildEmptyNotification(): Notification {
         return NotificationCompat.Builder(context, CALL_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_call)
-            .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher_round))
+            .setLargeIcon(
+                BitmapFactory.decodeResource(
+                    context.resources,
+                    R.mipmap.ic_launcher_round
+                )
+            )
             .setColor(ContextCompat.getColor(context, R.color.main_color))
-            .setContentTitle("Call Ended")
+            .setContentTitle(context.getString(R.string.call_ended))
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
     }
@@ -202,7 +212,12 @@ class CallNotificationManager(private val context: Context) {
 
         val builder = NotificationCompat.Builder(context, MISSED_CALL_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_miss_call)
-            .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher_round))
+            .setLargeIcon(
+                BitmapFactory.decodeResource(
+                    context.resources,
+                    R.mipmap.ic_launcher_round
+                )
+            )
             .setColor(ContextCompat.getColor(context, R.color.red))
             .setContentTitle(context.getString(R.string.missed_call))
             .setContentText(contentText)
@@ -212,23 +227,5 @@ class CallNotificationManager(private val context: Context) {
             .setContentIntent(activityPendingIntent)
 
         notificationManager.notify(MISSED_CALL_NOTIFICATION_ID + number.hashCode(), builder.build())
-    }
-
-    fun showEndCallNotification(number: String, startTime: Long, endTime: Long, callType: String, pendingIntent: PendingIntent) {
-
-        val builder = NotificationCompat.Builder(context, END_CALL_CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("Call Ended")
-            .setContentText("Tap to view call details for $number")
-            .setPriority(NotificationCompat.PRIORITY_MAX)
-            .setCategory(NotificationCompat.CATEGORY_CALL)
-            .setDefaults(Notification.DEFAULT_ALL)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setFullScreenIntent(pendingIntent, true)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .setOngoing(false)
-
-        notificationManager.notify(CALL_NOTIFICATION_ID, builder.build())
     }
 }

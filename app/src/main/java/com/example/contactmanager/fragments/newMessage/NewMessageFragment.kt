@@ -18,7 +18,9 @@ import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.viewmodels.QuickResponseViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.core.net.toUri
+import com.example.contactmanager.R
 import com.example.contactmanager.activities.endCall.EndCallActivity
+import com.example.contactmanager.utils.Common.isValidClick
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -66,7 +68,10 @@ class NewMessageFragment : Fragment(), OnClickHandler {
                     startActivity(intent)
                     requireActivity().finishAndRemoveTask()
                 } else {
-                    Toast.makeText(requireContext(), "Phone number not found", Toast.LENGTH_SHORT)
+                    Toast.makeText(
+                        requireContext(),
+                        requireActivity().getString(R.string.phone_number_not_found), Toast.LENGTH_SHORT
+                    )
                         .show()
                 }
             }
@@ -77,6 +82,7 @@ class NewMessageFragment : Fragment(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.llQuickResponse.id -> {
                 Common.editQuickMessageDialog(requireActivity(), onItemClick = { message ->

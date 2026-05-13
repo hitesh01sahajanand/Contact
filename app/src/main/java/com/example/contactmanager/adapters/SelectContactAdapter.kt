@@ -75,11 +75,6 @@ class SelectContactAdapter(
         notifyDataSetChanged()
     }
 
-    fun clearList() {
-        contactList.clear()
-        filteredList.clear()
-    }
-
     fun filter(query: String) {
 
         val searchText = query.trim()
@@ -134,7 +129,6 @@ class SelectContactAdapter(
         fun bind(item: ContactListItem.Contact, position: Int) {
             val data = item.data
 
-            val context = binding.root.context
             val isExpanded = position == expandedPosition
             val isNextExpanded = position + 1 == expandedPosition
             val isPrevExpanded = position - 1 == expandedPosition
@@ -155,8 +149,6 @@ class SelectContactAdapter(
             binding.llCollapseView.setBackgroundResource(backgroundRes)
 
             val params = binding.root.layoutParams as RecyclerView.LayoutParams
-            val vertical =
-                context.resources.getDimensionPixelSize(com.intuit.sdp.R.dimen._10sdp)
 
             params.setMargins(0, 0, 0, 0)
 

@@ -19,18 +19,6 @@ fun Call?.getStateCompat(): Int {
     }
 }
 
-fun Call?.getCallDuration(): Int {
-    return if (this != null) {
-        val connectTimeMillis = details.connectTimeMillis
-        if (connectTimeMillis == 0L) {
-            return 0
-        }
-        ((System.currentTimeMillis() - connectTimeMillis) / 1000).toInt()
-    } else {
-        0
-    }
-}
-
 fun Call.isOutgoing(): Boolean {
     return if (isQPlus()) {
         details.callDirection == Call.Details.DIRECTION_OUTGOING
@@ -45,9 +33,5 @@ fun isSPlus() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.Q)
 fun isQPlus() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
-fun Call.hasCapability(capability: Int): Boolean = (details.callCapabilities and capability) != 0
-
 fun Call?.isConference(): Boolean =
     this?.details?.hasProperty(Call.Details.PROPERTY_CONFERENCE) == true
-
-fun Call?.isHD(): Boolean = this?.details?.hasProperty(Call.Details.PROPERTY_HIGH_DEF_AUDIO) == true

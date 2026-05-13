@@ -293,6 +293,7 @@
     <string name="date">Date</string>
     <string name="contact_info">Contact Info</string>
     <string name="edit">Edit</string>
+
     <string name="loading_ad">Loading AD!!</string>
     <string name="no_connection">No Connection</string>
     <string name="no_internet_connection">No internet connection found.\nCheck your connection.</string>
@@ -302,8 +303,6 @@
     <string name="sms">SMS</string>
     <string name="duration_02d_02d_02d">Duration : %02d:%02d:%02d</string>
     <string name="duration_02d_02d">Duration : %02d:%02d</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="create_reminder">Create Reminder</string>
     <string name="remind_me_about">Remind me about</string>
     <string name="select_date_amp_time"><![CDATA[Select Date & Time]]></string>
@@ -316,5 +315,62 @@
     <string name="call_back">Call back %1$s</string>
     <string name="reminder_marked_as_done">Reminder marked as done</string>
     <string name="reminder_title">Reminder Title</string>
+    <string name="all_accounts">All Accounts</string>
+    <string name="device_only">Device Only</string>
+
+    <string name="call_reminders">Call Reminders</string>
+    <string name="call_reminder">Call Reminder</string>
+    <string name="reminder_to_call">Reminder to call %1$s (%2$s)</string>
+    <string name="add_block_number">Add Block Number</string>
+    <string name="current_weather">Current Weather</string>
+    <string name="seeing_different_weather">Seeing different weather?</string>
+    <string name="air_quality">Air quality</string>
+    <string name="wind">Wind</string>
+    <string name="humidity">Humidity</string>
+    <string name="visibility">Visibility</string>
+    <string name="dew_point">Dew point</string>
+    <string name="copy_to_clipboard">Copy to clipboard</string>
+
+    <string name="please_save_contact_first">Please save contact first</string>
+    <string name="unable_to_share_contact">Unable to share contact</string>
+    <string name="please_allow_exact_alarm_permission">Please allow exact alarm permission</string>
+    <string name="please_select_future_time">Please select future time</string>
+    <string name="unable_to_start_whatsapp_video_call">Unable to start WhatsApp video call</string>
+    <string name="incoming">Incoming</string>
+    <string name="outgoing">Outgoing</string>
+    <string name="missed">Missed</string>
+    <string name="rejected">Rejected</string>
+    <string name="all_contacts">All Contacts</string>
+    <string name="multiple_participants">Multiple Participants</string>
+    <string name="conference_call">Conference Call</string>
+    <string name="no_map_application_found">No map application found</string>
+    <string name="no_browser_found">No browser found</string>
+    <string name="no_email_application_found">No email application found</string>
+    <string name="please_accept_overlay_permission">Please Accept Overlay Permission</string>
+    <string name="please_select_language">Please select language</string>
+    <string name="permission_required_to_read_ringtone_details">Permission required to read ringtone details</string>
+    <string name="could_not_prepare_the_audio_file_please_try_a_different_file">Could not prepare the audio file. Please try a different file.</string>
+    <string name="invalid_ringtone_file">Invalid ringtone file</string>
+    <string name="failed_to_set_ringtone">Failed to set ringtone: %1$s</string>
+    <string name="mobile_">Mobile +%1$s</string>
+    <string name="voicemail">Voicemail</string>
+    <string name="rejected_call">Rejected Call</string>
+    <string name="blocked_call">Blocked Call</string>
+    <string name="unknown_call">Unknown Call</string>
+    <string name="sunny">Sunny</string>
+    <string name="cloudy">Cloudy</string>
+    <string name="rainy">Rainy</string>
+    <string name="partly_cloudy">Partly Cloudy</string>
+    <string name="thunderstorm">Thunderstorm</string>
+    <string name="there_will_be_mostly_sunny_skies">There will be mostly sunny skies. The high will reach 37° on this humid day.</string>
+    <string name="expect_overcast_skies_throughout">Expect overcast skies throughout the day with a slight chance of showers.</string>
+    <string name="heavy_rain_is_expected">Heavy rain is expected in the afternoon. Stay indoors if possible.</string>
+    <string name="a_mix_of_sun_and_clouds_with">A mix of sun and clouds with mild temperatures.</string>
+    <string name="stormy_weather_with_high_winds">Stormy weather with high winds and frequent lightning.</string>
+    <string name="no_calendar_app_found">No Calendar app found!</string>
+    <string name="error_opening_calendar">Error opening calendar: %1$s</string>
+    <string name="phone_number_not_found">Phone number not found</string>
+    <string name="feel_like">Feel like</string>
+    <string name="this_action_may_contains_ads">This action may contains Ads</string>
 
 </resources>

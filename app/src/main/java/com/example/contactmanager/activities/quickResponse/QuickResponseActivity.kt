@@ -14,6 +14,7 @@ import com.example.contactmanager.R
 import com.example.contactmanager.adapters.QuickResponseAdapter
 import com.example.contactmanager.databinding.ActivityQuickResponseBinding
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.viewmodels.QuickResponseViewModel
@@ -64,6 +65,7 @@ class QuickResponseActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.ivBack.id -> {
                 onBackPressedDispatcher.onBackPressed()

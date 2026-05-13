@@ -23,6 +23,7 @@ import com.example.contactmanager.adapters.SuggestionAdapter
 import com.example.contactmanager.databinding.FragmentKeypadBinding
 import com.example.contactmanager.models.ContactListItem
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.NewCallManager
 import com.example.contactmanager.utils.OnClickHandler
@@ -219,7 +220,7 @@ class KeypadFragment : Fragment(), OnClickHandler {
                 Common.actionCall(speedDial.contactNumber, requireActivity())
             } else {
                 Toast.makeText(requireContext(),
-                    getString(R.string.no_speed_dial_set_for, slot), Toast.LENGTH_SHORT)
+                    requireActivity().getString(R.string.no_speed_dial_set_for, slot), Toast.LENGTH_SHORT)
                     .show()
             }
         }
@@ -246,6 +247,7 @@ class KeypadFragment : Fragment(), OnClickHandler {
 
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.buttonCall.id -> {
                 val number = binding.edtDisplayNumber.text.toString()

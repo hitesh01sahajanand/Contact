@@ -1,7 +1,6 @@
 package com.example.contactmanager.utils
 
 import android.content.Context
-import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatDelegate
 import com.example.contactmanager.R
 

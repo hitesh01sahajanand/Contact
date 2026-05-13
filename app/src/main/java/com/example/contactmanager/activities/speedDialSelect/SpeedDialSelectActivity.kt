@@ -16,6 +16,7 @@ import com.example.contactmanager.R
 import com.example.contactmanager.adapters.SelectContactAdapter
 import com.example.contactmanager.databinding.ActivitySpeedDialSelectBinding
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.viewmodels.ContactViewModel
@@ -78,6 +79,7 @@ class SpeedDialSelectActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.ivBack.id -> {
                 onBackPressedDispatcher.onBackPressed()

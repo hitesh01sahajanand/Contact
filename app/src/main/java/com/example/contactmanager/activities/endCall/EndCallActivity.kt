@@ -28,6 +28,7 @@ import com.example.contactmanager.adapters.CallEndTabAdapter
 import com.example.contactmanager.databinding.ActivityEndCallBinding
 import com.example.contactmanager.repository.TagRepository
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager
@@ -81,10 +82,7 @@ class EndCallActivity : AppCompatActivity(), OnClickHandler {
             setTurnScreenOn(true)
         } else {
             window.addFlags(
-                android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                        android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                        android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                        android.view.WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+                android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or android.view.WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
             )
         }
 
@@ -179,19 +177,13 @@ class EndCallActivity : AppCompatActivity(), OnClickHandler {
                     binding.ivContactPhoto.visibility = View.VISIBLE
 //                    binding.tvFirstName.visibility = View.GONE
                     binding.ivUser.visibility = View.GONE
-                    Glide.with(this)
-                        .load(contact.userThumbnail)
+                    Glide.with(this).load(contact.userThumbnail)
                         .apply(RequestOptions.bitmapTransform(CircleCrop()))
-                        .error(R.drawable.ic_contact_profile)
-                        .into(binding.ivContactPhoto)
+                        .error(R.drawable.ic_contact_profile).into(binding.ivContactPhoto)
                 } else {
                     binding.ivContactPhoto.visibility = View.GONE
                     binding.tvFirstName.visibility = View.VISIBLE
-                    val initials = displayName
-                        .trim()
-                        .split(" ")
-                        .filter { it.isNotEmpty() }
-                        .take(2)
+                    val initials = displayName.trim().split(" ").filter { it.isNotEmpty() }.take(2)
                         .joinToString("") { it.first().uppercase() }
                     binding.tvFirstName.text = initials
                 }
@@ -245,28 +237,16 @@ class EndCallActivity : AppCompatActivity(), OnClickHandler {
         binding.tvDuration.text = if (hours > 0) {
             String.format(
                 Locale.getDefault(),
-                getString(R.string.duration_02d_02d_02d), hours, minutes, seconds
+                getString(R.string.duration_02d_02d_02d),
+                hours,
+                minutes,
+                seconds
             )
         } else {
             String.format(
-                Locale.getDefault(),
-                getString(R.string.duration_02d_02d), minutes, seconds
+                Locale.getDefault(), getString(R.string.duration_02d_02d), minutes, seconds
             )
         }
-
-        /*binding.tvDuration.text = when (callType) {
-            CALL_TYPE_MISSED -> getString(R.string.missed_call)
-            CALL_TYPE_REJECTED -> getString(R.string.call_declined)
-            else -> getString(R.string.call_ended)
-        }
-
-        // Override duration display if the call was actually answered and we have valid times
-        if ((callType == CALL_TYPE_ENDED || callType == CALL_TYPE_INCOMING || callType == CALL_TYPE_OUTGOING) && startTime > 0 && endTime > startTime) {
-            val durationMs = endTime - startTime
-            val seconds = (durationMs / 1000) % 60
-            val minutes = (durationMs / (1000 * 60)) % 60
-            val hours = (durationMs / (1000 * 60 * 60))
-        }*/
     }
 
     private fun setupAds() {
@@ -358,7 +338,10 @@ class EndCallActivity : AppCompatActivity(), OnClickHandler {
 
     private fun checkOverlayPermission() {
         if (!isUserAskPermission && !PermissionManager.hasOverlayPermission(this)) {
-            Toast.makeText(this, "Please Accept Overlay Permission", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                getString(R.string.please_accept_overlay_permission), Toast.LENGTH_SHORT
+            ).show()
             val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
                 data = "package:$packageName".toUri()
             }
@@ -368,8 +351,16 @@ class EndCallActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.llCall.id -> {
+                mobileNumber?.let { number ->
+                    Common.actionCall(number, this)
+                }
+                finishAndRemoveTask()
+            }
+
+            binding.ivCall.id -> {
                 mobileNumber?.let { number ->
                     Common.actionCall(number, this)
                 }

@@ -63,25 +63,6 @@ class SplashActivity : AppCompatActivity() {
         binding.lavSplashLogo.playAnimation()
     }
 
-    /*private fun checkNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.CALL_PHONE
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                proceedToNext()
-            } else {
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        } else {
-            proceedToNext()
-        }
-    }*/
-
     private fun checkNotificationPermission() {
 
         val permissions = mutableListOf<String>()

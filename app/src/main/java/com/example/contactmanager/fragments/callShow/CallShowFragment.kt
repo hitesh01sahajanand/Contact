@@ -1,27 +1,46 @@
 package com.example.contactmanager.fragments.callShow
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.example.contactmanager.activities.home.HomeActivity
-import com.example.contactmanager.activities.newContact.NewContactActivity
+import com.example.contactmanager.R
 import com.example.contactmanager.databinding.FragmentCallShowBinding
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.OnClickHandler
 import java.text.SimpleDateFormat
-import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 import java.util.Random
 
 
 class CallShowFragment : Fragment(), OnClickHandler {
     private lateinit var binding: FragmentCallShowBinding
+    private val random = Random()
+
+    private val weatherTypes by lazy {
+        listOf(
+            getString(R.string.sunny),
+            getString(R.string.cloudy),
+            getString(R.string.rainy),
+            getString(R.string.partly_cloudy),
+            getString(R.string.thunderstorm)
+        )
+    }
+
+    private val descriptions by lazy {
+        listOf(
+            getString(R.string.there_will_be_mostly_sunny_skies),
+            getString(R.string.expect_overcast_skies_throughout),
+            getString(R.string.heavy_rain_is_expected),
+            getString(R.string.a_mix_of_sun_and_clouds_with),
+            getString(R.string.stormy_weather_with_high_winds)
+        )
+    }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         binding = FragmentCallShowBinding.inflate(inflater, container, false)
         initView()
@@ -30,55 +49,33 @@ class CallShowFragment : Fragment(), OnClickHandler {
 
     private fun initView() {
         binding.onClickHandler = this
-        showCurrentDateTime()
-        showGreeting()
+        updateWeatherData()
     }
 
-    private fun showCurrentDateTime() {
-        val calendar = Calendar.getInstance()
+    private fun updateWeatherData() {
+        val currentTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+        binding.tvTime.text = currentTime
 
-        val dateFormat = SimpleDateFormat("HH:mm a", Locale.getDefault())
-        val currentDateTime = dateFormat.format(calendar.time)
+        val temp = random.nextInt(15) + 20 // 20 to 35
+        binding.tvWeatherCelsius.text = "${temp}°C"
+        binding.tvCelsius.text = "${temp}°C"
 
-        val random = Random()
+        val weatherIndex = random.nextInt(weatherTypes.size)
+        binding.tvWeatherType.text = weatherTypes[weatherIndex]
+        binding.tvDescription.text = descriptions[weatherIndex]
 
-        val sunriseMinute = random.nextInt(60)
-        val sunsetMinute = random.nextInt(60)
-
-        val sunriseTime = "6:${String.format("%02d", sunriseMinute)}"
-        val sunsetTime = "18:${String.format("%02d", sunsetMinute)}"
-
-        binding.textViewDay2.text =
-            "Today, the sun rises at $sunriseTime and sets at $sunsetTime"
-    }
-
-    private fun showGreeting() {
-        val calendar = Calendar.getInstance()
-        val hour = calendar.get(Calendar.HOUR_OF_DAY)
-
-        val greeting = when {
-            hour in 5..11 -> "Good Morning!"
-            hour in 12..17 -> "Good Afternoon!"
-            else -> "Good Night!"
-        }
-
-        binding.textViewDay1.text = greeting
+        binding.tvAirQuality.text = (random.nextInt(100) + 50).toString()
+        binding.tvWind.text = "${random.nextInt(20) + 5} km/h"
+        binding.tvHumidity.text = "${random.nextInt(40) + 40}%"
+        binding.tvVisibility.text = "${random.nextInt(10) + 2} km"
+        binding.tvDewPoint.text = "${random.nextInt(10) + 15}°"
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
-            binding.rlContacts.id -> {
-                val intent = Intent(requireActivity(), HomeActivity::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
-                requireActivity().finishAndRemoveTask()
-            }
-
-            binding.rlAddContact.id -> {
-                val intent = Intent(requireActivity(), NewContactActivity::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
-                requireActivity().finishAndRemoveTask()
+            binding.cvRefresh.id -> {
+                updateWeatherData()
             }
         }
     }

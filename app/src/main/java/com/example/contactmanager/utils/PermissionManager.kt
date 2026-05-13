@@ -1,7 +1,6 @@
 package com.example.contactmanager.utils
 
 import android.Manifest
-import android.app.Activity
 import android.app.AppOpsManager
 import android.app.Dialog
 import android.app.role.RoleManager
@@ -9,17 +8,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.telecom.TelecomManager
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
-import androidx.core.net.toUri
-import com.example.contactmanager.databinding.AlertDialogDesignBinding
 import com.example.contactmanager.databinding.PermissionDialogDesignBinding
 
 object PermissionManager {
@@ -153,7 +148,7 @@ object PermissionManager {
                         context.packageName
                     )
                     return true
-                } catch (e: SecurityException) {
+                } catch (_: SecurityException) {
                     // Permission truly denied
                 }
             }
@@ -174,7 +169,7 @@ object PermissionManager {
                 ) as Int
                 return reflectionMode == AppOpsManager.MODE_ALLOWED
             }
-        } catch (e: Exception) {}
+        } catch (_: Exception) {}
 
         return false
     }

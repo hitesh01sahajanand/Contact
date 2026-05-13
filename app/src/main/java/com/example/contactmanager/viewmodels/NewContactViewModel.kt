@@ -21,9 +21,6 @@ class NewContactViewModel @Inject constructor(
     private var _googleAccount: MutableLiveData<List<Triple<String, String, String>>> = MutableLiveData()
     val googleAccount: LiveData<List<Triple<String, String, String>>> = _googleAccount
 
-    private var _contactEmail: MutableLiveData<String> = MutableLiveData()
-    val contactEmail: LiveData<String> = _contactEmail
-
     private var _savedContactMassage: MutableLiveData<String> = MutableLiveData()
     val savedContactMassage: LiveData<String> = _savedContactMassage
 
@@ -33,13 +30,6 @@ class NewContactViewModel @Inject constructor(
             _googleAccount.postValue(data)
         }
     }
-
-    /*fun fetchContactEmail(contactId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val email = repository.getContactEmail(contactId)
-            _contactEmail.postValue(email ?: "")
-        }
-    }*/
 
     private var _contactAccountInfo: MutableLiveData<Pair<String?, String?>> = MutableLiveData()
     val contactAccountInfo: LiveData<Pair<String?, String?>> = _contactAccountInfo

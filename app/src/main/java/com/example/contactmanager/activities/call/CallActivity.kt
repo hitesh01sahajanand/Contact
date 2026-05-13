@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
@@ -14,43 +15,42 @@ import android.telecom.Call
 import android.telecom.CallAudioState
 import android.util.Log
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.lifecycleScope
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.home.HomeActivity
 import com.example.contactmanager.adapters.ConferenceParticipantsAdapter
 import com.example.contactmanager.databinding.ActivityCallBinding
 import com.example.contactmanager.databinding.ConferenceManagerBottomSheetBinding
+import com.example.contactmanager.models.QuickResponseModel
+import com.example.contactmanager.repository.TagRepository
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.NewCallManager
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.isConference
+import com.example.contactmanager.viewmodels.QuickResponseViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import android.media.ToneGenerator
-import android.view.MotionEvent
-import androidx.activity.viewModels
-import androidx.lifecycle.lifecycleScope
-import com.example.contactmanager.models.QuickResponseModel
-import com.example.contactmanager.viewmodels.QuickResponseViewModel
-import com.example.contactmanager.repository.TagRepository
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class CallActivity : AppCompatActivity(), OnClickHandler {
@@ -175,7 +175,7 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         val state = NewCallManager.getState()
 
         if (event.action == KeyEvent.ACTION_DOWN) {
@@ -287,7 +287,8 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         if (phoneState is NewCallManager.TwoCalls) {
             binding.inOutgoingCallLayout.llHoldNumber.isVisible = true
             val holdCall = phoneState.onHold
-            val holdNumber = holdCall.details.handle?.schemeSpecificPart ?: "Unknown"
+            val holdNumber =
+                holdCall.details.handle?.schemeSpecificPart ?: getString(R.string.unknown)
             val holdName = getDisplayName(holdNumber, holdCall.details.callerDisplayName)
             binding.inOutgoingCallLayout.tvHoldNumber.text =
                 "$holdName - ${getString(R.string.hold)}"
@@ -320,7 +321,6 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                 binding.inOutgoingCallLayout.llVideoCall.isVisible = true
                 binding.inOutgoingCallLayout.llAddCall.isVisible = true
                 binding.inOutgoingCallLayout.llSwap.visibility = View.INVISIBLE
-//                binding.inOutgoingCallLayout.llSwap.isVisible = false
                 binding.inOutgoingCallLayout.llMerge.isVisible = false
                 binding.inOutgoingCallLayout.llManage.isVisible = false
             }
@@ -331,21 +331,22 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
             if (NewCallManager.canAddCall()) 1.0f else 0.5f
 
         val state = NewCallManager.getState()
-        var number = call.details.handle?.schemeSpecificPart ?: "Unknown"
+        var number = call.details.handle?.schemeSpecificPart ?: getString(R.string.unknown)
         var name = getDisplayName(number, call.details.callerDisplayName)
 
         if (call.isConference()) {
-            name = "Conference Call"
+            name = getString(R.string.conference_call)
             val participants =
                 NewCallManager.getConferenceCalls().joinToString(", ") { conferenceCall ->
                     val handleNumber =
-                        conferenceCall.details.handle?.schemeSpecificPart ?: "Unknown"
+                        conferenceCall.details.handle?.schemeSpecificPart
+                            ?: getString(R.string.unknown)
                     getDisplayName(
                         handleNumber,
                         conferenceCall.details.callerDisplayName
                     )
                 }
-            number = participants.ifEmpty { "Multiple Participants" }
+            number = participants.ifEmpty { getString(R.string.multiple_participants) }
         }
 
         val accountHandle = call.details.accountHandle
@@ -360,7 +361,6 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
 
         when (state) {
             Call.STATE_RINGING -> {
-                Log.e("TAG", "updateUI: gggg $number $name")
                 binding.inIncomingLayout.tvNumberName.text = name
                 binding.inIncomingLayout.tvCalling.text = getString(R.string.incoming_call)
 
@@ -427,10 +427,12 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.inIncomingLayout.llRemindMe.id -> {
                 val call = NewCallManager.getPrimaryCall()
-                val number = call?.details?.handle?.schemeSpecificPart ?: "Unknown"
+                val number =
+                    call?.details?.handle?.schemeSpecificPart ?: getString(R.string.unknown)
                 val name = getDisplayName(number, call?.details?.callerDisplayName)
 
                 Common.showRemindMeDialog(this, name, number, onReminderSet = {
@@ -474,7 +476,6 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
 
             binding.inOutgoingCallLayout.llHold.id -> {
                 NewCallManager.toggleHold()
-                // isOnHold will be synced via onStateChanged -> updateUI
             }
 
             binding.inOutgoingCallLayout.llVideoCall.id -> {
@@ -559,6 +560,7 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                     MotionEvent.ACTION_DOWN -> {
                         handleDialPadTouchDown(v.id)
                     }
+
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                         handleDialPadTouchUp(v.id)
                         v.performClick()
@@ -572,10 +574,14 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
     private fun handleDialPadTouchDown(viewId: Int) {
         val charValue = keyMap[viewId] ?: return
         val call = NewCallManager.getPrimaryCall()
-        
+
         call?.playDtmfTone(charValue)
 
-        val isDialPadSound = com.example.contactmanager.utils.SharedPreferenceManager.getBoolean(this, Constance.DIAL_PAD_SOUND, false)
+        val isDialPadSound = com.example.contactmanager.utils.SharedPreferenceManager.getBoolean(
+            this,
+            Constance.DIAL_PAD_SOUND,
+            false
+        )
         if (isDialPadSound) {
             toneMap[viewId]?.let { tone ->
                 toneGenerator?.startTone(tone, 150)
@@ -655,9 +661,9 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
      *   [isMoreExpanded] — row-1 buttons expanded
      */
     private fun applyButtonUI() {
-        val iconActive   = ContextCompat.getColor(this, R.color.white)
+        val iconActive = ContextCompat.getColor(this, R.color.white)
         val iconInactive = ContextCompat.getColor(this, R.color.black_color)
-        val cardActive   = ContextCompat.getColor(this, R.color.grey_color)
+        val cardActive = ContextCompat.getColor(this, R.color.grey_color)
         val cardInactive = ContextCompat.getColor(this, R.color.bg_color)
 
         fun applyButton(
@@ -703,18 +709,8 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
             isMoreExpanded
         )
         // ⋯ More — active while row-1 is expanded
-        /*binding.inOutgoingCallLayout.cvMore.setCardBackgroundColor(
-            if (isMoreExpanded) cardActive else cardInactive
-        )
-        binding.inOutgoingCallLayout.ivMore.setColorFilter(if (isActive) iconActive else iconInactive)*/
 
         updateProximitySensor()
-    }
-
-
-    private fun updateHoldUI() {
-        isOnHold = NewCallManager.getState() == Call.STATE_HOLDING
-        applyButtonUI()
     }
 
     fun makeFullScreenImmersive() {
@@ -840,11 +836,6 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
             it != android.telecom.VideoProfile.STATE_AUDIO_ONLY
         } ?: false
 
-        Log.d(
-            "CallActivity",
-            "updateProximitySensor: state=$state, route=$audioRoute, isEarpiece=$isEarpiece, isSpeaker=$isSpeaker, isBluetooth=$isBluetooth, isVideo=$isVideo"
-        )
-
         val shouldActivate =
             (state == Call.STATE_ACTIVE || state == Call.STATE_DIALING || state == Call.STATE_CONNECTING)
                     && isEarpiece && !isSpeaker && !isBluetooth && !isVideo
@@ -860,7 +851,6 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         try {
             mProximityWakeLock?.let { wakeLock ->
                 if (wakeLock.isHeld) {
-                    Log.d("CallActivity", "releasing proximity wake lock")
                     wakeLock.release()
                 }
             }
@@ -876,7 +866,6 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         try {
             val powerManager = getSystemService(POWER_SERVICE) as? PowerManager
             if (powerManager == null) {
-                Log.e("CallActivity", "PowerManager is null")
                 return
             }
 
@@ -892,7 +881,6 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
                         PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
                         "ContactManager:ProximityWakeLock"
                     )
-                    Log.d("CallActivity", "Created proximity wake lock")
                 } else {
                     Log.w(
                         "CallActivity",
@@ -903,7 +891,6 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
 
             mProximityWakeLock?.let { wakeLock ->
                 if (!wakeLock.isHeld) {
-                    Log.d("CallActivity", "acquiring proximity wake lock")
                     wakeLock.acquire(30 * 60 * 1000L /* 30 minutes */)
                     // Some devices require clearing this flag for proximity screen off to work
                     window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

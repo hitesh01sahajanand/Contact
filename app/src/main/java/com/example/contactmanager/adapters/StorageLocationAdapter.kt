@@ -25,7 +25,7 @@ class StorageLocationAdapter : RecyclerView.Adapter<StorageLocationAdapter.Stora
         position: Int
     ) {
         val itemData = accountInfoDetails[position]
-        holder.setData(itemData)
+        holder.setData(itemData, position)
     }
 
     override fun getItemCount(): Int {
@@ -40,7 +40,7 @@ class StorageLocationAdapter : RecyclerView.Adapter<StorageLocationAdapter.Stora
 
     class StorageViewHolder(private val binding: StorageLocationDesignBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun setData(itemData: Pair<String?, String?>) {
+        fun setData(itemData: Pair<String?, String?>, position: Int) {
             val context = binding.root.context
             val displayName = itemData.first ?: ""
             val accountType = itemData.second ?: ""
@@ -78,7 +78,8 @@ class StorageLocationAdapter : RecyclerView.Adapter<StorageLocationAdapter.Stora
                     try {
                         iconDrawable = context.packageManager.getApplicationIcon(accountType)
                         val appInfo = context.packageManager.getApplicationInfo(accountType, 0)
-                        accountLabel = context.packageManager.getApplicationLabel(appInfo).toString()
+                        accountLabel =
+                            context.packageManager.getApplicationLabel(appInfo).toString()
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
@@ -96,7 +97,7 @@ class StorageLocationAdapter : RecyclerView.Adapter<StorageLocationAdapter.Stora
             } else {
                 binding.tvContactName.isVisible = true
                 binding.ivContactPhoto.isVisible = false
-                val color = Common.profileColors[adapterPosition % Common.profileColors.size]
+                val color = Common.profileColors[position % Common.profileColors.size]
                 binding.cvProfile.setCardBackgroundColor(
                     ContextCompat.getColor(binding.root.context, color)
                 )

@@ -69,7 +69,6 @@ class FavoriteViewModel @Inject constructor(
         registerObserver()
         viewModelScope.launch(Dispatchers.IO) {
             val data = repository.getAllFavoriteContacts()
-            Log.d("FavoriteViewModel", "getAllFavoriteContact: loaded ${data.size} favorites")
             _allFavoriteContacts.postValue(data)
         }
     }

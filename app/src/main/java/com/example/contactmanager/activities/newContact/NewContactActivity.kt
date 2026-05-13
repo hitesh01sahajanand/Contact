@@ -1,12 +1,9 @@
 package com.example.contactmanager.activities.newContact
 
-import android.content.ContentUris
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
-import com.bumptech.glide.Glide
-import androidx.core.net.toUri
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.provider.Settings
@@ -24,11 +21,13 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
+import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.example.contactmanager.R
 import com.example.contactmanager.adapters.AllAccountAdapter
 import com.example.contactmanager.databinding.ActivityNewContactBinding
@@ -38,6 +37,7 @@ import com.example.contactmanager.models.AccountModel
 import com.example.contactmanager.models.ContactDetail
 import com.example.contactmanager.models.FullContactData
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.viewmodels.NewContactViewModel
@@ -145,9 +145,9 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             newDisplayList.clear()
             newDisplayList.add(
                 AccountModel(
-                    name = "Device Only",
+                    name = getString(R.string.device_only),
                     email = "",
-                    avtar = Common.generateAvatar("Device Only")
+                    avtar = Common.generateAvatar(getString(R.string.device_only))
                 )
             )
             list.forEach {
@@ -177,7 +177,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             val accountName = accountInfo.first
             val accountType = accountInfo.second
             val accName =
-                if (accountName != null && accountName.contains("@")) accountName.substringBefore("@") else "Device Only"
+                if (accountName != null && accountName.contains("@")) accountName.substringBefore("@") else getString(R.string.device_only)
             val email = if (accountName != null && accountName.contains("@")) accountName else ""
             val itemData = AccountModel(
                 name = accName,
@@ -208,13 +208,11 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
                 ) {
                     try {
                         startActivity(Intent(Settings.ACTION_SYNC_SETTINGS))
-                    } catch (e: Exception) {
-                        Log.e("TAG", "initView ${e.message}: ")
+                    } catch (_: Exception) {
                         startActivity(Intent(Settings.ACTION_SETTINGS))
                     }
                 }
             } else {
-//                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
                 if (msg.contains("✅")) finish()
             }
         }
@@ -414,7 +412,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             fieldBinding.llType.isVisible = false
         }
 
-        if (container.id == R.id.container_phonetype || container.id == R.id.container_reletion ) {
+        if (container.id == R.id.container_phonetype || container.id == R.id.container_reletion) {
             fieldBinding.etValue.inputType = android.text.InputType.TYPE_CLASS_NUMBER
         }
 
@@ -458,6 +456,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.llAccounts.id -> showAccountPopup(binding.inAccountDesign.root, newDisplayList)
             binding.cvAddPhoto.id -> showImagePickerDialog()

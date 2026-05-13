@@ -3,22 +3,21 @@ package com.example.contactmanager.fragments.contacts
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
-import android.view.View
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
-import androidx.recyclerview.widget.RecyclerView
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.details.ContactsDetailsActivity
 import com.example.contactmanager.activities.newContact.NewContactActivity
@@ -28,6 +27,7 @@ import com.example.contactmanager.databinding.FragmentContactsBinding
 import com.example.contactmanager.models.AccountModel
 import com.example.contactmanager.models.ContactListItem
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager
@@ -178,7 +178,8 @@ class ContactsFragment : Fragment(), OnClickHandler {
                     var index = (y / itemHeight).toInt()
 
                     if (index < 0) index = 0
-                    if (index >= binding.indexBar.childCount) index = binding.indexBar.childCount - 1
+                    if (index >= binding.indexBar.childCount) index =
+                        binding.indexBar.childCount - 1
 
                     val textView = binding.indexBar.getChildAt(index) as TextView
                     val letter = textView.text.toString()
@@ -212,8 +213,6 @@ class ContactsFragment : Fragment(), OnClickHandler {
                             binding.cvIndexBubble.isVisible = false
                         }
                     }, 500)
-                } else if (newState == RecyclerView.SCROLL_STATE_DRAGGING || newState == RecyclerView.SCROLL_STATE_SETTLING) {
-//                    binding.cvIndexBubble.isVisible = true
                 }
             }
 
@@ -303,6 +302,7 @@ class ContactsFragment : Fragment(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
 
             binding.inHeader.cvMore.id -> {
@@ -337,15 +337,15 @@ class ContactsFragment : Fragment(), OnClickHandler {
 
                 accountList.add(
                     AccountModel(
-                        "All",
-                        "All Accounts",
+                        requireActivity().getString(R.string.all),
+                        requireActivity().getString(R.string.all_accounts),
                         count = counts["All Accounts"] ?: 0
                     )
                 )
                 accountList.add(
                     AccountModel(
-                        "Device",
-                        "Device Only",
+                        requireActivity().getString(R.string.device),
+                        requireActivity().getString(R.string.device_only),
                         count = counts["Device Only"] ?: 0
                     )
                 )
@@ -384,7 +384,7 @@ class ContactsFragment : Fragment(), OnClickHandler {
                     binding.cvAccounts,
                     accountList
                 ) { email ->
-                    val selectedName = accountList.find { it.email == email }?.name ?: "All"
+                    val selectedName = accountList.find { it.email == email }?.name ?: requireActivity().getString(R.string.all)
                     val tvTitle = binding.cvAccounts.findViewById<TextView>(R.id.tv_title)
                     tvTitle?.text = selectedName
 
@@ -406,6 +406,7 @@ class ContactsFragment : Fragment(), OnClickHandler {
         }
         tvTitle?.text = title
     }
+
     fun clearSearch() {
         if (::binding.isInitialized) {
             binding.edtSearch.setText("")

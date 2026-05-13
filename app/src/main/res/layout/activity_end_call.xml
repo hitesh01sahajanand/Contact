@@ -128,8 +128,10 @@
                             android:visibility="visible" />
 
                         <ImageView
+                            android:id="@+id/iv_call"
                             android:layout_width="@dimen/_18sdp"
                             android:layout_height="@dimen/_18sdp"
+                            android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
                             android:src="@drawable/ic_call_end"
                             app:tint="@color/black_color" />
 
@@ -303,7 +305,7 @@
                 android:layout_marginBottom="7dp"
                 android:background="@color/main_color"
                 app:tabIconTint="@color/tab_icon_selector"
-                app:tabIndicatorColor="@color/white" />
+                app:tabIndicatorColor="@color/white_" />
 
         </com.google.android.material.card.MaterialCardView>
 

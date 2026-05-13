@@ -1,20 +1,5 @@
 package com.example.contactmanager.models
 
-import android.graphics.Bitmap
-
-/*
-data class ContactModel(
-    val id: String,
-    val name: String,
-    val number: String,
-    var isFavorite: Boolean,
-    val isRecent: Boolean,
-    val isMissed: Boolean,
-    val lastCallDateTime: Long?,
-    val photoUri: String?,
-    var avatar: Bitmap? = null
-)*/
-
 import kotlin.math.abs
 import androidx.core.graphics.toColorInt
 
@@ -54,14 +39,12 @@ data class ContactModel(
         set(value) {
             val index = value.coerceIn(0, COLOR_CODES.size - 1)
             field = index
-            try {
-                color = COLOR_CODES[index].toColorInt()
-            } catch (e: IllegalArgumentException) {
-                color = -1
+            color = try {
+                COLOR_CODES[index].toColorInt()
+            } catch (_: IllegalArgumentException) {
+                -1
             }
         }
-
-    fun hasThumbnail(): Boolean = userThumbnail != null
 
     fun getFormattedName(startWithSurname: Boolean): String {
         if (!startWithSurname) {

@@ -499,6 +499,7 @@
                                         android:layout_width="@dimen/_12sdp"
                                         android:layout_height="@dimen/_12sdp"
                                         android:layout_gravity="center"
+                                        app:tint="@color/black_color"
                                         android:src="@drawable/ic_contact_arrow_down"
                                         android:visibility="visible" />
                                 </LinearLayout>
@@ -533,6 +534,7 @@
                             android:layout_width="@dimen/_10sdp"
                             android:layout_height="@dimen/_10sdp"
                             android:layout_gravity="center"
+                            app:tint="@color/black_color"
                             android:src="@drawable/ic_add" />
 
                         <TextView
@@ -743,6 +745,7 @@
                                         android:layout_width="@dimen/_12sdp"
                                         android:layout_height="@dimen/_12sdp"
                                         android:layout_gravity="center"
+                                        app:tint="@color/black_color"
                                         android:src="@drawable/ic_contact_arrow_down"
                                         android:visibility="visible" />
                                 </LinearLayout>
@@ -1009,6 +1012,7 @@
                                         android:layout_width="@dimen/_12sdp"
                                         android:layout_height="@dimen/_12sdp"
                                         android:layout_gravity="center"
+                                        app:tint="@color/black_color"
                                         android:src="@drawable/ic_contact_arrow_down"
                                         android:visibility="visible" />
                                 </LinearLayout>
@@ -1043,6 +1047,7 @@
                             android:layout_width="@dimen/_10sdp"
                             android:layout_height="@dimen/_10sdp"
                             android:layout_gravity="center"
+                            app:tint="@color/black_color"
                             android:src="@drawable/ic_add" />
 
                         <TextView

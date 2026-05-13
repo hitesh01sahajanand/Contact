@@ -16,6 +16,7 @@ import com.example.contactmanager.R
 import com.example.contactmanager.adapters.StorageLocationAdapter
 import com.example.contactmanager.databinding.ActivityStorageLocationBinding
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.OnClickHandler
 
 class StorageLocationActivity : AppCompatActivity(), OnClickHandler {
@@ -161,6 +162,7 @@ class StorageLocationActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.ivBack.id -> {
                 onBackPressedDispatcher.onBackPressed()

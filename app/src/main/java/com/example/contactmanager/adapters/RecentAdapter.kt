@@ -20,6 +20,7 @@ import com.example.contactmanager.databinding.RecentsDesignBinding
 import com.example.contactmanager.models.CallHistoryListItems
 import com.example.contactmanager.models.CallLogEntry
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.SharedPreferenceManager
 
@@ -309,34 +310,42 @@ class RecentAdapter(
             binding.run {
 
                 ivCall.setOnClickListener {
+                    if (!isValidClick()) return@setOnClickListener
                     onClickCall(data, Constance.ACTION_CALL)
                 }
 
                 ivMessage.setOnClickListener {
+                    if (!isValidClick()) return@setOnClickListener
                     onClickCall(data, Constance.ACTION_SEND_MESSAGE)
                 }
 
                 ivVideoCall.setOnClickListener {
+                    if (!isValidClick()) return@setOnClickListener
                     onClickCall(data, Constance.ACTION_VIDEO_CALL)
                 }
 
                 ivCallInfo.setOnClickListener {
+                    if (!isValidClick()) return@setOnClickListener
                     onClickCall(data, Constance.ACTION_INFO)
                 }
 
                 ivCallHistory.setOnClickListener {
+                    if (!isValidClick()) return@setOnClickListener
                     onClickCall(data, Constance.ACTION_CALL_HISTORY)
                 }
 
                 cvAddToContact.setOnClickListener {
+                    if (!isValidClick()) return@setOnClickListener
                     onClickCall(data, Constance.ACTION_ADD_TO_CONTACT)
                 }
 
                 cvAddTag.setOnClickListener {
+                    if (!isValidClick()) return@setOnClickListener
                     onClickCall(data, Constance.ACTION_ADD_TAG)
                 }
 
                 llBlockContact.setOnClickListener {
+                    if (!isValidClick()) return@setOnClickListener
                     onClickCall(data, Constance.ACTION_BLOCK_CONTACT)
                 }
 
@@ -347,7 +356,7 @@ class RecentAdapter(
                     data.stringCallName ?: data.stringNumber
                 }
 
-                tvExpandedCallType.text = Common.getCallType(data.intType)
+                tvExpandedCallType.text = Common.getCallType(binding.root.context, data.intType)
 
                 tvCollapseName.text = name
                 tvExpandedName.text = name
@@ -379,7 +388,9 @@ class RecentAdapter(
 
 
                 tvBlockText.text =
-                    if (data.isBlocked) "Unblock" else root.context.getString(R.string.block_contacts)
+                    if (data.isBlocked) root.context.getString(R.string.unblock) else root.context.getString(
+                        R.string.block_contacts
+                    )
 
                 // 🖼️ Profile Logic
                 if (data.stringPhotoUri.isNullOrEmpty()) {

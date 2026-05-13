@@ -11,9 +11,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.example.contactmanager.R
 import com.example.contactmanager.databinding.FavoriteDesignBinding
 import com.example.contactmanager.models.ContactModel
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 
 class FavoriteAdapter(private val onClick: (ContactModel, String) -> Unit) :
@@ -203,24 +205,28 @@ class FavoriteAdapter(private val onClick: (ContactModel, String) -> Unit) :
 
 
                 ivCall.setOnClickListener {
+                    if (!isValidClick()) return@setOnClickListener
                     onClick(itemData, Constance.ACTION_CALL)
                 }
 
                 ivMessage.setOnClickListener {
+                    if (!isValidClick()) return@setOnClickListener
                     onClick(itemData, Constance.ACTION_SEND_MESSAGE)
                 }
 
                 ivVideoCall.setOnClickListener {
+                    if (!isValidClick()) return@setOnClickListener
                     onClick(itemData, Constance.ACTION_VIDEO_CALL)
                 }
 
                 ivCallInfo.setOnClickListener {
+                    if (!isValidClick()) return@setOnClickListener
                     onClick(itemData, Constance.ACTION_INFO)
                 }
 
 
                 tvName.text = itemData.displayName
-                tvExpandedContactNumber.text = "Mobile +${itemData.number}"
+                tvExpandedContactNumber.text = context.getString(R.string.mobile_, itemData.number)
 
                 if (itemData.userThumbnail.isNullOrEmpty()) {
                     tvContactName.isVisible = true
@@ -243,4 +249,4 @@ class FavoriteAdapter(private val onClick: (ContactModel, String) -> Unit) :
         }
 
     }
-}
+}

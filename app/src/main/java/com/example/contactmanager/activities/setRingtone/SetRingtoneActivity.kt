@@ -1,13 +1,16 @@
 package com.example.contactmanager.activities.setRingtone
 
+import android.Manifest
 import android.content.ContentValues
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.Process
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.provider.Settings
@@ -20,6 +23,7 @@ import java.io.File
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -29,6 +33,7 @@ import com.example.contactmanager.R
 import com.example.contactmanager.adapters.RingtonesAdapter
 import com.example.contactmanager.databinding.ActivitySetRingtoneBinding
 import com.example.contactmanager.models.RingtoneModel
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 
@@ -69,9 +74,9 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
             } else {
                 // If at least the READ permission is granted, we can still load ringtones
                 val readGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    result[android.Manifest.permission.READ_MEDIA_AUDIO] == true
+                    result[Manifest.permission.READ_MEDIA_AUDIO] == true
                 } else {
-                    result[android.Manifest.permission.READ_EXTERNAL_STORAGE] == true
+                    result[Manifest.permission.READ_EXTERNAL_STORAGE] == true
                 }
 
                 if (readGranted) {
@@ -80,7 +85,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                 } else {
                     Toast.makeText(
                         this,
-                        "Permission required to read ringtone details",
+                        getString(R.string.permission_required_to_read_ringtone_details),
                         Toast.LENGTH_SHORT
                     ).show()
                     binding.tvRingtoneName.text = "Default"
@@ -91,18 +96,18 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
     private fun checkAndRequestAudioPermission(): Boolean {
         val permissions = mutableListOf<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            permissions.add(android.Manifest.permission.READ_MEDIA_AUDIO)
+            permissions.add(Manifest.permission.READ_MEDIA_AUDIO)
         } else {
-            permissions.add(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
             // For Android 9 and below, we also need WRITE to set custom ringtones
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                permissions.add(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             }
         }
 
         val missingPermissions = permissions.filter {
-            androidx.core.content.ContextCompat.checkSelfPermission(this, it) !=
-                    android.content.pm.PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(this, it) !=
+                    PackageManager.PERMISSION_GRANTED
         }.toTypedArray()
 
         return if (missingPermissions.isEmpty()) {
@@ -167,7 +172,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                     cursor.getString(0)
                 } else null
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -196,7 +201,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
         val currentUri = if (contactId != null) {
             getContactRingtoneUri(contactId!!) ?: try {
                 RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
-            } catch (e: SecurityException) {
+            } catch (_: SecurityException) {
                 null
             }
         } else {
@@ -248,14 +253,15 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                 }
         }
         // Final fallback — must never return null or blank
-        return getString(R.string.custom_ringtone).takeIf { it.isNotBlank() } ?: "Custom Ringtone"
+        return getString(R.string.custom_ringtone).takeIf { it.isNotBlank() }
+            ?: getString(R.string.custom_ringtone)
     }
 
     private fun displayCurrentRingtone() {
         val currentUri = if (contactId != null) {
             getContactRingtoneUri(contactId!!) ?: try {
                 RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
-            } catch (e: SecurityException) {
+            } catch (_: SecurityException) {
                 null
             }
         } else {
@@ -268,23 +274,23 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
         }
 
         if (currentUri == null) {
-            binding.tvRingtoneName.text = "Default"
+            binding.tvRingtoneName.text = getString(R.string.default_)
             return
         }
 
         val hasUriPermission = checkUriPermission(
             currentUri,
-            android.os.Process.myPid(),
-            android.os.Process.myUid(),
+            Process.myPid(),
+            Process.myUid(),
             Intent.FLAG_GRANT_READ_URI_PERMISSION
-        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) == PackageManager.PERMISSION_GRANTED
 
-        var name: String? = null
-        if (hasUriPermission || currentUri.authority != "media") {
-            name = queryNameFromContentResolver(currentUri)
+        var name: String?
+        name = if (hasUriPermission || currentUri.authority != "media") {
+            queryNameFromContentResolver(currentUri)
         } else {
             if (checkAndRequestAudioPermission()) {
-                name = queryNameFromContentResolver(currentUri)
+                queryNameFromContentResolver(currentUri)
             } else {
                 return // Permission requested, UI will update in callback
             }
@@ -315,7 +321,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                     if (idx >= 0) c.getString(idx) else null
                 } else null
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -338,7 +344,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                     if (!ringtoneStr.isNullOrEmpty()) Uri.parse(ringtoneStr) else null
                 } else null
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -373,15 +379,20 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                 } else {
                     // For Android 9 and below, we need to provide a file path via the DATA column
                     @Suppress("DEPRECATION")
-                    val ringtoneDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_RINGTONES)
+                    val ringtoneDir =
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_RINGTONES)
                     if (!ringtoneDir.exists()) ringtoneDir.mkdirs()
 
-                    val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "mp3"
+                    val extension =
+                        MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "mp3"
                     var file = File(ringtoneDir, "$safeName.$extension")
 
                     // Avoid overwriting if possible or just use a unique name
                     if (file.exists()) {
-                        file = File(ringtoneDir, "${safeName}_${System.currentTimeMillis()}.$extension")
+                        file = File(
+                            ringtoneDir,
+                            "${safeName}_${System.currentTimeMillis()}.$extension"
+                        )
                     }
                     put(MediaStore.MediaColumns.DATA, file.absolutePath)
                 }
@@ -429,7 +440,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
         if (stagedUri == null) {
             Toast.makeText(
                 this,
-                "Could not prepare the audio file. Please try a different file.",
+                getString(R.string.could_not_prepare_the_audio_file_please_try_a_different_file),
                 Toast.LENGTH_LONG
             ).show()
             return
@@ -438,7 +449,8 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
         // ✅ Extra safety check
         val ringtone = RingtoneManager.getRingtone(this, stagedUri)
         if (ringtone == null) {
-            Toast.makeText(this, "Invalid ringtone file", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.invalid_ringtone_file), Toast.LENGTH_SHORT)
+                .show()
             return
         }
 
@@ -459,7 +471,10 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
             setSystemRingtone(stagedUri)
         } catch (e: Exception) {
             Log.e("SetRingtone", "Error: ${e.message}")
-            Toast.makeText(this, "Failed to set ringtone: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                getString(R.string.failed_to_set_ringtone, e.message), Toast.LENGTH_SHORT
+            ).show()
             pendingRingtoneUri = null
         }
     }
@@ -536,7 +551,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
         val currentUri = if (contactId != null) {
             getContactRingtoneUri(contactId!!) ?: try {
                 RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
-            } catch (e: SecurityException) {
+            } catch (_: SecurityException) {
                 null
             }
         } else {
@@ -626,11 +641,23 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                     "${ContactsContract.Contacts._ID}=?",
                     arrayOf(contactId)
                 )
-                Toast.makeText(this, getString(R.string.ringtone_set_successfully), Toast.LENGTH_SHORT)
+                Toast.makeText(
+                    this,
+                    getString(R.string.ringtone_set_successfully),
+                    Toast.LENGTH_SHORT
+                )
                     .show()
             } else {
-                RingtoneManager.setActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE, uri)
-                Toast.makeText(this, getString(R.string.ringtone_set_successfully), Toast.LENGTH_SHORT)
+                RingtoneManager.setActualDefaultRingtoneUri(
+                    this,
+                    RingtoneManager.TYPE_RINGTONE,
+                    uri
+                )
+                Toast.makeText(
+                    this,
+                    getString(R.string.ringtone_set_successfully),
+                    Toast.LENGTH_SHORT
+                )
                     .show()
             }
             pendingRingtoneUri = null
@@ -647,7 +674,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                 Toast.LENGTH_LONG
             ).show()
         } catch (e: Exception) {
-            Log.e("TAG", "setSystemRingtone:ggfg ${e.message}")
+            Log.e("TAG", "setSystemRingtone: ${e.message}")
             Toast.makeText(this, "Failed to set ringtone: ${e.message}", Toast.LENGTH_SHORT).show()
             pendingRingtoneUri = null
         }
@@ -666,6 +693,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.cvDone.id -> {
                 val selected = selectedRingtone
@@ -678,8 +706,11 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
                 }
                 val currentDefault = if (contactId != null) {
                     getContactRingtoneUri(contactId!!) ?: try {
-                        RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
-                    } catch (e: SecurityException) {
+                        RingtoneManager.getActualDefaultRingtoneUri(
+                            this,
+                            RingtoneManager.TYPE_RINGTONE
+                        )
+                    } catch (_: SecurityException) {
                         null
                     }
                 } else {

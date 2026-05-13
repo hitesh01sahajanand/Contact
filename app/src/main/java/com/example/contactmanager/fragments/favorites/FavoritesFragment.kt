@@ -18,6 +18,7 @@ import com.example.contactmanager.activities.details.ContactsDetailsActivity
 import com.example.contactmanager.adapters.FavoriteAdapter
 import com.example.contactmanager.databinding.FragmentFavoritesBinding
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager
@@ -132,7 +133,7 @@ class FavoritesFragment : Fragment(), OnClickHandler {
             }
         }
 
-        binding.tvDoneSelection.text = getString(R.string.unfavorite)
+        binding.tvDoneSelection.text = requireActivity().getString(R.string.unfavorite)
         binding.tvDoneSelection.setOnClickListener {
             val selected = favoriteAdapter.getSelectedEntries()
             if (selected.isNotEmpty()) {
@@ -165,6 +166,7 @@ class FavoritesFragment : Fragment(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.inHeader.cvAdd.id -> {
                 requireActivity().startActivity(

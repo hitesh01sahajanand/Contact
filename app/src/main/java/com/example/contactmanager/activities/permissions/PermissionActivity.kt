@@ -25,6 +25,7 @@ import androidx.databinding.DataBindingUtil
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.language.LanguageActivity
 import com.example.contactmanager.databinding.ActivityPermissionBinding
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.ThemeManager
 import dagger.hilt.android.AndroidEntryPoint
@@ -99,7 +100,7 @@ class PermissionActivity : AppCompatActivity(), OnClickHandler {
 
         val privacyClickable = object : ClickableSpan() {
             override fun onClick(widget: View) {
-                Toast.makeText(widget.context, "Privacy clicked", Toast.LENGTH_SHORT).show()
+
             }
 
             override fun updateDrawState(ds: TextPaint) {
@@ -122,6 +123,7 @@ class PermissionActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.lottiPermissionBtn.id -> {
                 openDefaultAppDialog(this)

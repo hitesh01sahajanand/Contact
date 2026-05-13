@@ -35,6 +35,7 @@ import com.example.contactmanager.databinding.MoreDetailDesignBinding
 import com.example.contactmanager.models.CallLogEntry
 import com.example.contactmanager.models.FullContactData
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.viewmodels.ContactDetailsViewModel
@@ -71,7 +72,6 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             data?.let { populateFullContactData(it) }
         }
 
-        // 👉 Display initial data from intent for instant loading
         showInitialData()
     }
 
@@ -114,20 +114,15 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             binding.cvAddPhoto.setCardBackgroundColor(
                 ContextCompat.getColor(this, color)
             )
-            val firstChar = name?.trim()
-                ?.split(" ")
-                ?.filter { data -> data.isNotEmpty() }
-                ?.take(2)
-                ?.map { data -> data[0].uppercaseChar() }
-                ?.joinToString("")
+            val firstChar = name?.trim()?.split(" ")?.filter { data -> data.isNotEmpty() }?.take(2)
+                ?.map { data -> data[0].uppercaseChar() }?.joinToString("")
 
             binding.tvFirstName.text = firstChar
 
             if (isBlocked) {
                 binding.cvAddPhoto.setCardBackgroundColor(
                     ContextCompat.getColor(
-                        this,
-                        R.color.white
+                        this, R.color.white
                     )
                 )
                 binding.tvFirstName.isVisible = false
@@ -135,14 +130,12 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             } else if (!it.stringPhotoUri.isNullOrEmpty()) {
                 binding.cvAddPhoto.setCardBackgroundColor(
                     ContextCompat.getColor(
-                        this,
-                        R.color.white
+                        this, R.color.white
                     )
                 )
                 binding.tvFirstName.isVisible = false
                 binding.ivContactPhoto.isVisible = true
-                Glide.with(this)
-                    .load(it.stringPhotoUri)
+                Glide.with(this).load(it.stringPhotoUri)
                     .signature(ObjectKey(System.currentTimeMillis().toString()))
                     .into(binding.ivContactPhoto)
             } else {
@@ -153,8 +146,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             it.contactId?.let { id ->
                 binding.ivFavorite.setImageResource(
                     if (isContactFavorite(
-                            this,
-                            id
+                            this, id
                         )
                     ) R.drawable.ic_selected_star else R.drawable.ic_favorite
                 )
@@ -164,6 +156,20 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             binding.llShare.isVisible = isSaved
             binding.llFavorite.isVisible = isSaved
 
+        }
+
+        binding.tvNumber.setOnLongClickListener {
+            Common.copyToClipboard(
+                this, contactDetail?.stringNumber.toString(), getString(R.string.copy_to_clipboard)
+            )
+            true
+        }
+
+        binding.llPhone.setOnLongClickListener {
+            Common.copyToClipboard(
+                this, contactDetail?.stringNumber.toString(), getString(R.string.copy_to_clipboard)
+            )
+            true
         }
     }
 
@@ -195,6 +201,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.ivMessage.id -> {
                 contactDetail?.stringNumber?.let {
@@ -259,9 +266,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             binding.llMore.id -> {
 
                 val popUpBinding = MoreDetailDesignBinding.inflate(
-                    LayoutInflater.from(this),
-                    null,
-                    false
+                    LayoutInflater.from(this), null, false
                 )
 
 
@@ -275,8 +280,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                 popupWindow.elevation = 10f
 
                 popUpBinding.root.measure(
-                    View.MeasureSpec.UNSPECIFIED,
-                    View.MeasureSpec.UNSPECIFIED
+                    View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED
                 )
 
                 val popupWidth = popUpBinding.root.measuredWidth
@@ -285,9 +289,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                 val xOffset = binding.llMore.width - popupWidth - margin
                 val yOffset = -binding.llMore.height - popupHeight
                 popupWindow.showAsDropDown(
-                    binding.llMore,
-                    xOffset,
-                    yOffset
+                    binding.llMore, xOffset, yOffset
                 )
 
                 popUpBinding.tvDelete.setOnClickListener {
@@ -301,8 +303,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                                 onItemClick = {
                                     viewModel.deleteContact(id)
                                     finish()
-                                }
-                            )
+                                })
                         }
                     }
                     popupWindow.dismiss()
@@ -423,9 +424,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             binding.txtType.text = getPhoneTypeName(data.phones[0].type, data.phones[0].label)
             binding.llPhone.setOnClickListener {
                 Common.actionCall(
-                    data.phones[0].value,
-                    this,
-                    false
+                    data.phones[0].value, this, false
                 )
             }
 
@@ -434,8 +433,12 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                     binding.containerPhonetype,
                     data.phones[i].value,
                     getPhoneTypeName(data.phones[i].type, data.phones[i].label),
-                    null
-                ) { Common.actionCall(data.phones[i].value, this, false) }
+                    null,
+                    isPhone = true
+                ) {
+                    Common.actionCall(data.phones[i].value, this, false)
+
+                }
             }
         } else {
             binding.linearLayoutCall.isVisible = false
@@ -483,9 +486,8 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
         }
 
         // Check if About section should be visible
-        val isAboutVisible = data.company.isNotEmpty() || data.websites.isNotEmpty() ||
-                data.events.isNotEmpty() || data.notes.isNotEmpty() ||
-                data.relations.isNotEmpty()
+        val isAboutVisible =
+            data.company.isNotEmpty() || data.websites.isNotEmpty() || data.events.isNotEmpty() || data.notes.isNotEmpty() || data.relations.isNotEmpty()
 
         binding.companyAddressView.isVisible = isAboutVisible
 
@@ -564,12 +566,11 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
         value: String,
         type: String,
         iconRes: Int?,
+        isPhone: Boolean = false,
         onClick: () -> Unit
     ) {
         val itemBinding = ItemDetailEntryBinding.inflate(
-            LayoutInflater.from(this),
-            container,
-            false
+            LayoutInflater.from(this), container, false
         )
         itemBinding.tvValue.text = value
         itemBinding.tvType.text = type
@@ -580,26 +581,32 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             itemBinding.ivAction.isVisible = false
         }
         itemBinding.llMain.setOnClickListener { onClick() }
+        if (isPhone) {
+            itemBinding.llMain.setOnLongClickListener {
+                Common.copyToClipboard(this, value, getString(R.string.copy_to_clipboard))
+                true
+            }
+        }
         container.addView(itemBinding.root)
     }
 
     private fun openMap(address: String) {
         try {
             val intent = Intent(
-                Intent.ACTION_VIEW,
-                "geo:0,0?q=${android.net.Uri.encode(address)}".toUri()
+                Intent.ACTION_VIEW, "geo:0,0?q=${android.net.Uri.encode(address)}".toUri()
             )
             intent.setPackage("com.google.android.apps.maps")
             startActivity(intent)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             try {
                 val intent = Intent(
-                    Intent.ACTION_VIEW,
-                    "geo:0,0?q=${android.net.Uri.encode(address)}".toUri()
+                    Intent.ACTION_VIEW, "geo:0,0?q=${android.net.Uri.encode(address)}".toUri()
                 )
                 startActivity(intent)
-            } catch (ex: Exception) {
-                Toast.makeText(this, "No map application found", Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {
+                Toast.makeText(
+                    this, getString(R.string.no_map_application_found), Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -612,8 +619,8 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
         try {
             val intent = Intent(Intent.ACTION_VIEW, website.toUri())
             startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(this, "No browser found", Toast.LENGTH_SHORT).show()
+        } catch (_: Exception) {
+            Toast.makeText(this, getString(R.string.no_browser_found), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -621,8 +628,9 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
         try {
             val intent = Intent(Intent.ACTION_SENDTO, "mailto:$email".toUri())
             startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(this, "No email application found", Toast.LENGTH_SHORT).show()
+        } catch (_: Exception) {
+            Toast.makeText(this, getString(R.string.no_email_application_found), Toast.LENGTH_SHORT)
+                .show()
         }
     }
 
@@ -700,8 +708,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
         if (contactId.isEmpty()) return false
 
         if (ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.READ_CONTACTS
+                context, Manifest.permission.READ_CONTACTS
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             return false

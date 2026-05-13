@@ -4,6 +4,7 @@ import android.Manifest
 import android.accounts.AccountManager
 import android.app.Dialog
 import android.app.role.RoleManager
+import android.content.ActivityNotFoundException
 import android.content.ContentProviderOperation
 import android.content.Context
 import android.content.Intent
@@ -38,7 +39,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.contactmanager.R
 import com.example.contactmanager.activities.blockNumbers.BlockNumbersActivity
-import com.example.contactmanager.activities.home.HomeActivity
 import com.example.contactmanager.activities.language.LanguageActivity
 import com.example.contactmanager.activities.quickResponse.QuickResponseActivity
 import com.example.contactmanager.activities.setRingtone.SetRingtoneActivity
@@ -49,13 +49,13 @@ import com.example.contactmanager.databinding.ExportContactDialogBinding
 import com.example.contactmanager.models.AvailableAccountModel
 import com.example.contactmanager.models.VCardContact
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager
 import com.example.contactmanager.utils.PermissionManager.isDefaultDialer
 import com.example.contactmanager.utils.SharedPreferenceManager
 import com.example.contactmanager.utils.ThemeManager
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -124,7 +124,6 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
 
         val isConfirmDialog =
             SharedPreferenceManager.getBoolean(this, Constance.CONFIRM_DIALOG, false)
-        Log.e("TAG", "initView isConfirmDialog: ${isConfirmDialog}")
         binding.switchConfirmDialog.isChecked = isConfirmDialog
 
         binding.switchConfirmDialog.setOnCheckedChangeListener { _, isChecked ->
@@ -224,6 +223,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.ivBack.id -> {
                 onBackPressedDispatcher.onBackPressed()
@@ -329,11 +329,40 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             }
 
             binding.llShare.id -> {
+                try {
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name))
+                        val shareMessage = buildString {
+                            appendLine("Let me recommend you this application")
+                            appendLine()
+                            append("https://play.google.com/store/apps/details?id=$packageName")
+                        }
+                        putExtra(Intent.EXTRA_TEXT, shareMessage)
+                    }
 
+                    startActivity(Intent.createChooser(shareIntent, "Choose one"))
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
 
             binding.llRateUs.id -> {
-
+                try {
+                    startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("market://details?id=$packageName")
+                        )
+                    )
+                } catch (_: ActivityNotFoundException) {
+                    startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
+                        )
+                    )
+                }
             }
 
             binding.llPrivacyPolicy.id -> {
@@ -357,7 +386,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
                 val subscriptionManager =
-                    getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+                    getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
                 subscriptionManager?.activeSubscriptionInfoList?.forEachIndexed { index, info ->
                     val simName = "SIM ${index + 1}"
                     val key = "sim_${info.subscriptionId}"

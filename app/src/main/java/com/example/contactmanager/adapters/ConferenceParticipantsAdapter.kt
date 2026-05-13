@@ -4,6 +4,7 @@ import android.telecom.Call
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.example.contactmanager.R
 import com.example.contactmanager.databinding.ParticipantItemDesignBinding
 import com.example.contactmanager.utils.Common
 
@@ -31,7 +32,8 @@ class ConferenceParticipantsAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(call: Call) {
-            val number = call.details.handle?.schemeSpecificPart ?: "Unknown"
+            val number = call.details.handle?.schemeSpecificPart
+                ?: binding.root.context.getString(R.string.unknown)
             val name = call.details.callerDisplayName.takeIf { !it.isNullOrBlank() && it != number }
                 ?: Common.getContactName(binding.root.context, number)
             binding.tvName.text = name

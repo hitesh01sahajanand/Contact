@@ -127,7 +127,7 @@ class RecentRepository @Inject constructor(@param:ApplicationContext private val
 
                     val date = Date(dateStr.toLong())
                     val rawType = type.toInt()
-                    val callType = Common.getCallType(rawType)
+                    val callType = Common.getCallType(context,rawType)
                     val id = item.first
 
                     list.add(

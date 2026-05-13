@@ -27,6 +27,7 @@ import com.example.contactmanager.databinding.FilterBottomSheetDialogBinding
 import com.example.contactmanager.databinding.FragmentRecentsBinding
 import com.example.contactmanager.models.CallHistoryListItems
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.utils.PermissionManager
@@ -265,6 +266,7 @@ class RecentsFragment : Fragment(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.inHeader.cvMore.id -> {
 

@@ -3,6 +3,7 @@
     <color name="black">#FF000000</color>
     <color name="black_light">#717070</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="white_">#FFFFFFFF</color>
     <color name="blue_color">#3F51B5</color>
     <color name="divider_grey">#55808080</color>
     <color name="red">#F44336</color>
@@ -31,6 +32,7 @@
     <color name="block_bg_color">#fef4f3</color>
     <color name="light_blue_color">#6DB1FF</color>
     <color name="light_blue">#e1ecfb</color>
+    <color name="light_blu">#EBF2FF</color>
     <color name="view_color2">#F5F6FB</color>
     <color name="line_color">#E6E8EB</color>
 

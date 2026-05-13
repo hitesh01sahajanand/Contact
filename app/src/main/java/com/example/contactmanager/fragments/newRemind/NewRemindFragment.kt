@@ -71,15 +71,6 @@ class NewRemindFragment : Fragment() {
             adapterReminder.setReminders(reminders)
         }
 
-        /*if (!AdGetterSetterMethod.getNumbers().isNullOrEmpty()) {
-            binding.edittxt.setText(
-                getString(
-                    R.string.call_back,
-                    AdGetterSetterMethod.getNumbers()
-                )
-            )
-        }*/
-
         binding.buttonNo.setOnClickListener {
             toggleCreateView(false)
         }
@@ -154,14 +145,14 @@ class NewRemindFragment : Fragment() {
     private fun saveReminder() {
         val title = binding.edittxt.text.toString().trim()
         if (title.isEmpty()) {
-            binding.edittxt.error = getString(R.string.please_enter_reminder_title)
+            binding.edittxt.error = requireActivity().getString(R.string.please_enter_reminder_title)
             return
         }
 
         if (reminderDateTime.before(Calendar.getInstance())) {
             Toast.makeText(
                 requireContext(),
-                getString(R.string.please_select_a_future_time), Toast.LENGTH_SHORT
+                requireActivity().getString(R.string.please_select_a_future_time), Toast.LENGTH_SHORT
             ).show()
             return
         }
@@ -180,7 +171,7 @@ class NewRemindFragment : Fragment() {
         toggleCreateView(false)
         Toast.makeText(
             requireContext(),
-            getString(R.string.reminder_set_successfully), Toast.LENGTH_SHORT
+            requireActivity().getString(R.string.reminder_set_successfully), Toast.LENGTH_SHORT
         ).show()
     }
 

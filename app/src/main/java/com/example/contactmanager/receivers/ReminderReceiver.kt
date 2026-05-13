@@ -22,7 +22,7 @@ class ReminderReceiver : BroadcastReceiver() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
-                "Call Reminders",
+                context.getString(R.string.call_reminders),
                 NotificationManager.IMPORTANCE_HIGH
             )
             notificationManager.createNotificationChannel(channel)
@@ -42,8 +42,8 @@ class ReminderReceiver : BroadcastReceiver() {
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_incoming_call)
-            .setContentTitle("Call Reminder")
-            .setContentText("Reminder to call $contactName ($contactNumber)")
+            .setContentTitle(context.getString(R.string.call_reminder))
+            .setContentText(context.getString(R.string.reminder_to_call, contactName, contactNumber))
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)

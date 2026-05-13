@@ -2,7 +2,6 @@ package com.example.contactmanager.utils
 
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
-import java.util.Locale
 
 object LanguageManager {
 
@@ -18,7 +17,6 @@ object LanguageManager {
             locales[0]?.language ?: "en"
         } else {
             null
-//            Locale.getDefault().language
         }
     }
 }

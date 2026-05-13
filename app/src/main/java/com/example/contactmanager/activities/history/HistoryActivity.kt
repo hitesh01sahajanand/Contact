@@ -20,6 +20,7 @@ import com.example.contactmanager.adapters.HistoryAdapter
 import com.example.contactmanager.databinding.ActivityHistoryBinding
 import com.example.contactmanager.models.HistoryListItem
 import com.example.contactmanager.utils.Common
+import com.example.contactmanager.utils.Common.isValidClick
 import com.example.contactmanager.utils.Constance
 import com.example.contactmanager.utils.OnClickHandler
 import com.example.contactmanager.viewmodels.ContactDetailsViewModel
@@ -93,6 +94,7 @@ class HistoryActivity : AppCompatActivity(), OnClickHandler {
     }
 
     override fun onClick(view: View) {
+        if (!isValidClick()) return
         when (view.id) {
             binding.ivBack.id -> {
                 onBackPressedDispatcher.onBackPressed()

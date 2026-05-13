@@ -78,7 +78,6 @@ class PhoneStateReceiver : BroadcastReceiver() {
         prefs: android.content.SharedPreferences
     ) {
         val lastState = prefs.getInt(KEY_LAST_STATE, TelephonyManager.CALL_STATE_IDLE)
-        Log.d(TAG, "handleStateChange lastState=$lastState newState=$state")
 
         if (state == TelephonyManager.CALL_STATE_IDLE) {
             // Guard: don't fire twice for the same call end
@@ -145,8 +144,6 @@ class PhoneStateReceiver : BroadcastReceiver() {
                         }
                     }
                 }
-
-                Log.d(TAG, "IDLE → launching EndCallActivity number=$savedNumber type=$callType")
 
                 // Mark handled BEFORE launching so a second broadcast can't fire again
                 prefs.edit().putBoolean(KEY_IDLE_HANDLED, true).apply()
@@ -247,7 +244,7 @@ class PhoneStateReceiver : BroadcastReceiver() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 RECEIVER_CHANNEL_ID,
-                "Call Ended",
+                context.getString(R.string.call_ended),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
@@ -277,13 +274,12 @@ class PhoneStateReceiver : BroadcastReceiver() {
             .setCategory(NotificationCompat.CATEGORY_CALL)
             .setDefaults(Notification.DEFAULT_ALL)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setFullScreenIntent(pendingIntent, true)
+            .setFullScreenIntent(pendingIntent, false)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
 
         nm.notify(NOTIFY_ID, notification)
-        Log.d(TAG, "End-call notification posted number=$number")
     }
 
     /** Returns true if this app's process is currently in the foreground. */

@@ -2,7 +2,6 @@ package com.example.contactmanager.repository
 
 import android.content.Context
 import android.provider.ContactsContract
-import android.util.Log
 import com.example.contactmanager.models.ContactListItem
 import com.example.contactmanager.models.ContactModel
 import dagger.hilt.android.qualifiers.ApplicationContext
