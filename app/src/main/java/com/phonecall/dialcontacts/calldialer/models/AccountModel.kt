@@ -1,0 +1,12 @@
+package com.phonecall.dialcontacts.calldialer.models
+
+import android.graphics.Bitmap
+
+data class AccountModel(
+    val name: String,
+    val email: String,
+    val isAll: Boolean = false,
+    val avtar: Bitmap? = null,
+    val count: Int = 0,
+    val accountType: String? = null
+)

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     //Nepali
-    <string name="app_name">सम्पर्क एप</string>
+    <string name="app_name">फोन डायलर र सम्पर्कहरू</string>
     <string name="default_incoming_notification_channel_id" translatable="false">FCMaQ12Cfx@14_silent_v2</string>
 
     <string name="permission_access">एपको पूर्ण कार्यक्षमता सुनिश्चित गर्न आवश्यक अनुमति सक्षम गर्नुहोस्।</string>

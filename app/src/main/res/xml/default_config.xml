@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<defaultsMap>
+    <entry>
+        <!-- Key Is Your Parameter Name that you created in Remote Config-->
+        <key>activityChange</key>
+        <!-- Value will be Your Default Xray_Activity-->
+        <value>com.phonecall.dialcontacts.calldialer.activities.home.HomeActivity</value>
+    </entry>
+</defaultsMap>

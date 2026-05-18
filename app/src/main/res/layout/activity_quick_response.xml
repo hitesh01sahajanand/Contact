@@ -7,11 +7,11 @@
 
         <variable
             name="OnClickHandler"
-            type="com.example.contactmanager.utils.OnClickHandler" />
+            type="com.phonecall.dialcontacts.calldialer.utils.OnClickHandler" />
 
     </data>
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -19,84 +19,138 @@
         android:orientation="vertical"
         tools:context=".activities.quickResponse.QuickResponseActivity">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="?actionBarSize"
-            android:layout_gravity="center_vertical"
-            android:layout_marginHorizontal="@dimen/_10sdp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:id="@+id/iv_back"
-                android:layout_width="@dimen/_35sdp"
-                android:layout_height="@dimen/_35sdp"
-                android:contentDescription="@string/setting"
-                android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
-                android:src="@drawable/ic_back"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                style="@style/TextStyle.Medium"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:text="@string/quick_response"
-                android:textColor="@color/black_color"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/_10sdp"
-            app:cardCornerRadius="@dimen/_10sdp"
-            app:cardElevation="0dp">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rv_quick_response"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="@dimen/_10sdp" />
-        </androidx.cardview.widget.CardView>
-
-
         <LinearLayout
-            android:id="@+id/ll_quick_response"
+            android:id="@+id/ll_main"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginHorizontal="@dimen/_10sdp"
-            android:background="@drawable/quick_response_bg"
-            android:gravity="center"
-            android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-            android:orientation="horizontal"
-            android:padding="@dimen/_13sdp">
+            android:layout_height="0dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toTopOf="@+id/banner"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-            <ImageView
-                android:layout_width="@dimen/_15sdp"
-                android:layout_height="@dimen/_15sdp"
-                android:src="@drawable/ic_add"
-                android:tint="@color/main_color" />
-
-            <TextView
-                style="@style/TextStyle.Medium"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="?actionBarSize"
                 android:layout_gravity="center_vertical"
                 android:layout_marginHorizontal="@dimen/_10sdp"
-                android:gravity="start"
-                android:text="@string/add_quick_response"
-                android:textColor="@color/main_color" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/iv_back"
+                    android:layout_width="@dimen/_35sdp"
+                    android:layout_height="@dimen/_35sdp"
+                    android:contentDescription="@string/setting"
+                    android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
+                    android:src="@drawable/ic_back"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    style="@style/TextStyle.Medium"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text="@string/quick_response"
+                    android:textColor="@color/black_color"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/_10sdp"
+                app:cardCornerRadius="@dimen/_10sdp"
+                app:cardElevation="0dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_quick_response"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/_10sdp" />
+            </androidx.cardview.widget.CardView>
+
+            <LinearLayout
+                android:id="@+id/ll_quick_response"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginHorizontal="@dimen/_10sdp"
+                android:background="@drawable/quick_response_bg"
+                android:gravity="center"
+                android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                android:orientation="horizontal"
+                android:padding="@dimen/_13sdp">
+
+                <ImageView
+                    android:layout_width="@dimen/_15sdp"
+                    android:layout_height="@dimen/_15sdp"
+                    android:src="@drawable/ic_add"
+                    android:tint="@color/main_color" />
+
+                <TextView
+                    style="@style/TextStyle.Medium"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:gravity="start"
+                    android:text="@string/add_quick_response"
+                    android:textColor="@color/main_color" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
-    </LinearLayout>
+        <LinearLayout
+            android:id="@+id/banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/ll_main">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                app:cardCornerRadius="10dp"
+                app:cardElevation="5dp">
+
+                <com.facebook.shimmer.ShimmerFrameLayout
+                    android:id="@+id/shimmer_container_banner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_card_ads"
+                    android:visibility="visible"
+                    app:shimmer_auto_start="true"
+                    app:shimmer_base_color="#ccc">
+
+                    <include layout="@layout/ad_unifiled_small" />
+
+                </com.facebook.shimmer.ShimmerFrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/flNativeSmallPlaceholder"
+                    style="@style/NativeAdsView" />
+
+            </androidx.cardview.widget.CardView>
+
+            <FrameLayout
+                android:id="@+id/flBannerSmallPlaceholder"
+                style="@style/NativeAdsView" />>
+
+        </LinearLayout>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

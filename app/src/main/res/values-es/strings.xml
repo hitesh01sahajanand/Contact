@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     //spanish
-    <string name="app_name">Aplicación de contactos</string>
+    <string name="app_name">Marcador telefónico y contactos</string>
     <string name="default_incoming_notification_channel_id" translatable="false">FCMaQ12Cfx@14_silent_v2</string>
 
     <string name="permission_access">Habilita los permisos necesarios para garantizar el funcionamiento completo de la aplicación.</string>

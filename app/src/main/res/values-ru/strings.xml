@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     //Russian
-    <string name="app_name">Приложение Контакты</string>
+    <string name="app_name">Телефонный набор и контакты</string>
     <string name="default_incoming_notification_channel_id" translatable="false">FCMaQ12Cfx@14_silent_v2</string>
 
     <string name="permission_access">Включите необходимые разрешения для обеспечения полной функциональности приложения.</string>

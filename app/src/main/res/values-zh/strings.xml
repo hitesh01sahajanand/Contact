@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     //Chinese
-    <string name="app_name">联系人应用</string>
+    <string name="app_name">电话拨号器和联系人</string>
     <string name="default_incoming_notification_channel_id" translatable="false">FCMaQ12Cfx@14_silent_v2</string>
 
     <string name="permission_access">启用所需权限以确保应用的完整功能。</string>
@@ -369,5 +369,6 @@
     <string name="phone_number_not_found">未找到电话号码</string>
     <string name="feel_like">体感温度</string>
     <string name="this_action_may_contains_ads">此操作可能包含广告</string>
+
 
 </resources>

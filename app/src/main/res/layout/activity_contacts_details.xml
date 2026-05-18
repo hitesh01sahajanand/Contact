@@ -7,7 +7,7 @@
 
         <variable
             name="OnClickHandler"
-            type="com.example.contactmanager.utils.OnClickHandler" />
+            type="com.phonecall.dialcontacts.calldialer.utils.OnClickHandler" />
 
     </data>
 
@@ -197,7 +197,7 @@
                     android:id="@+id/linear_layout_call"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_10sdp"
+                    android:layout_marginVertical="@dimen/_10sdp"
                     android:orientation="vertical"
                     android:visibility="visible">
 
@@ -217,6 +217,12 @@
                             android:layout_marginHorizontal="@dimen/_3sdp"
                             android:text="@string/contact_info"
                             android:textColor="@color/black_color" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="0.5dp"
+                            android:layout_marginTop="@dimen/_10sdp"
+                            android:background="@color/border_color" />
 
                         <RelativeLayout
                             android:id="@+id/rrlayoutcall"
@@ -262,7 +268,7 @@
 
                                         <TextView
                                             android:id="@+id/txt_type"
-                                            style="@style/TextStyle.Medium"
+                                            style="@style/TextStyle.Regular"
                                             android:layout_width="wrap_content"
                                             android:layout_height="wrap_content"
                                             android:layout_marginTop="@dimen/_1sdp"
@@ -332,7 +338,7 @@
 
                                         <TextView
                                             android:id="@+id/txt_email_type"
-                                            style="@style/TextStyle.Medium"
+                                            style="@style/TextStyle.Regular"
                                             android:layout_width="wrap_content"
                                             android:layout_height="wrap_content"
                                             android:layout_marginTop="@dimen/_1sdp"
@@ -396,13 +402,13 @@
 
                                         <TextView
                                             android:id="@+id/txt_address_type"
-                                            style="@style/TextStyle.Medium"
+                                            style="@style/TextStyle.Regular"
                                             android:layout_width="wrap_content"
                                             android:layout_height="wrap_content"
                                             android:layout_marginEnd="10dp"
                                             android:layout_weight="1"
                                             android:includeFontPadding="false"
-                                            android:text="Type"
+                                            android:text="@string/type"
                                             android:textAlignment="viewEnd"
                                             android:textColor="@color/grey_color" />
                                     </LinearLayout>
@@ -429,12 +435,224 @@
                     </LinearLayout>
                 </LinearLayout>
 
+
+                <LinearLayout
+                    android:id="@+id/ll_whatsapp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/_10sdp"
+                    android:orientation="vertical"
+                    android:visibility="visible">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="@dimen/_10sdp"
+                        android:background="@drawable/bg_create2"
+                        android:orientation="vertical"
+                        android:padding="@dimen/_10sdp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/TextStyle.MediumSemiBold"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:layout_marginHorizontal="@dimen/_6sdp"
+                                android:text="@string/whatsapp"
+                                android:textColor="@color/black_color" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="0.5dp"
+                            android:layout_marginTop="@dimen/_8sdp"
+                            android:background="@color/border_color" />
+
+                        <RelativeLayout
+                            android:id="@+id/rl_whatsapp_message"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/_8sdp"
+                            android:onClick="@{ (v) -> OnClickHandler.onClick(v)}">
+
+                            <ImageView
+                                android:id="@+id/img_message"
+                                android:layout_width="@dimen/_28sdp"
+                                android:layout_height="@dimen/_28sdp"
+                                android:adjustViewBounds="true"
+                                android:src="@drawable/ic_message_" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_marginStart="@dimen/_8sdp"
+                                android:layout_toEndOf="@+id/img_message"
+                                android:orientation="vertical">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:orientation="horizontal">
+
+                                    <LinearLayout
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:orientation="vertical">
+
+                                        <TextView
+                                            android:id="@+id/tv_message_call"
+                                            style="@style/TextStyle.Medium"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:includeFontPadding="false"
+                                            android:text=""
+                                            android:textColor="@color/black_color" />
+
+                                        <TextView
+                                            style="@style/TextStyle.Regular"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="@dimen/_1sdp"
+                                            android:includeFontPadding="false"
+                                            android:text="@string/message"
+                                            android:textAlignment="viewEnd"
+                                            android:textColor="@color/grey_color" />
+                                    </LinearLayout>
+
+                                </LinearLayout>
+                            </LinearLayout>
+                        </RelativeLayout>
+
+                        <RelativeLayout
+                            android:id="@+id/rl_voice_call"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/_8sdp"
+                            android:onClick="@{ (v) -> OnClickHandler.onClick(v)}">
+
+                            <ImageView
+                                android:id="@+id/img_voice"
+                                android:layout_width="@dimen/_28sdp"
+                                android:layout_height="@dimen/_28sdp"
+                                android:adjustViewBounds="true"
+                                android:src="@drawable/ic_call_" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_marginStart="@dimen/_8sdp"
+                                android:layout_toEndOf="@+id/img_voice"
+                                android:orientation="vertical">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:orientation="horizontal">
+
+                                    <LinearLayout
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:orientation="vertical">
+
+                                        <TextView
+                                            android:id="@+id/tv_voice_call"
+                                            style="@style/TextStyle.Medium"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:includeFontPadding="false"
+                                            android:text=""
+                                            android:textColor="@color/black_color" />
+
+                                        <TextView
+                                            style="@style/TextStyle.Regular"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="@dimen/_1sdp"
+                                            android:includeFontPadding="false"
+                                            android:text="@string/voice_call"
+                                            android:textAlignment="viewEnd"
+                                            android:textColor="@color/grey_color" />
+                                    </LinearLayout>
+
+                                </LinearLayout>
+                            </LinearLayout>
+                        </RelativeLayout>
+
+                        <RelativeLayout
+                            android:id="@+id/rl_video_call"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/_8sdp"
+                            android:onClick="@{ (v) -> OnClickHandler.onClick(v)}">
+
+                            <ImageView
+                                android:id="@+id/img_video"
+                                android:layout_width="@dimen/_28sdp"
+                                android:layout_height="@dimen/_28sdp"
+                                android:adjustViewBounds="true"
+                                android:src="@drawable/ic_video_call_" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_marginStart="@dimen/_8sdp"
+                                android:layout_toEndOf="@+id/img_video"
+                                android:orientation="vertical">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:orientation="horizontal">
+
+                                    <LinearLayout
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:orientation="vertical">
+
+                                        <TextView
+                                            android:id="@+id/tv_video_call"
+                                            style="@style/TextStyle.Medium"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:includeFontPadding="false"
+                                            android:text=""
+                                            android:textColor="@color/black_color" />
+
+                                        <TextView
+                                            style="@style/TextStyle.Regular"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="@dimen/_1sdp"
+                                            android:includeFontPadding="false"
+                                            android:text="@string/video_call"
+                                            android:textAlignment="viewEnd"
+                                            android:textColor="@color/grey_color" />
+                                    </LinearLayout>
+
+                                </LinearLayout>
+                            </LinearLayout>
+                        </RelativeLayout>
+
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
                 <LinearLayout
                     android:id="@+id/company_address_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/_10sdp"
-                    android:layout_marginVertical="@dimen/_10sdp"
+                    android:layout_marginBottom="@dimen/_10sdp"
                     android:background="@drawable/bg_create2"
                     android:orientation="vertical"
                     android:padding="@dimen/_10sdp">
@@ -533,7 +751,8 @@
                                         android:layout_marginTop="@dimen/_1sdp"
                                         android:includeFontPadding="false"
                                         android:text="@string/website"
-                                        android:textColor="@color/grey_color" />
+                                        android:textColor="@color/grey_color"
+                                        android:textSize="@dimen/_12sdp" />
                                 </LinearLayout>
 
 
@@ -596,7 +815,8 @@
                                         android:layout_marginTop="@dimen/_1sdp"
                                         android:includeFontPadding="false"
                                         android:textAlignment="viewEnd"
-                                        android:textColor="@color/grey_color" />
+                                        android:textColor="@color/grey_color"
+                                        android:textSize="@dimen/_12sdp" />
                                 </LinearLayout>
 
 
@@ -712,54 +932,6 @@
 
                 </LinearLayout>
 
-
-                <!--  <androidx.cardview.widget.CardView
-                      android:id="@+id/cv_history"
-                      android:layout_width="match_parent"
-                      android:layout_height="wrap_content"
-                      android:layout_gravity="center"
-                      android:layout_marginHorizontal="@dimen/_10sdp"
-                      android:layout_marginTop="@dimen/_14sdp"
-                      android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                      app:cardCornerRadius="@dimen/_10sdp"
-                      app:cardElevation="0dp">
-
-                      <TextView
-                          style="@style/TextStyle.Medium"
-                          android:layout_width="match_parent"
-                          android:layout_height="wrap_content"
-                          android:layout_gravity="center"
-                          android:gravity="center"
-                          android:padding="@dimen/_10sdp"
-                          android:text="@string/history"
-                          android:textColor="@color/black_color"
-                          android:textStyle="bold" />
-
-                  </androidx.cardview.widget.CardView>
-
-                  <androidx.cardview.widget.CardView
-                      android:id="@+id/cv_storage_location"
-                      android:layout_width="match_parent"
-                      android:layout_height="wrap_content"
-                      android:layout_gravity="center"
-                      android:layout_marginHorizontal="@dimen/_10sdp"
-                      android:layout_marginTop="@dimen/_10sdp"
-                      android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                      app:cardCornerRadius="@dimen/_10sdp"
-                      app:cardElevation="0dp">
-
-                      <TextView
-                          style="@style/TextStyle.Medium"
-                          android:layout_width="match_parent"
-                          android:layout_height="wrap_content"
-                          android:layout_gravity="center"
-                          android:gravity="center"
-                          android:padding="@dimen/_10sdp"
-                          android:text="@string/storage_location"
-                          android:textColor="@color/black_color"
-                          android:textStyle="bold" />
-
-                  </androidx.cardview.widget.CardView>-->
 
             </LinearLayout>
 
@@ -897,271 +1069,47 @@
 
         </LinearLayout>
 
-        <!--    <TextView
-                android:id="@+id/tv_name"
+        <LinearLayout
+            android:id="@+id/banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/ll_main">
+
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginTop="@dimen/_10sdp"
-                android:ellipsize="end"
                 android:gravity="center"
-                android:singleLine="true"
-                android:text="gddsgsd"
-                android:textColor="@color/black"
-                android:textSize="@dimen/_18sdp"
-                android:textStyle="bold" />
+                app:cardCornerRadius="10dp"
+                app:cardElevation="5dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_10sdp"
-                android:layout_marginBottom="@dimen/_10sdp"
-                android:orientation="horizontal">
-
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cv_message"
+                <com.facebook.shimmer.ShimmerFrameLayout
+                    android:id="@+id/shimmer_container_banner"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginEnd="@dimen/_5sdp"
-                    android:layout_weight="1"
-                    android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                    app:cardBackgroundColor="@color/black_light"
-                    app:cardCornerRadius="@dimen/_120sdp"
-                    app:cardElevation="0dp">
+                    android:background="@drawable/bg_card_ads"
+                    android:visibility="visible"
+                    app:shimmer_auto_start="true"
+                    app:shimmer_base_color="#ccc">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:ellipsize="end"
-                        android:gravity="center"
-                        android:padding="@dimen/_8sdp"
-                        android:singleLine="true"
-                        android:text="Message"
-                        android:textColor="@color/white"
-                        android:textSize="@dimen/_12sdp"
-                        android:textStyle="bold" />
+                    <include layout="@layout/ad_unifiled_small" />
 
-                </androidx.cardview.widget.CardView>
+                </com.facebook.shimmer.ShimmerFrameLayout>
 
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cv_call"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginHorizontal="@dimen/_5sdp"
-                    android:layout_weight="1"
-                    android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                    app:cardBackgroundColor="@color/black_light"
-                    app:cardCornerRadius="@dimen/_120sdp"
-                    app:cardElevation="0dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:ellipsize="end"
-                        android:gravity="center"
-                        android:padding="@dimen/_8sdp"
-                        android:singleLine="true"
-                        android:text="Call"
-                        android:textColor="@color/white"
-                        android:textSize="@dimen/_12sdp"
-                        android:textStyle="bold" />
-
-                </androidx.cardview.widget.CardView>
-
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cv_video"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginHorizontal="@dimen/_5sdp"
-                    android:layout_weight="1"
-                    android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                    app:cardBackgroundColor="@color/black_light"
-                    app:cardCornerRadius="@dimen/_120sdp"
-                    app:cardElevation="0dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:ellipsize="end"
-                        android:gravity="center"
-                        android:padding="@dimen/_8sdp"
-                        android:singleLine="true"
-                        android:text="Video"
-                        android:textColor="@color/white"
-                        android:textSize="@dimen/_12sdp"
-                        android:textStyle="bold" />
-
-                </androidx.cardview.widget.CardView>
-
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cv_mail"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginStart="@dimen/_5sdp"
-                    android:layout_weight="1"
-                    android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                    app:cardBackgroundColor="@color/black_light"
-                    app:cardCornerRadius="@dimen/_120sdp"
-                    app:cardElevation="0dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:ellipsize="end"
-                        android:gravity="center"
-                        android:padding="@dimen/_8sdp"
-                        android:singleLine="true"
-                        android:text="Mail"
-                        android:textColor="@color/white"
-                        android:textSize="@dimen/_12sdp"
-                        android:textStyle="bold" />
-
-                </androidx.cardview.widget.CardView>
-
-
-            </LinearLayout>
-
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="@dimen/_1sdp"
-                app:cardCornerRadius="@dimen/_10sdp"
-                app:cardElevation="@dimen/_1sdp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <include
-                        android:id="@+id/in_history"
-                        layout="@layout/history_design" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="0.5dp"
-                        android:layout_marginHorizontal="@dimen/_10sdp"
-                        android:background="@color/black_light" />
-
-                    <TextView
-                        android:id="@+id/tv_show_history"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginVertical="@dimen/_5sdp"
-                        android:ellipsize="end"
-                        android:gravity="center"
-                        android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                        android:singleLine="true"
-                        android:text="Show All History"
-                        android:textColor="@color/blue_color"
-                        android:textSize="@dimen/_12sdp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
+                <FrameLayout
+                    android:id="@+id/flNativeSmallPlaceholder"
+                    style="@style/NativeAdsView" />
 
             </androidx.cardview.widget.CardView>
 
+            <FrameLayout
+                android:id="@+id/flBannerSmallPlaceholder"
+                style="@style/NativeAdsView" />>
 
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_10sdp"
-                app:cardCornerRadius="@dimen/_10sdp"
-                app:cardElevation="@dimen/_1sdp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/tv_new_contact"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginHorizontal="@dimen/_10sdp"
-                        android:ellipsize="end"
-                        android:gravity="start"
-                        android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                        android:paddingVertical="@dimen/_8sdp"
-                        android:singleLine="true"
-                        android:text="Create New Contact"
-                        android:textColor="@color/blue_color"
-                        android:textSize="@dimen/_12sdp"
-                        android:textStyle="bold" />
-
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="0.5dp"
-                        android:layout_marginHorizontal="@dimen/_10sdp"
-                        android:background="@color/black_light" />
-
-                    <TextView
-                        android:id="@+id/tv_share_contact"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginHorizontal="@dimen/_10sdp"
-                        android:layout_marginVertical="@dimen/_5sdp"
-                        android:ellipsize="end"
-                        android:gravity="start"
-                        android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                        android:paddingVertical="@dimen/_8sdp"
-                        android:singleLine="true"
-                        android:text="Share Contact"
-                        android:textColor="@color/blue_color"
-                        android:textSize="@dimen/_12sdp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cv_block_contact"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_10sdp"
-                android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                app:cardCornerRadius="@dimen/_10sdp"
-                app:cardElevation="@dimen/_1sdp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/tv_block_contact"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginHorizontal="@dimen/_10sdp"
-                        android:ellipsize="end"
-                        android:gravity="start"
-                        android:paddingVertical="@dimen/_8sdp"
-                        android:singleLine="true"
-                        android:text="Block this Caller"
-                        android:textColor="@color/cardview_dark_background"
-                        android:textSize="@dimen/_12sdp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>-->
-
+        </LinearLayout>
 
     </LinearLayout>
 </layout>

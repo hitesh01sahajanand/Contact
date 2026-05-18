@@ -40,6 +40,7 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
     <uses-permission
         android:name="android.permission.WRITE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
@@ -54,7 +55,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
     <application
-        android:name=".Advertisement.manegeAds.AdManege.MyAdAppController"
+        android:name=".Advertisement.MyApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -65,14 +66,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ContanctManager">
         <activity
+            android:name=".activities.endCall.CallEndActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.endCall.EndCallActivity"
-            android:exported="true"
             android:excludeFromRecents="true"
-            android:taskAffinity=""
+            android:exported="true"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
+            android:taskAffinity=""
             android:turnScreenOn="true"
             tools:ignore="LockedOrientationActivity" />
         <activity
@@ -215,7 +219,6 @@
         <receiver
             android:name=".receivers.CallActionReceiver"
             android:exported="false" />
-
         <receiver
             android:name=".receivers.PhoneStateReceiver"
             android:enabled="true"
@@ -268,12 +271,13 @@
         <meta-data
             android:name="com.facebook.sdk.AdvertiserIDCollectionEnabled"
             android:value="true" />
-
-        <provider
+        <!--
+<provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
             android:exported="false"
             tools:node="remove" />
+        -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

@@ -1,4 +1,4 @@
-package com.example.contactmanager
+package com.phonecall.dialcontacts.calldialer
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

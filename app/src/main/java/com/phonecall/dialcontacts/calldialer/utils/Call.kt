@@ -1,0 +1,37 @@
+package com.phonecall.dialcontacts.calldialer.utils
+
+import android.os.Build
+import android.telecom.Call
+import android.telecom.Call.STATE_CONNECTING
+import android.telecom.Call.STATE_DIALING
+import android.telecom.Call.STATE_SELECT_PHONE_ACCOUNT
+import androidx.annotation.ChecksSdkIntAtLeast
+
+private val OUTGOING_CALL_STATES =
+    arrayOf(STATE_CONNECTING, STATE_DIALING, STATE_SELECT_PHONE_ACCOUNT)
+
+@Suppress("DEPRECATION")
+fun Call?.getStateCompat(): Int {
+    return when {
+        this == null -> Call.STATE_DISCONNECTED
+        isSPlus() -> details.state
+        else -> state
+    }
+}
+
+fun Call.isOutgoing(): Boolean {
+    return if (isQPlus()) {
+        details.callDirection == Call.Details.DIRECTION_OUTGOING
+    } else {
+        OUTGOING_CALL_STATES.contains(getStateCompat())
+    }
+}
+
+@ChecksSdkIntAtLeast(api = Build.VERSION_CODES.S)
+fun isSPlus() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
+@ChecksSdkIntAtLeast(api = Build.VERSION_CODES.Q)
+fun isQPlus() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+
+fun Call?.isConference(): Boolean =
+    this?.details?.hasProperty(Call.Details.PROPERTY_CONFERENCE) == true

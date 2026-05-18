@@ -1,0 +1,43 @@
+package com.phonecall.dialcontacts.calldialer.viewmodels
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.phonecall.dialcontacts.calldialer.models.BlockModel
+import com.phonecall.dialcontacts.calldialer.repository.BlockRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class BlockViewModel @Inject constructor(
+    private val blockRepository: BlockRepository
+) : ViewModel() {
+
+    private val refreshTrigger = MutableSharedFlow<Unit>(replay = 1)
+
+    val allBlockedNumbers: Flow<List<BlockModel>> = blockRepository.getAllBlockedNumbers(refreshTrigger)
+
+    fun refresh() {
+        viewModelScope.launch {
+            refreshTrigger.emit(Unit)
+        }
+    }
+
+    init {
+        refresh()
+    }
+
+    fun blockNumber(number: String) {
+        viewModelScope.launch {
+            blockRepository.blockNumber(number)
+        }
+    }
+
+    fun unblockNumber(number: String) {
+        viewModelScope.launch {
+            blockRepository.unblockNumber(number)
+        }
+    }
+}

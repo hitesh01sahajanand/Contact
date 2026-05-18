@@ -7,7 +7,7 @@
 
         <variable
             name="OnClickHandler"
-            type="com.example.contactmanager.utils.OnClickHandler" />
+            type="com.phonecall.dialcontacts.calldialer.utils.OnClickHandler" />
 
     </data>
 
@@ -20,136 +20,186 @@
         android:orientation="vertical"
         tools:context=".activities.permissions.PermissionActivity">
 
-        <LinearLayout
-            android:id="@+id/ll_set_default"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_main"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:orientation="vertical"
-            app:layout_constraintBottom_toTopOf="@+id/ll_default"
+            app:layout_constraintBottom_toTopOf="@+id/banner"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <com.airbnb.lottie.LottieAnimationView
-                android:id="@+id/lotti_permission"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginHorizontal="@dimen/_10sdp"
-                android:layout_marginTop="@dimen/_40sdp"
-                android:adjustViewBounds="true"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:lottie_autoPlay="true"
-                app:lottie_loop="true"
-                app:lottie_rawRes="@raw/permission_light" />
-
             <LinearLayout
+                android:id="@+id/ll_set_default"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="@dimen/_10sdp"
-                android:layout_marginTop="@dimen/_10sdp"
                 android:orientation="vertical"
+                app:layout_constraintBottom_toTopOf="@+id/ll_default"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/lotti_permission">
+                app:layout_constraintTop_toTopOf="parent">
 
-                <TextView
-                    style="@style/TextStyle.MediumLarge"
+                <com.airbnb.lottie.LottieAnimationView
+                    android:id="@+id/lotti_permission"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:gravity="center"
-                    android:text="@string/set_default_app"
-                    android:textColor="@color/black_color" />
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_40sdp"
+                    android:adjustViewBounds="true"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:lottie_autoPlay="true"
+                    app:lottie_loop="true"
+                    app:lottie_rawRes="@raw/permission_light" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:orientation="vertical"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/lotti_permission">
+
+                    <TextView
+                        style="@style/TextStyle.MediumLarge"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:text="@string/set_default_app"
+                        android:textColor="@color/black_color" />
+
+                    <TextView
+                        android:id="@+id/tv_permission_desc"
+                        style="@style/TextStyle.Medium"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="@dimen/_5sdp"
+                        android:gravity="center"
+                        android:text="@string/to_make_receive_calls_set_this_app"
+                        android:textColor="@color/grey_color" />
+
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_default"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/ll_set_default">
+
+                <com.airbnb.lottie.LottieAnimationView
+                    android:id="@+id/lotti_permission_btn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="@dimen/_40sdp"
+                    android:adjustViewBounds="true"
+                    android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:lottie_autoPlay="true"
+                    app:lottie_loop="true"
+                    app:lottie_rawRes="@raw/permission_btn" />
 
                 <TextView
-                    android:id="@+id/tv_permission_desc"
+                    android:id="@+id/tv_cancel"
                     style="@style/TextStyle.Medium"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:layout_marginTop="@dimen/_5sdp"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
                     android:gravity="center"
-                    android:text="@string/to_make_receive_calls_set_this_app"
-                    android:textColor="@color/grey_color" />
+                    android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
+                    android:padding="@dimen/_10sdp"
+                    android:text="@string/cancel"
+                    android:textColor="@color/black_color" />
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="@dimen/_40sdp"
+                        android:layout_height="@dimen/_40sdp"
+                        android:src="@drawable/ic_policy" />
+
+                    <TextView
+                        android:id="@+id/tv_privacy_policy"
+                        style="@style/TextStyle.Medium"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="@dimen/_10sdp"
+                        android:gravity="start"
+                        android:text=""
+                        android:textColor="@color/grey_color" />
+
+
+                </LinearLayout>
 
 
             </LinearLayout>
 
-        </LinearLayout>
-
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <LinearLayout
-            android:id="@+id/ll_default"
+            android:id="@+id/banner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/_20sdp"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/ll_set_default">
+            app:layout_constraintTop_toBottomOf="@id/cl_main">
 
-            <com.airbnb.lottie.LottieAnimationView
-                android:id="@+id/lotti_permission_btn"
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginTop="@dimen/_40sdp"
-                android:adjustViewBounds="true"
-                android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:lottie_autoPlay="true"
-                app:lottie_loop="true"
-                app:lottie_rawRes="@raw/permission_btn" />
-
-            <TextView
-                android:id="@+id/tv_cancel"
-                style="@style/TextStyle.Medium"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginHorizontal="@dimen/_10sdp"
                 android:gravity="center"
-                android:onClick="@{(v) -> OnClickHandler.onClick(v)}"
-                android:padding="@dimen/_10sdp"
-                android:text="@string/cancel"
-                android:textColor="@color/black_color" />
+                app:cardCornerRadius="10dp"
+                app:cardElevation="5dp">
 
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="@dimen/_10sdp"
-                android:layout_marginTop="@dimen/_10sdp"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="@dimen/_40sdp"
-                    android:layout_height="@dimen/_40sdp"
-                    android:src="@drawable/ic_policy" />
-
-                <TextView
-                    android:id="@+id/tv_privacy_policy"
-                    style="@style/TextStyle.Medium"
+                <com.facebook.shimmer.ShimmerFrameLayout
+                    android:id="@+id/shimmer_container_banner"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginStart="@dimen/_10sdp"
-                    android:gravity="start"
-                    android:text=""
-                    android:textColor="@color/grey_color" />
+                    android:background="@drawable/bg_card_ads"
+                    android:visibility="visible"
+                    app:shimmer_auto_start="true"
+                    app:shimmer_base_color="#ccc">
 
+                    <include layout="@layout/ad_unifiled_small" />
 
-            </LinearLayout>
+                </com.facebook.shimmer.ShimmerFrameLayout>
 
+                <FrameLayout
+                    android:id="@+id/flNativeSmallPlaceholder"
+                    style="@style/NativeAdsView" />
 
+            </androidx.cardview.widget.CardView>
+
+            <FrameLayout
+                android:id="@+id/flBannerSmallPlaceholder"
+                style="@style/NativeAdsView" />
         </LinearLayout>
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

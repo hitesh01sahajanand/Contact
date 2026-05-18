@@ -6,10 +6,12 @@ plugins {
 
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
-    namespace = "com.example.contactmanager"
+    namespace = "com.phonecall.dialcontacts.calldialer"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -17,7 +19,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.contactmanager"
+        applicationId = "com.phonecall.dialcontacts.calldialer"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -43,6 +45,7 @@ android {
 
     buildFeatures {
         dataBinding = true
+        buildConfig = true
     }
 }
 
@@ -107,5 +110,11 @@ dependencies {
 
     //onesignal
     implementation("com.onesignal:OneSignal:5.1.6")
+
+    //PostHog
+    implementation("com.posthog:posthog-android:3.+")
+
+    //for encrypted & decrypted
+    implementation(libs.jersey.core)
 
 }

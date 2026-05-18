@@ -36,5 +36,8 @@
     <color name="view_color2">#F5F6FB</color>
     <color name="line_color">#E6E8EB</color>
 
+    <color name="tools_theme">#1FBCF8</color>
+    <color name="transparent">#00000000</color>
+
 
 </resources>

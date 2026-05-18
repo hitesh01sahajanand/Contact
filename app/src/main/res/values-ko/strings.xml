@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     //Korean
-    <string name="app_name">연락처 앱</string>
+    <string name="app_name">전화 다이얼러 및 연락처</string>
     <string name="default_incoming_notification_channel_id" translatable="false">FCMaQ12Cfx@14_silent_v2</string>
 
     <string name="permission_access">앱의 전체 기능을 사용하려면 필요한 권한을 활성화하세요.</string>

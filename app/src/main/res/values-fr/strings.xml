@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     //French
-    <string name="app_name">Application Contacts</string>
+    <string name="app_name">Composeur téléphonique et contacts</string>
     <string name="default_incoming_notification_channel_id" translatable="false">FCMaQ12Cfx@14_silent_v2</string>
 
     <string name="permission_access">Activez les autorisations requises pour assurer le bon fonctionnement de l application.</string>

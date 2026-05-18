@@ -28,4 +28,17 @@
         <item name="android:textSize">20sp</item>
     </style>
 
+    <style name="NativeAdsView">
+        <item name="android:layout_alignParentBottom">true</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_centerHorizontal">true</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="ExitDialogAnimation">
+        <item name="android:windowEnterAnimation">@anim/anim_item_from_bottom_anim</item>
+        <item name="android:windowExitAnimation">@anim/anim_topbottom_anim</item>
+    </style>
+
 </resources>

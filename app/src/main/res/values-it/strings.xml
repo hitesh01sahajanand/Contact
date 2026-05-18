@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     //Italian
-    <string name="app_name">App Contatti</string>
+    <string name="app_name">Compositore telefonico e contatti</string>
     <string name="default_incoming_notification_channel_id" translatable="false">FCMaQ12Cfx@14_silent_v2</string>
 
     <string name="permission_access">Abilita le autorizzazioni richieste per garantire il pieno funzionamento dell app.</string>

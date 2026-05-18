@@ -1,7 +1,7 @@
 <resources>
 
     <string name="default_incoming_notification_channel_id" translatable="false">FCMaQ12Cfx@14_silent_v2</string>
-    <string name="app_name">Contact App</string>
+    <string name="app_name">Phone Dialer &amp; Contacts</string>
 
     <string name="permission_access">Enable required permissions to ensure full functionality ot the app.</string>
     <string name="calls">Calls</string>
@@ -372,5 +372,8 @@
     <string name="phone_number_not_found">Phone number not found</string>
     <string name="feel_like">Feel like</string>
     <string name="this_action_may_contains_ads">This action may contains Ads</string>
+    <string name="whatsapp">Whatsapp</string>
+    <string name="voice_call">Voice Call</string>
+    <string name="type">Type</string>
 
 </resources>

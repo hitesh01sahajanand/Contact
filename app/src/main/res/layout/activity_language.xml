@@ -7,7 +7,7 @@
 
         <variable
             name="OnClickHandler"
-            type="com.example.contactmanager.utils.OnClickHandler" />
+            type="com.phonecall.dialcontacts.calldialer.utils.OnClickHandler" />
 
     </data>
 
@@ -58,8 +58,47 @@
             android:id="@+id/rv_languages"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:clipToPadding="false"
             android:paddingBottom="@dimen/_10sdp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:gravity="center"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="10dp"
+                app:cardElevation="5dp">
+
+                <com.facebook.shimmer.ShimmerFrameLayout
+                    android:id="@+id/shimmer_container_small"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="visible"
+                    app:shimmer_auto_start="true"
+                    app:shimmer_base_color="#ccc">
+
+                    <include layout="@layout/layout_big_native_ad_load" />
+
+                </com.facebook.shimmer.ShimmerFrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/flNativeSmallPlaceholder"
+                    style="@style/NativeAdsView" />
+
+            </androidx.cardview.widget.CardView>
+
+            <FrameLayout
+                android:id="@+id/flBannerSmallPlaceholder"
+                style="@style/NativeAdsView" />
+        </LinearLayout>
 
     </LinearLayout>
 </layout>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     //German
-    <string name="app_name">Kontakte-App</string>
+    <string name="app_name">Telefonwähler und Kontakte</string>
     <string name="default_incoming_notification_channel_id" translatable="false">FCMaQ12Cfx@14_silent_v2</string>
 
     <string name="permission_access">Aktivieren Sie die erforderlichen Berechtigungen, um die volle Funktionalität der App sicherzustellen.</string>

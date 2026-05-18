@@ -1,4 +1,4 @@
-package com.example.contactmanager
+package com.phonecall.dialcontacts.calldialer
 
 import org.junit.Test
 

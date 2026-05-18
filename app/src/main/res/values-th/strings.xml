@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     //Thai
-    <string name="app_name">แอปผู้ติดต่อ</string>
+    <string name="app_name">ตัวโทรออกและรายชื่อติดต่อ</string>
     <string name="default_incoming_notification_channel_id" translatable="false">FCMaQ12Cfx@14_silent_v2</string>
 
     <string name="permission_access">เปิดใช้งานสิทธิ์ที่จำเป็นเพื่อให้แอปทำงานได้อย่างเต็มประสิทธิภาพ</string>

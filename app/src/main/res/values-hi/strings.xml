@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     //Hindi
-    <string name="app_name">संपर्क ऐप</string>
+    <string name="app_name">फ़ोन डायलर और संपर्क</string>
     <string name="default_incoming_notification_channel_id" translatable="false">FCMaQ12Cfx@14_silent_v2</string>
 
     <string name="permission_access">ऐप की पूरी कार्यक्षमता सुनिश्चित करने के लिए आवश्यक अनुमतियाँ सक्षम करें।</string>

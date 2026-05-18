@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "324503990814",
+    "project_id": "dialcontacts-calldialer",
+    "storage_bucket": "dialcontacts-calldialer.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:324503990814:android:708301370bbd935f61740f",
+        "android_client_info": {
+          "package_name": "com.phonecall.dialcontacts.calldialer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDvRDLHrqKc_g8zW_j9GkMF9aUuVmOb5-M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -7,7 +7,7 @@
 
         <variable
             name="OnClickHandler"
-            type="com.example.contactmanager.utils.OnClickHandler" />
+            type="com.phonecall.dialcontacts.calldialer.utils.OnClickHandler" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

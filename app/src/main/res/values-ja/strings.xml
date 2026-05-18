@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     // Japanese
-    <string name="app_name">連絡先アプリ</string>
+    <string name="app_name">電話ダイヤラーと連絡先</string>
     <string name="default_incoming_notification_channel_id" translatable="false">FCMaQ12Cfx@14_silent_v2</string>
 
     <string name="permission_access">アプリの機能を完全に利用するために、必要な権限を有効にしてください。</string>
