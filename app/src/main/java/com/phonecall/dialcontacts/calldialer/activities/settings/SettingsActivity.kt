@@ -40,6 +40,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSBannerSmall
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSNativeDisplay
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.activities.blockNumbers.BlockNumbersActivity
 import com.phonecall.dialcontacts.calldialer.activities.language.LanguageActivity
@@ -277,7 +278,9 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             }
 
             binding.llLanguage.id -> {
-                startActivity(Intent(this, LanguageActivity::class.java))
+                val intent = Intent(this, LanguageActivity::class.java)
+                intent.putExtra("language", true)
+                startActivity(intent)
             }
 
             binding.llBlockNumber.id -> {
@@ -294,6 +297,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             }
 
             binding.llSoundVibration.id -> {
+                ADSAppManage.isAppOpenBlocked = true
                 val intent = try {
                     Intent(Settings.ACTION_SOUND_SETTINGS)
                 } catch (_: Exception) {
@@ -315,6 +319,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                 if (Settings.System.canWrite(this)) {
                     startActivity(Intent(this, SetRingtoneActivity::class.java))
                 } else {
+                    ADSAppManage.isAppOpenBlocked = true
                     val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
                     intent.data = "package:$packageName".toUri()
                     manageWriteSettingsLauncher.launch(intent)
@@ -356,6 +361,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             }
 
             binding.llImportContact.id -> {
+                ADSAppManage.isAppOpenBlocked = true
                 importFileLauncher.launch("*/*")
             }
 
@@ -371,7 +377,6 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                         }
                         putExtra(Intent.EXTRA_TEXT, shareMessage)
                     }
-
                     startActivity(Intent.createChooser(shareIntent, "Choose one"))
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -380,6 +385,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
 
             binding.llRateUs.id -> {
                 try {
+                    ADSAppManage.isAppOpenBlocked = true
                     startActivity(
                         Intent(
                             Intent.ACTION_VIEW,
@@ -387,6 +393,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                         )
                     )
                 } catch (_: ActivityNotFoundException) {
+                    ADSAppManage.isAppOpenBlocked = true
                     startActivity(
                         Intent(
                             Intent.ACTION_VIEW,

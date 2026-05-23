@@ -224,11 +224,15 @@ object Common {
 
     fun hideSystemUI(activity: Activity) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            activity.window.insetsController?.let { controller ->
-                controller.hide(WindowInsets.Type.navigationBars())
+            activity.window?.decorView?.post {
 
-                controller.systemBarsBehavior =
-                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                activity.window?.insetsController?.let { controller ->
+
+                    controller.hide(WindowInsets.Type.navigationBars())
+
+                    controller.systemBarsBehavior =
+                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                }
             }
         }
     }

@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -32,12 +33,19 @@ import androidx.core.widget.ImageViewCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import com.google.android.gms.ads.MobileAds
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.InstallStateUpdatedListener
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.InstallStatus
+import com.google.android.play.core.install.model.UpdateAvailability
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSBannerSmall
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSInterDisplayClick
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass.EXIT_SCREEN_NATIVE
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSNativeDisplay
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSUtilitis
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.databinding.ActivityHomeBinding
 import com.phonecall.dialcontacts.calldialer.fragments.contacts.ContactsFragment
@@ -47,6 +55,7 @@ import com.phonecall.dialcontacts.calldialer.fragments.recents.RecentsFragment
 import com.phonecall.dialcontacts.calldialer.utils.Common
 import com.phonecall.dialcontacts.calldialer.utils.Common.isValidClick
 import com.phonecall.dialcontacts.calldialer.utils.Constance
+import com.phonecall.dialcontacts.calldialer.utils.DailyNotificationUtils
 import com.phonecall.dialcontacts.calldialer.utils.OnClickHandler
 import com.phonecall.dialcontacts.calldialer.utils.PermissionManager
 import com.phonecall.dialcontacts.calldialer.utils.SharedPreferenceManager
@@ -70,23 +79,62 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
     private var isViewInitialized = false
     private var isFromPermissionRequest = false
     private var permissionDialog: Dialog? = null
+    private lateinit var appUpdateManager: AppUpdateManager
+    private val APP_UPDATE_REQUEST_CODE = 1001
 
-    private val contactPermissions = arrayOf(
-        Manifest.permission.READ_CONTACTS,
-        Manifest.permission.WRITE_CONTACTS,
-        Manifest.permission.READ_CALL_LOG,
-        Manifest.permission.WRITE_CALL_LOG,
-        Manifest.permission.CALL_PHONE,
-        Manifest.permission.READ_PHONE_STATE
-    )
+    private val contactPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        arrayOf(
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.WRITE_CONTACTS,
+            Manifest.permission.READ_CALL_LOG,
+            Manifest.permission.WRITE_CALL_LOG,
+            Manifest.permission.CALL_PHONE,
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.POST_NOTIFICATIONS
+        )
+    } else {
+        arrayOf(
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.WRITE_CONTACTS,
+            Manifest.permission.READ_CALL_LOG,
+            Manifest.permission.WRITE_CALL_LOG,
+            Manifest.permission.CALL_PHONE,
+            Manifest.permission.READ_PHONE_STATE
+        )
+    }
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         isFromPermissionRequest = true
-        if (!permissions.all { it.value }) {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val notificationGranted = permissions[Manifest.permission.POST_NOTIFICATIONS]
+            if (notificationGranted != null && !notificationGranted) {
+                SharedPreferenceManager.putBoolean(
+                    this,
+                    Constance.NOTIFICATION_PERMISSION_SKIP,
+                    true
+                )
+            }
+        }
+
+        val requiredPermissions = contactPermissions.filter {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                it != Manifest.permission.POST_NOTIFICATIONS
+            } else {
+                true
+            }
+        }
+
+        if (!requiredPermissions.all {
+                permissions[it] == true || ContextCompat.checkSelfPermission(
+                    this,
+                    it
+                ) == PackageManager.PERMISSION_GRANTED
+            }) {
             // Check if any of the denied permissions are permanently denied (user clicked "Don't ask again")
-            val isPermanentlyDenied = contactPermissions.any {
+            val isPermanentlyDenied = requiredPermissions.any {
                 ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED &&
                         !ActivityCompat.shouldShowRequestPermissionRationale(this, it)
             }
@@ -108,6 +156,7 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
     }
 
     private fun openAppSettings() {
+        ADSAppManage.isAppOpenBlocked = true
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
             data = Uri.fromParts("package", packageName, null)
         }
@@ -134,6 +183,17 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
             insets
         }
         Common.hideSystemUI(this)
+        appUpdateManager = AppUpdateManagerFactory.create(this)
+        if (ADSMainClass.shouldShowAppUpdate()) {
+            checkForUpdates()
+        }
+
+        try {
+            DailyNotificationUtils.scheduleDailyNotification(this)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         initView()
     }
 
@@ -147,6 +207,54 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
         super.onStop()
         permissionDialog?.dismiss()
     }
+
+    private fun checkForUpdates() {
+        val appUpdateInfoTask = appUpdateManager.appUpdateInfo
+
+        appUpdateInfoTask.addOnSuccessListener { appUpdateInfo ->
+            val updateType =
+                if (ADSMainClass.getInAppUpdateType().equals("Immediate", ignoreCase = true)) {
+                    AppUpdateType.IMMEDIATE
+                } else {
+                    AppUpdateType.FLEXIBLE
+                }
+
+            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+                && appUpdateInfo.isUpdateTypeAllowed(updateType)
+            ) {
+                try {
+                    appUpdateManager.startUpdateFlowForResult(
+                        appUpdateInfo,
+                        updateType,
+                        this,
+                        APP_UPDATE_REQUEST_CODE
+                    )
+                    ADSMainClass.updateAppUpdateShowCount()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+
+        appUpdateManager.registerListener(installStateUpdatedListener)
+    }
+
+    private val installStateUpdatedListener = InstallStateUpdatedListener { state ->
+        if (state.installStatus() == InstallStatus.DOWNLOADED) {
+//            showUpdateCompletedSnackbar()
+        }
+    }
+
+    /*private fun showUpdateCompletedSnackbar() {
+        Snackbar.make(
+            findViewById(R.id.drawerLayout),
+            "An update has just been downloaded.",
+            Snackbar.LENGTH_INDEFINITE
+        ).apply {
+            setAction("RESTART") { appUpdateManager.completeUpdate() }
+            show()
+        }
+    }*/
 
     fun exitApp(activity: Activity) {
         val massageBox = Dialog(this)
@@ -187,6 +295,12 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
         permissionDialog?.dismiss()
         val missingPermissions = contactPermissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }.filter {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && it == Manifest.permission.POST_NOTIFICATIONS) {
+                !SharedPreferenceManager.getBoolean(this, Constance.NOTIFICATION_PERMISSION_SKIP)
+            } else {
+                true
+            }
         }
 
         if (missingPermissions.isNotEmpty()) {
@@ -210,6 +324,12 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
             if (showCustomDialog) {
                 permissionDialog = PermissionManager.openPermissionDialog(this) {
                     isFromPermissionRequest = true
+                    SharedPreferenceManager.putBoolean(
+                        this,
+                        Constance.OVERLAY_PERMISSION_SKIP,
+                        true
+                    )
+                    ADSAppManage.isAppOpenBlocked = true
                     val intent = Intent(
                         Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         "package:$packageName".toUri()
@@ -219,6 +339,8 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
             } else {
                 // Just allowed Contacts/Call Log: go directly to Overlay settings for a seamless experience
                 isFromPermissionRequest = true
+                SharedPreferenceManager.putBoolean(this, Constance.OVERLAY_PERMISSION_SKIP, true)
+                ADSAppManage.isAppOpenBlocked = true
                 val intent = Intent(
                     Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                     "package:$packageName".toUri()
@@ -378,6 +500,7 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
 
     override fun onClick(view: View) {
         if (!isValidClick()) return
+        if (selectedTab == view) return
 
         when (view.id) {
             binding.llFavorite.id -> {
@@ -399,11 +522,6 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
                 switchFragments(keypadFragment)
                 updateTabUI(binding.llKeypad)
             }
-
-            /* binding.llSettings.id -> {
-                 switchFragments(settingsFragment)
-                 updateTabUI(binding.llSettings)
-             }*/
         }
     }
 
@@ -445,7 +563,8 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
             findViewById<View>(R.id.flBannerSmallPlaceholder).visibility = View.GONE
         }
 
-        if (!ADSMainClass.getAdsTypeManage().equals("Load") && ADSUtilitis.IsNetworkConnected(this@HomeActivity)
+        if (!ADSMainClass.getAdsTypeManage()
+                .equals("Load") && ADSUtilitis.IsNetworkConnected(this@HomeActivity)
         ) {
             ADSInterDisplayClick.AdmobInterstitialAd(
                 this@HomeActivity,
@@ -471,7 +590,7 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
 
                 } else {
                     if (doubleBackToExitPressedOnce) {
-//                        finish()
+                        finish()
                         return
                     }
 

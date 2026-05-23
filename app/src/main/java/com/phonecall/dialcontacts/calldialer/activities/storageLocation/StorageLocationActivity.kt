@@ -12,6 +12,9 @@ import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSBannerSmall
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSNativeDisplay
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.adapters.StorageLocationAdapter
 import com.phonecall.dialcontacts.calldialer.databinding.ActivityStorageLocationBinding
@@ -32,8 +35,9 @@ class StorageLocationActivity : AppCompatActivity(), OnClickHandler {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-
+        Common.hideSystemUI(this)
         initView()
+        loadAds()
     }
 
     private fun initView() {
@@ -71,6 +75,30 @@ class StorageLocationActivity : AppCompatActivity(), OnClickHandler {
         adapter.addAll(getAccountInfoDetails(contactId))
     }
 
+    private fun loadAds() {
+        if (ADSMainClass.getOtherAdsShow()) {
+            if (ADSMainClass.getOtherAdsType().equals("native")) {
+                ADSNativeDisplay.loadAdmobNativeAdBig(
+                    ADSMainClass.getStringValue(ADSMainClass.OTHER_SCREEN_NATIVE),
+                    findViewById(R.id.flNativeSmallPlaceholder),
+                    findViewById(R.id.shimmer_container_banner),
+                    "small",
+                    this
+                )
+            } else {
+                ADSBannerSmall.loadAdMobBanner(
+                    ADSMainClass.getStringValue(ADSMainClass.OTHER_SCREEN_BANNER),
+                    findViewById(R.id.flBannerSmallPlaceholder),
+                    findViewById(R.id.shimmer_container_banner),
+                    this
+                )
+            }
+        } else {
+            findViewById<View>(R.id.shimmer_container_banner).visibility = View.GONE
+            findViewById<View>(R.id.flNativeSmallPlaceholder).visibility = View.GONE
+            findViewById<View>(R.id.flBannerSmallPlaceholder).visibility = View.GONE
+        }
+    }
 
     private fun getAccountInfoDetails(contactId: String?): List<Pair<String?, String?>> {
         val result = mutableListOf<Pair<String?, String?>>()
@@ -93,8 +121,10 @@ class StorageLocationActivity : AppCompatActivity(), OnClickHandler {
             val accountNameIndex = it.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_NAME)
             val accountTypeIndex = it.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE)
             while (it.moveToNext()) {
-                val accountName = if (accountNameIndex != -1) it.getString(accountNameIndex) ?: "" else ""
-                val accountType = if (accountTypeIndex != -1) it.getString(accountTypeIndex) ?: "" else ""
+                val accountName =
+                    if (accountNameIndex != -1) it.getString(accountNameIndex) ?: "" else ""
+                val accountType =
+                    if (accountTypeIndex != -1) it.getString(accountTypeIndex) ?: "" else ""
                 uniqueAccounts.add(Pair(accountName, accountType))
             }
         }

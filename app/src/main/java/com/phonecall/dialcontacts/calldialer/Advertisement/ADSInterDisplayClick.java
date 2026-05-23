@@ -4,6 +4,7 @@ package com.phonecall.dialcontacts.calldialer.Advertisement;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -58,6 +59,7 @@ public class ADSInterDisplayClick {
 
     public static void ADSBackDisplayInterstitial(Activity context, String adsId, OnFinishAds onFinishAd, boolean... doShowAds) {
         onFinishAds = onFinishAd;
+        Log.e("TAG", "ADSBackDisplayInterstitial: "+ADSMainClass.getInterAdsOnBackShow() +ADSMainClass.getAds_Free() );
         if (ADSMainClass.getAds_Free()|| !ADSMainClass.getInterAdsOnBackShow() ) {
             onFinishAds.onFinishAds(true);
             return;
@@ -130,6 +132,8 @@ public class ADSInterDisplayClick {
 
     public static void AdmobInterstitialAd(Activity context, String AdsID) {
 
+        Log.e("TAG", "AdmobInterstitialAd: dfdd"+ADSMainClass.getAdsTypeManage() );
+
         if (ADSMainClass.getAdsTypeManage().equals("Load")) {
             /*if (context instanceof FullMActivity) {
 //                return;
@@ -145,7 +149,7 @@ public class ADSInterDisplayClick {
                 new InterstitialAdLoadCallback() {
                     @Override
                     public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
-//                        Log.d("SSSSSSSSSSS", "onAdLoaded: " );
+                        Log.d("SSSSSSSSSSS", "onAdLoaded: " );
                         ADSUtilitis.trackScreen(context, "Inter_Load");
                         FirebaseAnalytics firebaseAnalytics;
                         firebaseAnalytics = FirebaseAnalytics.getInstance(context);
@@ -181,7 +185,7 @@ public class ADSInterDisplayClick {
 
                     @Override
                     public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-//                        Log.d("SSSSSSSSSSS", "onAdFailedToLoad: "  +  loadAdError.getMessage() );
+                        Log.d("SSSSSSSSSSS", "onAdFailedToLoad: "  +  loadAdError.getMessage() );
 //                        AdmobInterstitialAd(context, AdsID);
                         ADSUtilitis.trackScreen(context, "Inter_Fail");
                         ADSUtilitis.MassageBoxFullDismiss();

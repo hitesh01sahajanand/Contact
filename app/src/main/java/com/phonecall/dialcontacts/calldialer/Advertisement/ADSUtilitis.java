@@ -1,5 +1,6 @@
 package com.phonecall.dialcontacts.calldialer.Advertisement;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -29,6 +30,14 @@ public class ADSUtilitis {
 
     public static void MassageBoxFull(Context context) {
         try {
+            // Guard: do not show dialog on a finishing or destroyed Activity
+            if (context instanceof Activity) {
+                Activity activity = (Activity) context;
+                if (activity.isFinishing() || activity.isDestroyed()) {
+                    return;
+                }
+            }
+
             if (MassageBoxFull != null)
                 if (MassageBoxFull.isShowing())
                     return;

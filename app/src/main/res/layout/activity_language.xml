@@ -26,6 +26,19 @@
             android:orientation="horizontal"
             android:paddingHorizontal="@dimen/_10sdp">
 
+            <ImageView
+                android:id="@+id/iv_back"
+                android:layout_width="@dimen/_35sdp"
+                android:layout_height="@dimen/_35sdp"
+                android:layout_marginEnd="@dimen/_10sdp"
+                android:contentDescription="@string/setting"
+                android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
+                android:src="@drawable/ic_back"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
             <TextView
                 style="@style/TextStyle.Large"
                 android:layout_width="0dp"
@@ -44,8 +57,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                android:paddingHorizontal="@dimen/_25sdp"
-                android:paddingVertical="@dimen/_10sdp"
+                android:paddingHorizontal="@dimen/_20sdp"
+                android:paddingVertical="@dimen/_8sdp"
                 android:text="@string/done"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/main_color"

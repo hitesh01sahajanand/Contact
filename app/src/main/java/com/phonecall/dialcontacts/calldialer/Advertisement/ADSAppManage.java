@@ -87,7 +87,7 @@ public class ADSAppManage extends Application {
                 if (className.equals("LanguageActivity") ||
                         className.equals("CallEndActivity") ||
                         className.equals("SplashActivity") ||
-                        className.equals("FullMActivity") ||
+                        className.equals("CallActivity") ||
                         className.equals("OverlayPermissionActivity")
                 ) {
                     return;

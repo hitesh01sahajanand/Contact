@@ -19,8 +19,10 @@ import androidx.databinding.DataBindingUtil
 import com.google.android.gms.tasks.Task
 import com.google.firebase.messaging.FirebaseMessaging
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSUtilitis
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.activities.home.HomeActivity
+import com.phonecall.dialcontacts.calldialer.activities.language.LanguageActivity
 import com.phonecall.dialcontacts.calldialer.activities.permissions.PermissionActivity
 import com.phonecall.dialcontacts.calldialer.databinding.ActivityMainBinding
 import com.phonecall.dialcontacts.calldialer.utils.Constance
@@ -67,6 +69,10 @@ class SplashActivity : BaseSplashActivity() {
 
         ADSMainClass.updateConsecutiveStreak(this)
         ADSMainClass.scheduleInstallDayWorker(this)
+
+        if (intent.getBooleanExtra("from_overlay_notification", false)) {
+            SharedPreferenceManager.putBoolean(this, Constance.OVERLAY_PERMISSION_SKIP, false)
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val insetsController = window.insetsController
@@ -134,12 +140,37 @@ class SplashActivity : BaseSplashActivity() {
             android.R.anim.fade_out
         )
 
-        if (!isLogIN) {
-            startActivity(Intent(this, PermissionActivity::class.java))
-            finish()
+        if (ADSMainClass.getSplashToLanguage()) {
+            if (!ADSMainClass.getLanguageScreen()) {
+                if (!isLogIN) {
+                    ADSUtilitis.trackScreen(this@SplashActivity, "Splash_TO_Language")
+                    startActivity(Intent(this@SplashActivity, LanguageActivity::class.java))
+                    finish()
+                }else{
+                    ADSUtilitis.trackScreen(this@SplashActivity, "Splash_TO_Main")
+                    startActivity(Intent(this, HomeActivity::class.java), options.toBundle())
+                    finish()
+                }
+
+            } else {
+                if (!isLogIN) {
+                    startActivity(Intent(this, PermissionActivity::class.java))
+                    finish()
+                } else {
+                    ADSUtilitis.trackScreen(this@SplashActivity, "Splash_TO_Main")
+                    startActivity(Intent(this, HomeActivity::class.java), options.toBundle())
+                    finish()
+                }
+            }
         } else {
-            startActivity(Intent(this, HomeActivity::class.java), options.toBundle())
-            finish()
+            if (!isLogIN) {
+                startActivity(Intent(this, PermissionActivity::class.java))
+                finish()
+            } else {
+                ADSUtilitis.trackScreen(this@SplashActivity, "Splash_TO_Main")
+                startActivity(Intent(this, HomeActivity::class.java), options.toBundle())
+                finish()
+            }
         }
     }
 }

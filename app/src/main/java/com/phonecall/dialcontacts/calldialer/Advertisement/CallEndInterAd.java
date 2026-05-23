@@ -29,9 +29,9 @@ public class CallEndInterAd {
     public static OnCompeteAds onCompleteAdCallBack;
     public static boolean isAdsEnabled = true;
     private static InterstitialAd fullScreenAds;
-    private static AppOpenAd appOpenAd;
     public static boolean isAdShowing = true;
     public static void fullScreenAdShow(Activity context, OnCompeteAds onFinishAd, boolean... doShowAds) {
+
         onCompleteAdCallBack = onFinishAd;
         if (ADSMainClass.getAds_Free()) {
             if (onCompleteAdCallBack != null) {
@@ -40,38 +40,8 @@ public class CallEndInterAd {
             return;
         }
 
-        if (ADSMainClass.getCallEndInterAdsType().equalsIgnoreCase("appopen")) {
-            admobAppOpenAd(context);
-        } else {
-            admobFullScreenAd(context);
-        }
-    }
-
-    public static void admobAppOpenAd(Activity context) {
-        if (appOpenAd != null) {
-            adsShowCheckEvent(false);
-            try {
-                appOpenAd.show(context);
-                appOpenAd = null;
-            } catch (Exception e) {
-                appOpenAd = null;
-                adsShowCheckEvent(true);
-                if (onCompleteAdCallBack != null) {
-                    onCompleteAdCallBack.onCompeteAds(false);
-                }
-            }
-        } else {
-            adsShowCheckEvent(true);
-            if (onCompleteAdCallBack != null) {
-                onCompleteAdCallBack.onCompeteAds(false);
-                onCompleteAdCallBack = null;
-            }
-        }
-
-        if (isAdsEnabled) {
-            isAdsEnabled = false;
-            admobAppOpenAdLoad(context);
-        }
+        // Removed click frequency check for CallEnd to ensure it follows daily limit only
+        admobFullScreenAd(context);
     }
 
     public static void admobFullScreenAd(Activity context) {
@@ -93,81 +63,16 @@ public class CallEndInterAd {
 
         } else {
 //            Log.d("TAG", "CallEndAd: ad is NULL, cannot show (33333)");
-            adsShowCheckEvent(true);
             if (onCompleteAdCallBack != null) {
                 onCompleteAdCallBack.onCompeteAds(false); // Return false because show failed
-                onCompleteAdCallBack = null;
             }
         }
 
-//        if (isAdsEnabled) {
-////            Log.d("TAG", "CallEndAd: Triggering reload for next time (44444)");
-//            isAdsEnabled = false;
-//            if (ADSMainClass.getCallEndInterAdsType().equalsIgnoreCase("appopen")) {
-//                admobAppOpenAdLoad(context);
-//            } else {
-//                admobFullScreenAdLoad(context);
-//            }
-//        }
-    }
-
-    public static void admobAppOpenAdLoad(Activity context) {
-        if (appOpenAd != null) {
-            isAdsEnabled = true;
-            return;
+        if (isAdsEnabled) {
+//            Log.d("TAG", "CallEndAd: Triggering reload for next time (44444)");
+            isAdsEnabled = false;
+            admobFullScreenAdLoad(context);
         }
-
-        AdRequest adRequest = new AdRequest.Builder().build();
-        AppOpenAd.load(context, ADSMainClass.getStringValue(ADSMainClass.APP_OPEN_ID), adRequest,
-                new AppOpenAd.AppOpenAdLoadCallback() {
-                    @Override
-                    public void onAdLoaded(@NonNull AppOpenAd ad) {
-                        FirebaseAnalytics firebaseAnalytics = FirebaseAnalytics.getInstance(context);
-                        ad.setOnPaidEventListener(adValue -> {
-                            double revenue = adValue.getValueMicros() / 1_000_000.0;
-                            String currency = adValue.getCurrencyCode();
-                            Bundle adRevenueParams = new Bundle();
-                            adRevenueParams.putString(FirebaseAnalytics.Param.AD_PLATFORM, "Google Ad Manager");
-                            adRevenueParams.putString(FirebaseAnalytics.Param.CURRENCY, currency);
-                            adRevenueParams.putDouble(FirebaseAnalytics.Param.VALUE, revenue);
-                            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.AD_IMPRESSION, adRevenueParams);
-                        });
-
-                        isAdsEnabled = true;
-                        appOpenAd = ad;
-                        ADSUtilitis.trackScreen(context, "CallEndAppOpen_Load");
-                        onAppOpenListner(context);
-                    }
-
-                    @Override
-                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                        ADSUtilitis.trackScreen(context, "CallEndAppOpen_Fail");
-                        isAdsEnabled = true;
-                    }
-                });
-    }
-
-    private static void onAppOpenListner(Activity context) {
-        appOpenAd.setFullScreenContentCallback(new FullScreenContentCallback() {
-            @Override
-            public void onAdDismissedFullScreenContent() {
-                adsShowCheckEvent(true);
-                if (onCompleteAdCallBack != null) {
-                    onCompleteAdCallBack.onCompeteAds(true);
-                    onCompleteAdCallBack = null;
-                }
-            }
-
-            @Override
-            public void onAdFailedToShowFullScreenContent(AdError adError) {
-//                ADSUtilitis.trackScreen(context, "CallEndInter_FailedToShow");
-                adsShowCheckEvent(true);
-                if (onCompleteAdCallBack != null) {
-                    onCompleteAdCallBack.onCompeteAds(false);
-                    onCompleteAdCallBack = null;
-                }
-            }
-        });
     }
 
     public static void adsShowCheckEvent(Boolean aBoolean) {
@@ -200,15 +105,7 @@ public class CallEndInterAd {
 //        }
 //    }
 
-    public static void loadAd(Activity context) {
-        if (ADSMainClass.getCallEndInterAdsType().equalsIgnoreCase("appopen")) {
-            admobAppOpenAdLoad(context);
-        } else {
-            admobFullScreenAdLoad(context);
-        }
-    }
-
-    private static void admobFullScreenAdLoad(Activity context) {
+    public static void admobFullScreenAdLoad(Activity context) {
         if (fullScreenAds != null) {
             isAdsEnabled = true;
             return;
@@ -264,14 +161,12 @@ public class CallEndInterAd {
 //
 //                        }
                         CallEndInterAd.fullScreenAds = interstitialAd;
-                        ADSUtilitis.trackScreen(context, "CallEndInter_Load");
 //                        Log.d("TAG", "CallEndAd: Ad loaded successfully and assigned to fullScreenAds.");
                         onContactListner(context);
                     }
 
                     @Override
                     public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                        ADSUtilitis.trackScreen(context, "CallEndInter_Fail");
 //                        Log.d("TAG", "CallEndAd: onAdFailedToLoad: " + loadAdError.getMessage());
                         isAdsEnabled = true; // Allow next attempt if needed
                     }
@@ -289,17 +184,14 @@ public class CallEndInterAd {
                 adsShowCheckEvent(true);
                 if (onCompleteAdCallBack != null) {
                     onCompleteAdCallBack.onCompeteAds(true);
-                    onCompleteAdCallBack = null;
                 }
             }
 
             @Override
             public void onAdFailedToShowFullScreenContent(AdError adError) {
-//                ADSUtilitis.trackScreen(context, "CallEndInter_FailedToShow");
                 adsShowCheckEvent(true);
                 if (onCompleteAdCallBack != null) {
                     onCompleteAdCallBack.onCompeteAds(false);
-                    onCompleteAdCallBack = null;
                 }
             }
 

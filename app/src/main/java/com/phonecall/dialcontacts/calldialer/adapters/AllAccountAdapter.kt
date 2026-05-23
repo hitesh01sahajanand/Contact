@@ -69,7 +69,7 @@ class AllAccountAdapter(
             binding.cvProfile.setCardBackgroundColor(
                 ContextCompat.getColor(binding.root.context, color)
             )
-            val firstChar = itemData.name.firstOrNull()?.uppercase() ?: ""
+            val firstChar = itemData.email.firstOrNull()?.uppercase() ?: ""
             binding.tvContactName.text = firstChar
         }
     }

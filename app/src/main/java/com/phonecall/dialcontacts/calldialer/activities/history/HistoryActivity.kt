@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.view.View
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -14,6 +15,11 @@ import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSBannerSmall
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSInterDisplayClick
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSNativeDisplay
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSUtilitis
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.activities.newContact.NewContactActivity
 import com.phonecall.dialcontacts.calldialer.adapters.HistoryAdapter
@@ -48,8 +54,9 @@ class HistoryActivity : AppCompatActivity(), OnClickHandler {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-
+        Common.hideSystemUI(this)
         initView()
+        loadAds()
     }
 
     private fun initView() {
@@ -91,6 +98,12 @@ class HistoryActivity : AppCompatActivity(), OnClickHandler {
                 adapter.addAll(groupedList)
             }
         }
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                loadInterAd()
+            }
+        })
     }
 
     override fun onClick(view: View) {
@@ -175,6 +188,40 @@ class HistoryActivity : AppCompatActivity(), OnClickHandler {
                         })
                 }
             }
+        }
+    }
+
+    fun loadInterAd() {
+        ADSInterDisplayClick.ADSBackDisplayInterstitial(
+            this@HistoryActivity,
+            ADSMainClass.getStringValue(ADSMainClass.INTER_FIRST_TIME),
+            { _ ->
+                finish()
+            })
+    }
+
+    private fun loadAds() {
+        if (ADSMainClass.getOtherAdsShow()) {
+            if (ADSMainClass.getOtherAdsType().equals("native")) {
+                ADSNativeDisplay.loadAdmobNativeAdBig(
+                    ADSMainClass.getStringValue(ADSMainClass.OTHER_SCREEN_NATIVE),
+                    findViewById(R.id.flNativeSmallPlaceholder),
+                    findViewById(R.id.shimmer_container_banner),
+                    "small",
+                    this
+                )
+            } else {
+                ADSBannerSmall.loadAdMobBanner(
+                    ADSMainClass.getStringValue(ADSMainClass.OTHER_SCREEN_BANNER),
+                    findViewById(R.id.flBannerSmallPlaceholder),
+                    findViewById(R.id.shimmer_container_banner),
+                    this
+                )
+            }
+        } else {
+            findViewById<View>(R.id.shimmer_container_banner).visibility = View.GONE
+            findViewById<View>(R.id.flNativeSmallPlaceholder).visibility = View.GONE
+            findViewById<View>(R.id.flBannerSmallPlaceholder).visibility = View.GONE
         }
     }
 }

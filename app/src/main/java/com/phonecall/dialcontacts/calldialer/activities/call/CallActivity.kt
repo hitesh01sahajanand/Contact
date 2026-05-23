@@ -17,15 +17,14 @@ import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
-import android.view.WindowInsets
-import android.view.WindowInsetsController
 import android.view.WindowManager
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
@@ -112,7 +111,8 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // Do NOT call enableEdgeToEdge() here — it conflicts with fullscreen/immersive mode
+        // and causes the status bar to remain visible with white icons.
         binding = DataBindingUtil.setContentView(this, R.layout.activity_call)
 
         lifecycleScope.launch {
@@ -714,63 +714,33 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
     }
 
     fun makeFullScreenImmersive() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Android 11+ (API 30+)
-            window.insetsController?.let { controller ->
-                controller.hide(
-                    WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars()
-                )
-
-                controller.systemBarsBehavior =
-                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
-        } else {
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility =
-                (View.SYSTEM_UI_FLAG_FULLSCREEN
-                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        or View.SYSTEM_UI_FLAG_LAYOUT_STABLE)
-        }
-
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
-
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val controller = window.insetsController
-            controller?.let {
-                it.hide(WindowInsets.Type.navigationBars())
-                it.systemBarsBehavior =
-                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
-        }
-
         val sdk = Build.VERSION.SDK_INT
+
+        // Hide ONLY the navigation bar — keep status bar visible so time & details show
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val insetsController = WindowInsetsControllerCompat(window, window.decorView)
+        insetsController.hide(WindowInsetsCompat.Type.navigationBars())
+        insetsController.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+
+        // Make navigation bar transparent so no gap appears
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         // Lock portrait (except API 26 due to known issues)
         if (sdk != Build.VERSION_CODES.O) {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
 
-        // Allow drawing behind system bars
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        // Always keep screen ON (valid, not deprecated)
+        // Keep screen ON during call
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            // ✅ Modern APIs
+
+        // Show over lock screen
+        if (sdk >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
-
             val keyguardManager = getSystemService(KeyguardManager::class.java)
             keyguardManager?.requestDismissKeyguard(this, null)
-
         } else {
-            // ✅ Fallback for old devices only
             @Suppress("DEPRECATION")
             window.addFlags(
                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
@@ -782,6 +752,7 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onResume() {
         super.onResume()
+        makeFullScreenImmersive()
         val call = NewCallManager.getPrimaryCall()
         val isNew = intent.getBooleanExtra("isNew", false)
         if (call == null && !isNew) {

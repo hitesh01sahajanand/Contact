@@ -73,30 +73,38 @@ class RecentViewModel @Inject constructor(
         observeTags()
     }
 
-    private var isObserverRegistered = false
+    private var isCallLogObserverRegistered = false
+    private var isContactsObserverRegistered = false
 
     fun registerObserver() {
-        if (isObserverRegistered) return
+        if (isCallLogObserverRegistered && isContactsObserverRegistered) return
         try {
-            context.contentResolver.registerContentObserver(
-                CallLog.Calls.CONTENT_URI,
-                true,
-                observer
-            )
-            context.contentResolver.registerContentObserver(
-                ContactsContract.Contacts.CONTENT_URI,
-                true,
-                observer
-            )
-            isObserverRegistered = true
+            if (!isCallLogObserverRegistered && androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_CALL_LOG) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                context.contentResolver.registerContentObserver(
+                    CallLog.Calls.CONTENT_URI,
+                    true,
+                    observer
+                )
+                isCallLogObserverRegistered = true
+            }
+            if (!isContactsObserverRegistered && androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_CONTACTS) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                context.contentResolver.registerContentObserver(
+                    ContactsContract.Contacts.CONTENT_URI,
+                    true,
+                    observer
+                )
+                isContactsObserverRegistered = true
+            }
         } catch (e: SecurityException) {
+            e.printStackTrace()
+        } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
     override fun onCleared() {
         super.onCleared()
-        if (isObserverRegistered) {
+        if (isCallLogObserverRegistered || isContactsObserverRegistered) {
             context.contentResolver.unregisterContentObserver(observer)
         }
     }

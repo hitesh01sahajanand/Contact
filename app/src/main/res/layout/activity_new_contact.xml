@@ -77,8 +77,8 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:gravity="center"
-                    android:paddingHorizontal="@dimen/_20sdp"
-                    android:paddingVertical="@dimen/_10sdp"
+                    android:paddingHorizontal="@dimen/_18sdp"
+                    android:paddingVertical="@dimen/_8sdp"
                     android:text="@string/save"
                     android:textColor="@color/black_color" />
 
@@ -92,7 +92,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginTop="@dimen/_10sdp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/banner"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/ll_header">
@@ -499,9 +499,9 @@
                                         android:layout_width="@dimen/_12sdp"
                                         android:layout_height="@dimen/_12sdp"
                                         android:layout_gravity="center"
-                                        app:tint="@color/black_color"
                                         android:src="@drawable/ic_contact_arrow_down"
-                                        android:visibility="visible" />
+                                        android:visibility="visible"
+                                        app:tint="@color/black_color" />
                                 </LinearLayout>
 
                             </LinearLayout>
@@ -534,8 +534,8 @@
                             android:layout_width="@dimen/_10sdp"
                             android:layout_height="@dimen/_10sdp"
                             android:layout_gravity="center"
-                            app:tint="@color/black_color"
-                            android:src="@drawable/ic_add" />
+                            android:src="@drawable/ic_add"
+                            app:tint="@color/black_color" />
 
                         <TextView
                             style="@style/TextStyle.Regular"
@@ -745,9 +745,9 @@
                                         android:layout_width="@dimen/_12sdp"
                                         android:layout_height="@dimen/_12sdp"
                                         android:layout_gravity="center"
-                                        app:tint="@color/black_color"
                                         android:src="@drawable/ic_contact_arrow_down"
-                                        android:visibility="visible" />
+                                        android:visibility="visible"
+                                        app:tint="@color/black_color" />
                                 </LinearLayout>
                             </LinearLayout>
 
@@ -1012,9 +1012,9 @@
                                         android:layout_width="@dimen/_12sdp"
                                         android:layout_height="@dimen/_12sdp"
                                         android:layout_gravity="center"
-                                        app:tint="@color/black_color"
                                         android:src="@drawable/ic_contact_arrow_down"
-                                        android:visibility="visible" />
+                                        android:visibility="visible"
+                                        app:tint="@color/black_color" />
                                 </LinearLayout>
                             </LinearLayout>
 
@@ -1047,8 +1047,8 @@
                             android:layout_width="@dimen/_10sdp"
                             android:layout_height="@dimen/_10sdp"
                             android:layout_gravity="center"
-                            app:tint="@color/black_color"
-                            android:src="@drawable/ic_add" />
+                            android:src="@drawable/ic_add"
+                            app:tint="@color/black_color" />
 
                         <TextView
                             style="@style/TextStyle.Regular"
@@ -1065,6 +1065,48 @@
 
 
         </androidx.core.widget.NestedScrollView>
+
+        <LinearLayout
+            android:id="@+id/banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/scroll_view">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                app:cardCornerRadius="10dp"
+                app:cardElevation="5dp">
+
+                <com.facebook.shimmer.ShimmerFrameLayout
+                    android:id="@+id/shimmer_container_banner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_card_ads"
+                    android:visibility="visible"
+                    app:shimmer_auto_start="true"
+                    app:shimmer_base_color="#ccc">
+
+                    <include layout="@layout/ad_unifiled_small" />
+
+                </com.facebook.shimmer.ShimmerFrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/flNativeSmallPlaceholder"
+                    style="@style/NativeAdsView" />
+
+            </androidx.cardview.widget.CardView>
+
+            <FrameLayout
+                android:id="@+id/flBannerSmallPlaceholder"
+                style="@style/NativeAdsView" />>
+
+        </LinearLayout>
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

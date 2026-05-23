@@ -2,6 +2,7 @@ package com.phonecall.dialcontacts.calldialer.activities.quickResponse
 
 import android.os.Bundle
 import android.view.View
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -11,8 +12,10 @@ import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSBannerSmall
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSInterDisplayClick
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSNativeDisplay
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSUtilitis
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.adapters.QuickResponseAdapter
 import com.phonecall.dialcontacts.calldialer.databinding.ActivityQuickResponseBinding
@@ -73,6 +76,15 @@ class QuickResponseActivity : AppCompatActivity(), OnClickHandler {
         }
     }
 
+    fun loadInterAd() {
+        ADSInterDisplayClick.ADSBackDisplayInterstitial(
+            this@QuickResponseActivity,
+            ADSMainClass.getStringValue(ADSMainClass.INTER_SECOND_TIME),
+            { _ ->
+                finish()
+            })
+    }
+
     private fun observeData() {
         lifecycleScope.launch {
             viewModel.messages.collectLatest { list ->
@@ -92,6 +104,12 @@ class QuickResponseActivity : AppCompatActivity(), OnClickHandler {
 
         binding.rvQuickResponse.adapter = adapter
         binding.rvQuickResponse.layoutManager = LinearLayoutManager(this)
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                loadInterAd()
+            }
+        })
     }
 
     override fun onClick(view: View) {

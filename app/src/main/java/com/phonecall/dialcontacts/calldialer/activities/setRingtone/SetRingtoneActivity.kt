@@ -19,6 +19,7 @@ import android.util.Log
 import android.view.View
 import android.webkit.MimeTypeMap
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import java.io.File
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,8 +31,10 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSBannerSmall
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSInterDisplayClick
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSNativeDisplay
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSUtilitis
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.adapters.RingtonesAdapter
 import com.phonecall.dialcontacts.calldialer.databinding.ActivitySetRingtoneBinding
@@ -124,7 +127,6 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Common.hideSystemUI(this)
         contactId = intent.getStringExtra(Constance.CONTACT_ID)
 
         if (!Settings.System.canWrite(this)) {
@@ -145,6 +147,7 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
             insets
         }
 
+        Common.hideSystemUI(this)
         initView()
         loadAds()
         loadSystemRingtones()
@@ -175,6 +178,15 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
             findViewById<View>(R.id.flNativeSmallPlaceholder).visibility = View.GONE
             findViewById<View>(R.id.flBannerSmallPlaceholder).visibility = View.GONE
         }
+    }
+
+    fun loadInterAd() {
+        ADSInterDisplayClick.ADSBackDisplayInterstitial(
+            this@SetRingtoneActivity,
+            ADSMainClass.getStringValue(ADSMainClass.INTER_SECOND_TIME),
+            { _ ->
+                finish()
+            })
     }
 
     private fun updateHeaderTitle() {
@@ -218,6 +230,12 @@ class SetRingtoneActivity : AppCompatActivity(), OnClickHandler {
         })
         binding.rvRingtone.adapter = adapter
         binding.rvRingtone.layoutManager = LinearLayoutManager(this)
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                loadInterAd()
+            }
+        })
     }
 
     private fun loadSystemRingtones() {

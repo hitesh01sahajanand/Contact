@@ -75,6 +75,16 @@ object PermissionManager {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    fun hasNotificationPermission(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+    }
+
     fun openPermissionDialog(context: Context, onClick: () -> Unit): Dialog {
         val dialog = Dialog(context)
         val alertBinding = PermissionDialogDesignBinding.inflate(LayoutInflater.from(context))
@@ -116,12 +126,20 @@ object PermissionManager {
                 Constance.OVERLAY_PERMISSION_SKIP
             )
 
+        val hasNotificationPermission =
+            hasNotificationPermission(context) || SharedPreferenceManager.getBoolean(
+                context,
+                Constance.NOTIFICATION_PERMISSION_SKIP
+            )
+
         alertBinding.llContact.visibility =
-            if (hasContactPermission) android.view.View.GONE else android.view.View.VISIBLE
+            if (hasContactPermission) View.GONE else View.VISIBLE
         alertBinding.llCallLog.visibility =
-            if (hasCallLogPermission) android.view.View.GONE else android.view.View.VISIBLE
+            if (hasCallLogPermission) View.GONE else View.VISIBLE
+        alertBinding.llNotification.visibility =
+            if (hasNotificationPermission) View.GONE else View.VISIBLE
         alertBinding.llDisplayOverOtherApps.visibility =
-            if (hasOverlayPermission) android.view.View.GONE else android.view.View.VISIBLE
+            if (hasOverlayPermission) View.GONE else View.VISIBLE
 
         alertBinding.cvContinue.setOnClickListener {
             dialog.dismiss()

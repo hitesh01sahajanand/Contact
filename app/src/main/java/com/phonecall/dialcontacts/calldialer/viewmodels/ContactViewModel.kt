@@ -1,10 +1,13 @@
 package com.phonecall.dialcontacts.calldialer.viewmodels
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.database.ContentObserver
 import android.os.Handler
 import android.os.Looper
 import android.provider.ContactsContract
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -41,8 +44,16 @@ class ContactViewModel @Inject constructor(
 
     private var isObserverRegistered = false
 
+    private fun hasContactPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context, Manifest.permission.READ_CONTACTS
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
     fun registerObserver() {
         if (isObserverRegistered) return
+        // Guard: only register if READ_CONTACTS is granted to avoid SecurityException
+        if (!hasContactPermission()) return
         try {
             context.contentResolver.registerContentObserver(
                 ContactsContract.Contacts.CONTENT_URI,
@@ -71,15 +82,22 @@ class ContactViewModel @Inject constructor(
     private var _accountCounts = MutableLiveData<Map<String, Int>>()
     val accountCounts: LiveData<Map<String, Int>> = _accountCounts
 
-    var currentSelectedAccount: String = context.getString(R.string.all_accounts)
+    var currentSelectedAccount: String = ACCOUNT_ALL
 
     fun loadContacts(showLoader: Boolean = true) {
+        // Skip silently if permission not yet granted
+        if (!hasContactPermission()) return
         registerObserver()
         when (currentSelectedAccount) {
-            context.getString(R.string.all_accounts) -> loadAllContacts(showLoader)
-            context.getString(R.string.device_only) -> getContactsByDevice(showLoader)
+            ACCOUNT_ALL -> loadAllContacts(showLoader)
+            ACCOUNT_DEVICE -> getContactsByDevice(showLoader)
             else -> getContactsByAccountWithHeaders(currentSelectedAccount, showLoader)
         }
+    }
+
+    companion object {
+        const val ACCOUNT_ALL = "All Accounts"
+        const val ACCOUNT_DEVICE = "Device Only"
     }
 
     private var loadJob: kotlinx.coroutines.Job? = null

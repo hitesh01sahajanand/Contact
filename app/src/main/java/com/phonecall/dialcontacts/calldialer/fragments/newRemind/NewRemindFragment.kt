@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.activities.endCall.EndCallActivity
+import com.phonecall.dialcontacts.calldialer.activities.endCall.CallEndActivity
 import com.phonecall.dialcontacts.calldialer.adapters.ReminderMainAdapter
 import com.phonecall.dialcontacts.calldialer.databinding.FragmentMessageBinding
 import com.phonecall.dialcontacts.calldialer.models.ReminderModel
@@ -166,6 +167,7 @@ class NewRemindFragment : Fragment() {
 
         viewModel.insertReminder(reminder)
         val mobileNumber = (requireActivity() as? EndCallActivity)?.mobileNumber
+            ?: (requireActivity() as? CallEndActivity)?.mobileNumber
         scheduleNotification(title, reminderDateTime.timeInMillis, mobileNumber)
 
         toggleCreateView(false)

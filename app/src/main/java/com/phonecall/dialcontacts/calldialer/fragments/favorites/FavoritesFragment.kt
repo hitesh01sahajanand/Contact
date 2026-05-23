@@ -48,7 +48,11 @@ class FavoritesFragment : Fragment(), OnClickHandler {
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
-        if (!hidden && PermissionManager.hasContactPermissions(requireActivity())) {
+        if (hidden) {
+            if (::favoriteAdapter.isInitialized) {
+                favoriteAdapter.clearSelection()
+            }
+        } else if (PermissionManager.hasContactPermissions(requireActivity())) {
             viewModel.getAllFavoriteContact()
         }
     }

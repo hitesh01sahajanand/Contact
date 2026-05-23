@@ -247,7 +247,7 @@ class KeypadFragment : Fragment(), OnClickHandler {
 
 
     override fun onClick(view: View) {
-        if (!isValidClick()) return
+        if (view.id != binding.buttonDelete.id && !isValidClick()) return
         when (view.id) {
             binding.buttonCall.id -> {
                 val number = binding.edtDisplayNumber.text.toString()

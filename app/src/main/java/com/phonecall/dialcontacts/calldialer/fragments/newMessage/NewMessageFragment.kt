@@ -21,6 +21,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import androidx.core.net.toUri
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.activities.endCall.EndCallActivity
+import com.phonecall.dialcontacts.calldialer.activities.endCall.CallEndActivity
 import com.phonecall.dialcontacts.calldialer.utils.Common.isValidClick
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -61,6 +62,7 @@ class NewMessageFragment : Fragment(), OnClickHandler {
 
             if (action == Constance.DATA_FETCH) {
                 val mobileNumber = (requireActivity() as? EndCallActivity)?.mobileNumber
+                    ?: (requireActivity() as? CallEndActivity)?.mobileNumber
                 if (!mobileNumber.isNullOrEmpty()) {
                     val uri = Uri.parse("smsto:$mobileNumber")
                     val intent = Intent(Intent.ACTION_SENDTO, uri).apply {

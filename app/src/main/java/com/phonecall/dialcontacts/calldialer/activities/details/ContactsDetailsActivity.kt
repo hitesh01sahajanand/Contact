@@ -12,6 +12,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -24,9 +25,12 @@ import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import com.bumptech.glide.Glide
 import com.bumptech.glide.signature.ObjectKey
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSBannerSmall
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSInterDisplayClick
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSNativeDisplay
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSUtilitis
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.activities.history.HistoryActivity
 import com.phonecall.dialcontacts.calldialer.activities.newContact.NewContactActivity
@@ -78,6 +82,12 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
 
         showInitialData()
         loadAds()
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                loadInterAd()
+            }
+        })
     }
 
     private fun loadAds() {
@@ -103,6 +113,15 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             findViewById<View>(R.id.flNativeSmallPlaceholder).visibility = View.GONE
             findViewById<View>(R.id.flBannerSmallPlaceholder).visibility = View.GONE
         }
+    }
+
+    fun loadInterAd() {
+        ADSInterDisplayClick.ADSBackDisplayInterstitial(
+            this@ContactsDetailsActivity,
+            ADSMainClass.getStringValue(ADSMainClass.INTER_FIRST_TIME),
+            { _ ->
+                finish()
+            })
     }
 
     private fun showInitialData() {
@@ -493,6 +512,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                         intent.putExtra(Constance.CONTACT_ID, contactId)
                         startActivity(intent)
                     } else {
+                        ADSAppManage.isAppOpenBlocked = true
                         val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
                         intent.data = "package:$packageName".toUri()
                         manageWriteSettingsLauncher.launch(intent)

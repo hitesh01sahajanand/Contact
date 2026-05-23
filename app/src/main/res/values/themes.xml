@@ -36,9 +36,25 @@
         <item name="android:gravity">center</item>
     </style>
 
+    <style name="TransparentTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
     <style name="ExitDialogAnimation">
         <item name="android:windowEnterAnimation">@anim/anim_item_from_bottom_anim</item>
         <item name="android:windowExitAnimation">@anim/anim_topbottom_anim</item>
+    </style>
+
+    <!-- Theme for CallActivity: shows status bar with visible time & details -->
+    <style name="Theme.CallActivity" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
     </style>
 
 </resources>

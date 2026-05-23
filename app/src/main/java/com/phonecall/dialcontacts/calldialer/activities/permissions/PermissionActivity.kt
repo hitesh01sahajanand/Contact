@@ -15,6 +15,7 @@ import android.text.style.ClickableSpan
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -26,6 +27,7 @@ import com.phonecall.dialcontacts.calldialer.Advertisement.ADSBannerSmall
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSNativeDisplay
 import com.phonecall.dialcontacts.calldialer.R
+import com.phonecall.dialcontacts.calldialer.activities.home.HomeActivity
 import com.phonecall.dialcontacts.calldialer.activities.language.LanguageActivity
 import com.phonecall.dialcontacts.calldialer.databinding.ActivityPermissionBinding
 import com.phonecall.dialcontacts.calldialer.utils.Common
@@ -33,6 +35,7 @@ import com.phonecall.dialcontacts.calldialer.utils.Common.isValidClick
 import com.phonecall.dialcontacts.calldialer.utils.OnClickHandler
 import com.phonecall.dialcontacts.calldialer.utils.ThemeManager
 import dagger.hilt.android.AndroidEntryPoint
+import kotlin.jvm.java
 
 @AndroidEntryPoint
 class PermissionActivity : AppCompatActivity(), OnClickHandler {
@@ -76,6 +79,12 @@ class PermissionActivity : AppCompatActivity(), OnClickHandler {
         binding.lottiPermissionBtn.playAnimation()
 
         manageTextViews()
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                goNextActivity()
+            }
+        })
 
     }
 
@@ -186,12 +195,18 @@ class PermissionActivity : AppCompatActivity(), OnClickHandler {
                 }
             }
         } catch (e: Exception) {
-            Log.e("TAG", "openDefaultAppDialog:${e.message} ")
+            Log.e("TAG", "openDefaultAppDialog:${e.message}")
         }
     }
 
     fun goNextActivity() {
-        startActivity(Intent(this, LanguageActivity::class.java))
-        finish()
+        val isFromLanguage = intent.getBooleanExtra("language", false)
+        if (isFromLanguage) {
+            startActivity(Intent(this, HomeActivity::class.java))
+            finish()
+        } else {
+            startActivity(Intent(this, LanguageActivity::class.java))
+            finish()
+        }
     }
 }

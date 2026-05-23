@@ -10,6 +10,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -52,18 +53,21 @@ public class ADSNativeDisplay {
         contexts = context;
         ArrayIndex = 0;
         if (ADSMainClass.getAds_Free()) {
+            Log.e("TAG", "loadAdmobNativeAdBig: 111" );
 //            lnr_view.setVisibility(View.GONE);
             linearLayout.setVisibility(View.GONE);
             shimmerFrameLayout.setVisibility(View.GONE);
             return;
         }
         if (adsId.isEmpty()) {
+            Log.e("TAG", "loadAdmobNativeAdBig: 222" );
             linearLayout.setVisibility(View.GONE);
             shimmerFrameLayout.setVisibility(View.GONE);
             return;
         }
 
         if (NativeByPage == ADSMainClass.getNativeByPage()) {
+            Log.e("TAG", "loadAdmobNativeAdBig: 333" );
             NativeByPage = 0;
 
 //            if (ADSMainClass.getAdsDisplayType().equals("facebook")) {
@@ -75,13 +79,16 @@ public class ADSNativeDisplay {
 //            } else {
 
             if (ads_type.equals("big")) {
+                Log.e("TAG", "loadAdmobNativeAdBig: 555" );
                 AdmobBigDisplay(context, adsId, linearLayout, shimmerFrameLayout, false);
             } else {
+                Log.e("TAG", "loadAdmobNativeAdBig: 666" );
                 AdmobSmallDisplay(context, adsId, linearLayout, shimmerFrameLayout, true);
             }
 //            }
 
         } else {
+            Log.e("TAG", "loadAdmobNativeAdBig: 444" );
             NativeByPage++;
             shimmerFrameLayout.setVisibility(View.GONE);
             linearLayout.setVisibility(View.GONE);
@@ -90,7 +97,7 @@ public class ADSNativeDisplay {
 
 
     public static void AdmobBigDisplay(Context context, String adsId, final FrameLayout linearLayout, ShimmerFrameLayout shimmerFrameLayout, Boolean banner_flag) {
-
+        Log.e("TAG", "AdmobBigDisplay: 0000 "+adsId );
         if (shimmerFrameLayout != null) {
             shimmerFrameLayout.setVisibility(View.VISIBLE);
             shimmerFrameLayout.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
@@ -104,15 +111,13 @@ public class ADSNativeDisplay {
         linearLayout.setVisibility(View.GONE);
 
         if (ADSMainClass.getAdsTypeManage().equals("Load")) {
-
-            if (LoadingCheck) {
-                LoadingCheck = false;
-                AdmobFullNative(context, adsId, shimmerFrameLayout, linearLayout, banner_flag);
-            }
+            Log.e("TAG", "AdmobBigDisplay: 7777" );
+            AdmobFullNative(context, adsId, shimmerFrameLayout, linearLayout, banner_flag);
             return;
         }
 
         if (AdmobNativeAd != null) {
+            Log.e("TAG", "loadAdmobNativeAdBig: 888" );
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             NativeAdView adView;
             if (AdsDisplayType.equals("big")) {
@@ -122,6 +127,7 @@ public class ADSNativeDisplay {
             }
 
             if (shimmerFrameLayout != null) {
+                Log.e("TAG", "AdmobBigDisplay: 9999" );
                 shimmerFrameLayout.setVisibility(View.GONE);
                 shimmerFrameLayout.stopShimmer();
             }
@@ -130,11 +136,14 @@ public class ADSNativeDisplay {
             linearLayout.removeAllViews();
             linearLayout.addView(adView);
             ADSAdpater.admob_nativehashmap.put(ADSAdpater.pos, adView);
+        } else {
+            if (shimmerFrameLayout != null) {
+                Log.e("TAG", "AdmobBigDisplay: 9999" );
+                shimmerFrameLayout.setVisibility(View.GONE);
+                shimmerFrameLayout.stopShimmer();
+            }
         }
-        if (LoadingCheck) {
-            LoadingCheck = false;
-            AdmobFullNative(context, adsId, shimmerFrameLayout, linearLayout, banner_flag);
-        }
+        AdmobFullNative(context, adsId, shimmerFrameLayout, linearLayout, banner_flag);
     }
 
     public static void AdmobSmallDisplay(Context context, String adsId, final FrameLayout linearLayout, ShimmerFrameLayout shimmerFrameLayout, Boolean banner_flag) {

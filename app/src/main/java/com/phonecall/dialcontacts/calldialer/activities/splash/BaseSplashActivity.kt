@@ -25,6 +25,7 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppStarting
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSInterDisplayClick
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass.SHOW_FULL_SCREEN_INTENT_PERMISSION
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSUtilitis
@@ -37,6 +38,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
+import kotlin.text.equals
 
 abstract class BaseSplashActivity : AppCompatActivity() {
     lateinit var decrypted: String

@@ -2,6 +2,7 @@ package com.phonecall.dialcontacts.calldialer.activities.blockNumbers
 
 import android.os.Bundle
 import android.view.View
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -12,8 +13,10 @@ import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSBannerSmall
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSInterDisplayClick
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSNativeDisplay
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSUtilitis
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.adapters.BlockNumberAdapter
 import com.phonecall.dialcontacts.calldialer.databinding.ActivityBlockNumbersBinding
@@ -100,6 +103,12 @@ class BlockNumbersActivity : AppCompatActivity(), OnClickHandler {
         }
         binding.rvBlockNumbers.adapter = adapter
         binding.rvBlockNumbers.layoutManager = LinearLayoutManager(this)
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                loadInterAd()
+            }
+        })
     }
 
     private fun observeData() {
@@ -112,6 +121,15 @@ class BlockNumbersActivity : AppCompatActivity(), OnClickHandler {
                 binding.cvBlockNumbers.visibility = if (isEmpty) View.GONE else View.VISIBLE
             }
         }
+    }
+
+    fun loadInterAd() {
+        ADSInterDisplayClick.ADSBackDisplayInterstitial(
+            this@BlockNumbersActivity,
+            ADSMainClass.getStringValue(ADSMainClass.INTER_SECOND_TIME),
+            { _ ->
+                finish()
+            })
     }
 
     private fun showUnblockDialog(blockModel: BlockModel) {

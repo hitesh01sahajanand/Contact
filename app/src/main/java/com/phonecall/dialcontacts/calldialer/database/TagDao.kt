@@ -15,6 +15,9 @@ interface TagDao {
     @Query("SELECT * FROM tags WHERE phoneNumber = :number")
     suspend fun getTagByNumber(number: String): TagModel?
 
+    @Query("SELECT * FROM tags WHERE phoneNumber = :number")
+    fun getTagByNumberSync(number: String): TagModel?
+
     @Query("SELECT * FROM tags")
     fun getAllTags(): Flow<List<TagModel>>
 

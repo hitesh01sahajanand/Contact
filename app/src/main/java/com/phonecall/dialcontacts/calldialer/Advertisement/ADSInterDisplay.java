@@ -145,7 +145,7 @@ public class ADSInterDisplay {
                 new InterstitialAdLoadCallback() {
                     @Override
                     public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
-//                        Log.d("SSSSSSSSSSS", "onAdLoaded: " );
+                        Log.d("SSSSSSSSSSS", "onAdLoaded: " );
                         FirebaseAnalytics firebaseAnalytics;
                         firebaseAnalytics = FirebaseAnalytics.getInstance(context);
                         interstitialAd.setOnPaidEventListener(new OnPaidEventListener() {

@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import com.phonecall.dialcontacts.calldialer.activities.endCall.EndCallActivity
+import com.phonecall.dialcontacts.calldialer.activities.endCall.CallEndActivity
 import com.phonecall.dialcontacts.calldialer.databinding.FragmentMoreFeaturesBinding
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.utils.Common
@@ -42,6 +43,7 @@ class MoreFeaturesFragment : Fragment(), OnClickHandler {
 
             binding.llMessage.id -> {
                 val mobileNumber = (requireActivity() as? EndCallActivity)?.mobileNumber
+                    ?: (requireActivity() as? CallEndActivity)?.mobileNumber
                 if (!mobileNumber.isNullOrEmpty()) {
                     val intent = Intent(Intent.ACTION_SENDTO)
                     intent.data = "smsto:${mobileNumber}".toUri()
@@ -78,6 +80,7 @@ class MoreFeaturesFragment : Fragment(), OnClickHandler {
             binding.llSendMail.id -> {
 
                 val mobileNumber = (requireActivity() as? EndCallActivity)?.mobileNumber
+                    ?: (requireActivity() as? CallEndActivity)?.mobileNumber
                 if (!mobileNumber.isNullOrEmpty()) {
                     val intent = Intent(
                         Intent.ACTION_SENDTO,

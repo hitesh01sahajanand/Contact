@@ -277,7 +277,7 @@ class ContactsFragment : Fragment(), OnClickHandler {
         val isLoading = viewModel.isLoading.value ?: false
         val itemCount = allContactsAdapter.itemCount
 
-        if (isLoading && itemCount == 0) {
+        if (isLoading) {
             binding.pbLoading.isVisible = true
             binding.clContacts.isVisible = false
             binding.llContactSpaceHolder.isVisible = false
@@ -335,18 +335,19 @@ class ContactsFragment : Fragment(), OnClickHandler {
                 val accountList = mutableListOf<AccountModel>()
                 val counts = viewModel.accountCounts.value ?: emptyMap()
 
+                // Use stable constants as keys (email field), translated strings only for display
                 accountList.add(
                     AccountModel(
                         requireActivity().getString(R.string.all),
-                        requireActivity().getString(R.string.all_accounts),
-                        count = counts["All Accounts"] ?: 0
+                        ContactViewModel.ACCOUNT_ALL,
+                        count = counts[ContactViewModel.ACCOUNT_ALL] ?: 0
                     )
                 )
                 accountList.add(
                     AccountModel(
                         requireActivity().getString(R.string.device),
-                        requireActivity().getString(R.string.device_only),
-                        count = counts["Device Only"] ?: 0
+                        ContactViewModel.ACCOUNT_DEVICE,
+                        count = counts[ContactViewModel.ACCOUNT_DEVICE] ?: 0
                     )
                 )
 
@@ -383,12 +384,13 @@ class ContactsFragment : Fragment(), OnClickHandler {
                     requireActivity(),
                     binding.cvAccounts,
                     accountList
-                ) { email ->
-                    val selectedName = accountList.find { it.email == email }?.name ?: requireActivity().getString(R.string.all)
+                ) { selectedKey ->
+                    val selectedName = accountList.find { it.email == selectedKey }?.name
+                        ?: requireActivity().getString(R.string.all)
                     val tvTitle = binding.cvAccounts.findViewById<TextView>(R.id.tv_title)
                     tvTitle?.text = selectedName
 
-                    viewModel.currentSelectedAccount = email
+                    viewModel.currentSelectedAccount = selectedKey
                     viewModel.loadContacts()
                 }
             }
@@ -396,13 +398,14 @@ class ContactsFragment : Fragment(), OnClickHandler {
     }
 
     private fun updateAccountUI() {
-        val email = viewModel.currentSelectedAccount
+        val key = viewModel.currentSelectedAccount
         val tvTitle = binding.cvAccounts.findViewById<TextView>(R.id.tv_title)
 
-        val title = when (email) {
-            "All Accounts" -> "All"
-            "Device Only" -> "Device"
-            else -> email.substringBefore("@")
+        // Use translated strings for display; stable constants for comparison
+        val title = when (key) {
+            ContactViewModel.ACCOUNT_ALL -> requireActivity().getString(R.string.all)
+            ContactViewModel.ACCOUNT_DEVICE -> requireActivity().getString(R.string.device)
+            else -> key.substringBefore("@")
         }
         tvTitle?.text = title
     }

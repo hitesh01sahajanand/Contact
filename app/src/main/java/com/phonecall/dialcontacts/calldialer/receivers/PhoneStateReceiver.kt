@@ -16,6 +16,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.activities.endCall.EndCallActivity
+import com.phonecall.dialcontacts.calldialer.callEndUtils.CallEndLaunchHelper
+import com.phonecall.dialcontacts.calldialer.callEndUtils.CallEndPendingLaunch
+import java.util.Date
 
 class PhoneStateReceiver : BroadcastReceiver() {
 
@@ -39,6 +42,11 @@ class PhoneStateReceiver : BroadcastReceiver() {
         Log.d(TAG, "onReceive action=$action")
 
         when (action) {
+            Intent.ACTION_USER_PRESENT -> {
+                Log.d(TAG, "onReceive: USER_PRESENT, launching pending call end")
+                CallEndPendingLaunch.tryLaunchAndClear(context)
+            }
+
             TelephonyManager.ACTION_PHONE_STATE_CHANGED -> {
                 val stateStr = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
                 val number = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
@@ -148,7 +156,10 @@ class PhoneStateReceiver : BroadcastReceiver() {
                 // Mark handled BEFORE launching so a second broadcast can't fire again
                 prefs.edit().putBoolean(KEY_IDLE_HANDLED, true).apply()
 
-                launchEndCallActivity(context, savedNumber, callStartTime, endTime, callType)
+                Log.e(TAG, "handleStateChange: fgdgdgdggdgg", )
+
+//                launchEndCallActivity(context, savedNumber, callStartTime, endTime, callType)
+                CallEndLaunchHelper.openAfterCallEnded(context, savedNumber, Date(callStartTime), Date(endTime), callType)
 
                 // Reset
                 prefs.edit().apply {

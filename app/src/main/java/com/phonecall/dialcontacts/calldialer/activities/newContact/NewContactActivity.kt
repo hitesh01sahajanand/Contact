@@ -14,6 +14,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,6 +29,11 @@ import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSBannerSmall
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSInterDisplayClick
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSNativeDisplay
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSUtilitis
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.adapters.AllAccountAdapter
 import com.phonecall.dialcontacts.calldialer.databinding.ActivityNewContactBinding
@@ -74,8 +80,34 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-
+        Common.hideSystemUI(this)
         initView()
+        loadAds()
+    }
+
+    private fun loadAds() {
+        if (ADSMainClass.getOtherAdsShow()) {
+            if (ADSMainClass.getOtherAdsType().equals("native")) {
+                ADSNativeDisplay.loadAdmobNativeAdBig(
+                    ADSMainClass.getStringValue(ADSMainClass.OTHER_SCREEN_NATIVE),
+                    findViewById(R.id.flNativeSmallPlaceholder),
+                    findViewById(R.id.shimmer_container_banner),
+                    "small",
+                    this
+                )
+            } else {
+                ADSBannerSmall.loadAdMobBanner(
+                    ADSMainClass.getStringValue(ADSMainClass.OTHER_SCREEN_BANNER),
+                    findViewById(R.id.flBannerSmallPlaceholder),
+                    findViewById(R.id.shimmer_container_banner),
+                    this
+                )
+            }
+        } else {
+            findViewById<View>(R.id.shimmer_container_banner).visibility = View.GONE
+            findViewById<View>(R.id.flNativeSmallPlaceholder).visibility = View.GONE
+            findViewById<View>(R.id.flBannerSmallPlaceholder).visibility = View.GONE
+        }
     }
 
     private val pickImageLauncher = registerForActivityResult(
@@ -177,7 +209,9 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             val accountName = accountInfo.first
             val accountType = accountInfo.second
             val accName =
-                if (accountName != null && accountName.contains("@")) accountName.substringBefore("@") else getString(R.string.device_only)
+                if (accountName != null && accountName.contains("@")) accountName.substringBefore("@") else getString(
+                    R.string.device_only
+                )
             val email = if (accountName != null && accountName.contains("@")) accountName else ""
             val itemData = AccountModel(
                 name = accName,
@@ -220,6 +254,22 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         binding.selectBirthday.setOnClickListener {
             showDatePicker { date -> binding.selectBirthday.text = date }
         }
+
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                loadInterAd()
+            }
+        })
+    }
+
+    fun loadInterAd() {
+        ADSInterDisplayClick.ADSBackDisplayInterstitial(
+            this@NewContactActivity,
+            ADSMainClass.getStringValue(ADSMainClass.INTER_FIRST_TIME),
+            { _ ->
+                finish()
+            })
     }
 
     private fun updateAccountUI(model: AccountModel) {

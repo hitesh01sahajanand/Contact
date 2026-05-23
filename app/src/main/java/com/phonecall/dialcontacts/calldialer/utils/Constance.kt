@@ -36,4 +36,5 @@ object Constance {
     const val DUO: String = "com.google.android.apps.tachyon"
     val videoCallList: Array<String> = arrayOf(WHATSAPP, WHATSAPP_BUSINESS, DUO)
     const val OVERLAY_PERMISSION_SKIP = "overlay_permission_skip"
+    const val NOTIFICATION_PERMISSION_SKIP = "notification_permission_skip"
 }

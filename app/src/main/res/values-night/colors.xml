@@ -24,4 +24,5 @@
     <color name="light_blue">#1A1A1A</color>
     <color name="view_color2">#1A1A1A</color>
     <color name="line_color">#66CDD1D6</color>
+    <color name="exo_black_opacity_60">#99FFFFFF</color>
 </resources>

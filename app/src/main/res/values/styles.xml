@@ -43,7 +43,7 @@
 
     <style name="TextStyle.ExtraLarge" parent="TextStyle">
         <item name="android:fontFamily">@font/fig_tree_semi_bold</item>
-        <item name="android:textSize">@dimen/_22sdp</item>
+        <item name="android:textSize">@dimen/_21sdp</item>
     </style>
 
     <style name="TransparentDialog" parent="Theme.Design.Light.BottomSheetDialog">

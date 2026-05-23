@@ -8,6 +8,8 @@
     <color name="divider_grey">#55808080</color>
     <color name="red">#F44336</color>
 
+    <color name="bg_view">#F5F6FB</color>
+
 
     <color name="grey_color">#6B7173</color>
     <color name="action_call_color">#4CAF50</color>
@@ -38,6 +40,7 @@
 
     <color name="tools_theme">#1FBCF8</color>
     <color name="transparent">#00000000</color>
+    <color name="exo_black_opacity_60">#98000000</color>
 
 
 </resources>

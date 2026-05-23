@@ -56,9 +56,9 @@
 
     <application
         android:name=".Advertisement.MyApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
+        android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
@@ -67,7 +67,15 @@
         android:theme="@style/Theme.ContanctManager">
         <activity
             android:name=".activities.endCall.CallEndActivity"
-            android:exported="false" />
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:showOnLockScreen="false"
+            android:taskAffinity=""
+            android:theme="@style/TransparentTheme"
+            android:turnScreenOn="false"
+            android:windowSoftInputMode="adjustPan" />
+
         <activity
             android:name=".activities.endCall.EndCallActivity"
             android:excludeFromRecents="true"
@@ -79,6 +87,15 @@
             android:taskAffinity=""
             android:turnScreenOn="true"
             tools:ignore="LockedOrientationActivity" />
+
+        <activity
+            android:name=".activities.overlayPermission.OverlayPermissionActivity"
+            android:allowEmbedded="true"
+            android:configChanges="keyboardHidden"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleInstance"
+            android:noHistory="true" />
         <activity
             android:name=".activities.storageLocation.StorageLocationActivity"
             android:exported="false" />
@@ -134,6 +151,7 @@
             android:screenOrientation="portrait"
             android:showOnLockScreen="true"
             android:turnScreenOn="true"
+            android:theme="@style/Theme.CallActivity"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.DIAL" />
@@ -213,6 +231,17 @@
             </intent-filter>
         </service>
 
+        <service
+            android:name=".callEndUtils.CallEndReceiver"
+            android:exported="true"
+            android:foregroundServiceType="phoneCall"
+            android:permission="android.permission.BIND_SCREENING_SERVICE"
+            tools:ignore="ForegroundServicePermission">
+            <intent-filter>
+                <action android:name="android.telecom.CallScreeningService" />
+            </intent-filter>
+        </service>
+
         <receiver
             android:name=".receivers.ReminderReceiver"
             android:exported="false" />
@@ -231,12 +260,30 @@
                 <action android:name="android.intent.action.PHONE_STATE" />
                 <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.USER_PRESENT" />
                 <action android:name="com.example.autostart.ACTION_IMPLICIT_BROADCAST" />
                 <action android:name="com.example.autostart.ACTION_EXPLICIT_BROADCAST" />
 
                 <category android:name="com.example.autostart.CATEGORY_AUTOSTART" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".receivers.DailyNotificationReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".Advertisement.MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"

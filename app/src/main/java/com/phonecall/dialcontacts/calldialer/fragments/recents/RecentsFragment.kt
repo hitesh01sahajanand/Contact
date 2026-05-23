@@ -60,7 +60,11 @@ class RecentsFragment : Fragment(), OnClickHandler {
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
-        if (!hidden && PermissionManager.hasCallLogPermissions(requireActivity())) {
+        if (hidden) {
+            if (::adapter.isInitialized) {
+                adapter.clearSelection()
+            }
+        } else if (PermissionManager.hasCallLogPermissions(requireActivity())) {
             viewModel.loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
         }
     }

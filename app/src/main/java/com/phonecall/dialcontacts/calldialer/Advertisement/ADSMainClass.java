@@ -4,6 +4,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import android.telephony.TelephonyManager;
+import android.util.Log;
+
+
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -11,6 +17,7 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ADSMainClass {
 
@@ -569,7 +576,7 @@ public class ADSMainClass {
         return new Gson().fromJson(json, type);
     }
 
-    public static String getDeviceCountry(Context context) {
+    /*public static String getDeviceCountry(Context context) {
         if (getCountryGetWithIp() && !getIpCountryName().isEmpty()) {
             return getIpCountryName().toUpperCase();
         }
@@ -590,6 +597,40 @@ public class ADSMainClass {
                 return "";
             }
         }
+    }*/
+
+    public static String getDeviceCountry(Context context) {
+
+        if (getCountryGetWithIp() && !getIpCountryName().isEmpty()) {
+            return getIpCountryName();
+        }
+
+        try {
+            TelephonyManager tm =
+                    (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+
+            String countryCode = tm.getNetworkCountryIso();
+
+            if (countryCode == null || countryCode.isEmpty()) {
+                countryCode = tm.getSimCountryIso();
+            }
+
+            if (countryCode == null || countryCode.isEmpty()) {
+                countryCode = Locale.getDefault().getCountry();
+            }
+
+            if (countryCode != null && !countryCode.isEmpty()) {
+
+                Locale locale = new Locale("", countryCode);
+
+                return locale.getDisplayCountry();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return "";
     }
 
     public static boolean isCountryAllowedForCallEnd(Context context) {
@@ -706,11 +747,13 @@ public class ADSMainClass {
 
     public static void setNotificationCountries(List<String> countries) {
         String json = new Gson().toJson(countries);
+        Log.e("TAG", "Saving Countries = " + json);
         ADSPrefManage().edit().putString(NOTIFICATION_COUNTRY, json).apply();
     }
 
     public static List<String> getNotificationCountries() {
         String json = ADSPrefManage().getString(NOTIFICATION_COUNTRY, "[]");
+        Log.e("TAG", "Reading Countries = " + json);
         Type type = new TypeToken<ArrayList<String>>() {
         }.getType();
         return new Gson().fromJson(json, type);
@@ -808,27 +851,27 @@ public class ADSMainClass {
             // Scenario 2: Notification + Call State
             boolean result = checkDaysAndCountry(installDays, getNotificationCallInstallDays(),
                     currentCountry, getNotificationCallCountries());
-            android.util.Log.d("CallEndCheck", "Scenario 2 Result: " + result);
+            Log.d("CallEndCheck", "Scenario 2 Result: " + result);
             return result;
 
         } else if (notif) {
             // Scenario 1: Only Notification
             if (!isFcmTrigger) {
-                android.util.Log.d("CallEndCheck", "Blocked: Scenario 1 but not an FCM trigger");
+                Log.d("CallEndCheck", "Blocked: Scenario 1 but not an FCM trigger");
                 return false;
             }
-            boolean result = checkDaysAndCountry(installDays, getNotificationInstallDays(),
-                    currentCountry, getNotificationCountries());
-            android.util.Log.d("CallEndCheck", "Scenario 1 Result: " + result);
+            boolean result = checkDaysAndCountry(installDays, getNotificationInstallDays(), currentCountry, getNotificationCountries());
+            Log.d("CallEndCheck", "Scenario 1 Result: " + result);
             return result;
         }
 
-        android.util.Log.d("CallEndCheck", "Blocked: No matching scenario (possibly no notification permission)");
+        Log.d("CallEndCheck", "Blocked: No matching scenario (possibly no notification permission)");
         return false;
     }
 
     private static boolean checkDaysAndCountry(long currentDays, int requiredDays,
                                                String currentCountry, List<String> allowedCountries) {
+        Log.d("CallEndCheck", "Scenario 1 Result:ddddd " +allowedCountries + "  "+ currentCountry );
         if (currentDays < requiredDays) return false;
 
         if (allowedCountries == null || allowedCountries.isEmpty()) return true;
@@ -1216,16 +1259,16 @@ public class ADSMainClass {
     }
 
     public static void scheduleInstallDayWorker(Context context) {
-        androidx.work.PeriodicWorkRequest installDayWorkRequest =
+        PeriodicWorkRequest installDayWorkRequest =
 //                new androidx.work.PeriodicWorkRequest.Builder(InstallDayWorker.class, 15, java.util.concurrent.TimeUnit.MINUTES)
-                new androidx.work.PeriodicWorkRequest.Builder(InstallDayWorker.class, 24, java.util.concurrent.TimeUnit.HOURS)
+                new PeriodicWorkRequest.Builder(InstallDayWorker.class, 24, java.util.concurrent.TimeUnit.HOURS)
                         .addTag("InstallDayWork")
                         .build();
 
-        androidx.work.WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 "InstallDayUniqueWork",
 //                androidx.work.ExistingPeriodicWorkPolicy.REPLACE,
-                androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+                ExistingPeriodicWorkPolicy.KEEP,
                 installDayWorkRequest
         );
 //        android.util.Log.d("ADSMainClass", "InstallDayWorker scheduled for every 15 minutes (Testing).");
