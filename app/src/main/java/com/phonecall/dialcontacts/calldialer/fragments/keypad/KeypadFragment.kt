@@ -203,7 +203,13 @@ class KeypadFragment : Fragment(), OnClickHandler {
                 appendDigit(view.id)
             }
             val digitStr = keyMap[view.id]
-            if (digitStr != null && digitStr.matches(Regex("[1-9]"))) {
+            if (digitStr == "0") {
+                view.setOnLongClickListener {
+                    binding.edtDisplayNumber.append("+")
+                    binding.buttonDelete.visibility = View.VISIBLE
+                    true
+                }
+            } else if (digitStr != null && digitStr.matches(Regex("[1-9]"))) {
                 view.setOnLongClickListener {
                     val slot = digitStr.toInt()
                     handleSpeedDial(slot)

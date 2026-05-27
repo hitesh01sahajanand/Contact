@@ -369,4 +369,10 @@
     <string name="feel_like">Percepita</string>
     <string name="this_action_may_contains_ads">Questa azione potrebbe contenere annunci</string>
 
+    <string name="whatsapp">WhatsApp</string>
+    <string name="voice_call">Chiamata vocale</string>
+    <string name="type">Tipo</string>
+    <string name="enable_notification_permission">Abilita l autorizzazione alle notifiche per ricevere in tempo reale avvisi importanti, chiamate in arrivo e aggiornamenti dell app.</string>
+    <string name="selected">%1$d selezionato/i</string>
+
 </resources>

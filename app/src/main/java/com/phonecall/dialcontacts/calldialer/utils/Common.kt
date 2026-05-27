@@ -101,6 +101,9 @@ import java.util.Locale
 
 object Common {
 
+    @JvmField
+    var backCount: Int = 0
+
     val profileColors = listOf(
         R.color.color_1,
         R.color.color_2,
@@ -223,16 +226,23 @@ object Common {
 
 
     fun hideSystemUI(activity: Activity) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            activity.window?.decorView?.post {
+        activity.window?.decorView?.post {
+            activity.window?.let { window ->
+                val controller = WindowCompat.getInsetsController(window, window.decorView)
+                controller.hide(WindowInsetsCompat.Type.navigationBars())
+                controller.systemBarsBehavior =
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        }
+    }
 
-                activity.window?.insetsController?.let { controller ->
-
-                    controller.hide(WindowInsets.Type.navigationBars())
-
-                    controller.systemBarsBehavior =
-                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                }
+    fun showSystemUI(activity: Activity) {
+        activity.window?.decorView?.post {
+            activity.window?.let { window ->
+                val controller = WindowCompat.getInsetsController(window, window.decorView)
+                controller.show(WindowInsetsCompat.Type.navigationBars())
+                controller.systemBarsBehavior =
+                    WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
             }
         }
     }

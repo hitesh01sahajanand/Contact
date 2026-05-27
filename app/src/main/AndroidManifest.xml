@@ -53,6 +53,7 @@
         android:maxSdkVersion="29"
         tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:name=".Advertisement.MyApplication"
@@ -69,7 +70,7 @@
             android:name=".activities.endCall.CallEndActivity"
             android:excludeFromRecents="true"
             android:exported="true"
-            android:launchMode="singleTask"
+            android:launchMode="singleTop"
             android:showOnLockScreen="false"
             android:taskAffinity=""
             android:theme="@style/TransparentTheme"

@@ -270,6 +270,7 @@ class LanguageActivity : AppCompatActivity(), OnClickHandler {
 
         if (ADSMainClass.getSplashToLanguage()) {
             if (!ADSMainClass.getLanguageScreen()) {
+                ADSUtilitis.trackScreen(this@LanguageActivity, "LANGUAGE_TO_PERMISSION")
                 val intent = Intent(this, PermissionActivity::class.java)
                 intent.putExtra("language", true)
                 startActivity(intent)

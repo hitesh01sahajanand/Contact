@@ -36,7 +36,27 @@ class SplashActivity : BaseSplashActivity() {
     private val requestPermissionLauncher =
         registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
-        ) { _ ->
+        ) { permissions ->
+            val notificationGranted =
+                permissions[if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    Manifest.permission.POST_NOTIFICATIONS
+                } else {
+                    Log.d("TAG", "no need to notification permission: ")
+                }] == true
+
+            val callGranted = permissions[Manifest.permission.CALL_PHONE] == true
+
+            Log.d("Permission", "Notification: $notificationGranted")
+            Log.d("Permission", "Call: $callGranted")
+
+            if (notificationGranted) {
+                ADSUtilitis.trackScreen(this@SplashActivity, "Notification_Allow")
+            }
+
+            if (callGranted) {
+                ADSUtilitis.trackScreen(this@SplashActivity, "Call_State_Allow")
+            }
+
             proceedToNext()
         }
 
@@ -146,7 +166,7 @@ class SplashActivity : BaseSplashActivity() {
                     ADSUtilitis.trackScreen(this@SplashActivity, "Splash_TO_Language")
                     startActivity(Intent(this@SplashActivity, LanguageActivity::class.java))
                     finish()
-                }else{
+                } else {
                     ADSUtilitis.trackScreen(this@SplashActivity, "Splash_TO_Main")
                     startActivity(Intent(this, HomeActivity::class.java), options.toBundle())
                     finish()
@@ -154,6 +174,7 @@ class SplashActivity : BaseSplashActivity() {
 
             } else {
                 if (!isLogIN) {
+                    ADSUtilitis.trackScreen(this@SplashActivity, "Splash_TO_PERMISSION")
                     startActivity(Intent(this, PermissionActivity::class.java))
                     finish()
                 } else {
@@ -164,6 +185,7 @@ class SplashActivity : BaseSplashActivity() {
             }
         } else {
             if (!isLogIN) {
+                ADSUtilitis.trackScreen(this@SplashActivity, "Splash_TO_PERMISSION")
                 startActivity(Intent(this, PermissionActivity::class.java))
                 finish()
             } else {

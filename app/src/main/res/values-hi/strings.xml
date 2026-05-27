@@ -368,5 +368,10 @@
     <string name="phone_number_not_found">फोन नंबर नहीं मिला</string>
     <string name="feel_like">महसूस</string>
     <string name="this_action_may_contains_ads">इस क्रिया में विज्ञापन शामिल हो सकते हैं</string>
+    <string name="whatsapp">व्हाट्सएप</string>
+    <string name="voice_call">वॉइस कॉल</string>
+    <string name="type">प्रकार</string>
+    <string name="enable_notification_permission">महत्वपूर्ण अलर्ट, आने वाली कॉल और ऐप अपडेट की रियल-टाइम जानकारी पाने के लिए नोटिफिकेशन अनुमति सक्षम करें।</string>
+    <string name="selected">%1$d चयनित</string>
 
 </resources>

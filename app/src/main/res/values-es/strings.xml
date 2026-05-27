@@ -370,4 +370,10 @@
     <string name="feel_like">Sensación térmica</string>
     <string name="this_action_may_contains_ads">Esta acción puede contener anuncios</string>
 
+    <string name="whatsapp">WhatsApp</string>
+    <string name="voice_call">Llamada de voz</string>
+    <string name="type">Tipo</string>
+    <string name="enable_notification_permission">Activa el permiso de notificaciones para mantenerte actualizado en tiempo real sobre alertas importantes, llamadas entrantes y actualizaciones de la aplicación.</string>
+    <string name="selected">%1$d seleccionado(s)</string>
+
 </resources>

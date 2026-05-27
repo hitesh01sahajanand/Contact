@@ -370,4 +370,10 @@
     <string name="feel_like">体感温度</string>
     <string name="this_action_may_contains_ads">この操作には広告が含まれる場合があります</string>
 
+    <string name="whatsapp">WhatsApp</string>
+    <string name="voice_call">音声通話</string>
+    <string name="type">タイプ</string>
+    <string name="enable_notification_permission">重要な通知、着信、アプリの更新情報をリアルタイムで受け取るために、通知権限を有効にしてください。</string>
+    <string name="selected">%1$d 件選択済み</string>
+
 </resources>

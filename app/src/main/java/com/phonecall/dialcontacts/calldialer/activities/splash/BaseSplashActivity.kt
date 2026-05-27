@@ -34,6 +34,7 @@ import com.phonecall.dialcontacts.calldialer.BuildConfig
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.utils.ManegeUtilsView
 import com.phonecall.dialcontacts.calldialer.utils.ManegeUtilsView.ssfsfsfsf
+import com.posthog.PostHog
 import org.json.JSONArray
 import org.json.JSONObject
 import java.security.MessageDigest
@@ -319,8 +320,8 @@ abstract class BaseSplashActivity : AppCompatActivity() {
                             call_end_bacK_inter.getBoolean("notification_screen_back_ads_show")
                         val call_end_inter_ads_type =
                             call_end_bacK_inter.getString("call_end_inter_ads_type")
-                        val call_end_inter_day_count =
-                            call_end_bacK_inter.getLong("call_end_inter_day_count")
+                        val call_end_inter_day_count = call_end_bacK_inter.getLong("call_end_inter_day_count")
+                        val callend_again_open_count = call_end_bacK_inter.getLong("callend_again_open_count")
                         val call_end_inter_active_total_show_count =
                             call_end_bacK_inter.getLong("call_end_inter_active_total_show_count")
                         val callend_inter_ad_id =
@@ -348,6 +349,12 @@ abstract class BaseSplashActivity : AppCompatActivity() {
                                 call_end_inter_day_count
                             )
                         )
+                        ADSMainClass.setCallEndAgainOpenCount(
+                            Math.toIntExact(
+                                callend_again_open_count
+                            )
+                        )
+
                         ADSMainClass.setCallEndInterShowCount(
                             Math.toIntExact(
                                 call_end_inter_active_total_show_count
@@ -657,7 +664,7 @@ abstract class BaseSplashActivity : AppCompatActivity() {
     }
 
     private fun app_next_screen_showing() {
-//        PostHog.capture(event = "splashOpen")
+        PostHog.capture(event = "splashOpen")
         ADSAppManage.AppStartingScreenOpen = true
         initActivity()
     }

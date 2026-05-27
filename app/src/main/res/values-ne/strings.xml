@@ -369,4 +369,10 @@
     <string name="feel_like">महसुस हुने</string>
     <string name="this_action_may_contains_ads">यस कार्यमा विज्ञापनहरू समावेश हुन सक्छन्</string>
 
+    <string name="whatsapp">व्हाट्सएप</string>
+    <string name="voice_call">भ्वाइस कल</string>
+    <string name="type">प्रकार</string>
+    <string name="enable_notification_permission">महत्त्वपूर्ण सूचना, आउने कल र एप अपडेटहरू रियल-टाइममा प्राप्त गर्न नोटिफिकेशन अनुमति सक्षम गर्नुहोस्।</string>
+    <string name="selected">%1$d चयन गरिएको</string>
+
 </resources>

@@ -39,6 +39,8 @@ import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
+import com.google.firebase.FirebaseApp
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSBannerSmall
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSInterDisplayClick
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
@@ -47,6 +49,7 @@ import com.phonecall.dialcontacts.calldialer.Advertisement.ADSNativeDisplay
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSUtilitis
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
 import com.phonecall.dialcontacts.calldialer.R
+import com.phonecall.dialcontacts.calldialer.callEndUtils.PreferenceDayCycle
 import com.phonecall.dialcontacts.calldialer.databinding.ActivityHomeBinding
 import com.phonecall.dialcontacts.calldialer.fragments.contacts.ContactsFragment
 import com.phonecall.dialcontacts.calldialer.fragments.favorites.FavoritesFragment
@@ -170,6 +173,42 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
         SharedPreferenceManager.putBoolean(this, Constance.OVERLAY_PERMISSION_SKIP, true)
     }
 
+    private val overlayHandler = Handler(Looper.getMainLooper())
+
+    private val overlayPermissionChecker = object : Runnable {
+        override fun run() {
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+                if (Settings.canDrawOverlays(this@HomeActivity)) {
+                    ADSUtilitis.trackScreen(this@HomeActivity, "Overlay_Allow")
+
+                    // Permission granted
+                    SharedPreferenceManager.putBoolean(
+                        this@HomeActivity,
+                        Constance.OVERLAY_PERMISSION_SKIP,
+                        true
+                    )
+
+                    ADSAppManage.isAppOpenBlocked = true
+
+                    // App automatically foreground me aa jayegi
+                    val intent = Intent(this@HomeActivity, HomeActivity::class.java)
+                    intent.addFlags(
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                                Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    )
+                    startActivity(intent)
+
+                    return
+                }
+            }
+
+            // 500ms baad fir check karega
+            overlayHandler.postDelayed(this, 500)
+        }
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeManager.applyAppTheme(this)
@@ -195,6 +234,12 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
         }
 
         initView()
+
+        if (savedInstanceState != null) {
+            ADSMainClass.IS_AD_SHOWING = 0
+        } else {
+            setAppRetention()
+        }
     }
 
     override fun onResume() {
@@ -329,23 +374,25 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
                         Constance.OVERLAY_PERMISSION_SKIP,
                         true
                     )
-                    ADSAppManage.isAppOpenBlocked = true
                     val intent = Intent(
                         Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         "package:$packageName".toUri()
                     )
                     overlayPermissionLauncher.launch(intent)
+                    overlayHandler.post(overlayPermissionChecker)
+                    ADSAppManage.isAppOpenBlocked = true
                 }
             } else {
                 // Just allowed Contacts/Call Log: go directly to Overlay settings for a seamless experience
                 isFromPermissionRequest = true
                 SharedPreferenceManager.putBoolean(this, Constance.OVERLAY_PERMISSION_SKIP, true)
-                ADSAppManage.isAppOpenBlocked = true
                 val intent = Intent(
                     Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                     "package:$packageName".toUri()
                 )
                 overlayPermissionLauncher.launch(intent)
+                overlayHandler.post(overlayPermissionChecker)
+                ADSAppManage.isAppOpenBlocked = true
             }
         }
 
@@ -606,6 +653,39 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
                 }
             }
         })
+    }
+
+    private fun setAppRetention() {
+        PreferenceDayCycle.HomeCheckAndUpdateDayCount(this)
+        val dayCount: Int = PreferenceDayCycle.getHomeDayCount(this)
+        if (dayCount > 0 && dayCount <= 7) {
+            setAppRetentionLogEvent(dayCount)
+        }
+    }
+
+    private fun setAppRetentionLogEvent(dayCount: Int) {
+        FirebaseApp.initializeApp(this)
+        val firebaseAnalytics = FirebaseAnalytics.getInstance(this)
+        val bundle = Bundle()
+
+        if (dayCount == 1 && !ADSMainClass.getHomeRetention1Day()) {
+            bundle.putBoolean("OneDayHomeRetention", true)
+            firebaseAnalytics.logEvent("OneDayHomeRetention", bundle)
+            ADSMainClass.setHomeRetention1Day(true)
+        } else if (dayCount == 3 && !ADSMainClass.getHomeRetention3Day()) {
+            bundle.putBoolean("ThreeDayHomeRetention", true)
+            firebaseAnalytics.logEvent("ThreeDayHomeRetention", bundle)
+            ADSMainClass.setHomeRetention3Day(true)
+        } else if (dayCount == 7 && !ADSMainClass.getHomeRetention7Day()) {
+            bundle.putBoolean("SevenDayHomeRetention", true)
+            firebaseAnalytics.logEvent("SevenDayHomeRetention", bundle)
+            ADSMainClass.setHomeRetention7Day(true)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        overlayHandler.removeCallbacks(overlayPermissionChecker)
     }
 
 

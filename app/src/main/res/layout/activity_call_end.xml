@@ -22,9 +22,10 @@
             android:id="@+id/main"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="@dimen/_10sdp"
+            android:layout_marginTop="@dimen/_8sdp"
             android:background="@color/bg_color"
             android:orientation="vertical"
+            android:visibility="visible"
             tools:context=".activities.endCall.EndCallActivity">
 
             <LinearLayout
@@ -35,15 +36,17 @@
                 android:orientation="vertical">
 
                 <LinearLayout
+                    android:id="@+id/ll_header_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
                     android:orientation="horizontal"
-                    android:padding="@dimen/_10sdp">
+                    android:padding="@dimen/_5sdp">
 
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/cv_add_photo"
-                        android:layout_width="@dimen/_60sdp"
-                        android:layout_height="@dimen/_60sdp"
+                        android:layout_width="@dimen/_55sdp"
+                        android:layout_height="@dimen/_55sdp"
                         android:layout_gravity="start"
                         android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
                         app:cardBackgroundColor="@color/color_3"
@@ -125,6 +128,7 @@
                                     android:singleLine="true"
                                     android:text=""
                                     android:textColor="@color/black_color"
+                                    android:textSize="@dimen/_11sdp"
                                     android:visibility="visible" />
 
                                 <TextView
@@ -140,6 +144,7 @@
                                     android:singleLine="true"
                                     android:text=""
                                     android:textColor="@color/grey_color"
+                                    android:textSize="@dimen/_11sdp"
                                     android:visibility="visible" />
 
                             </LinearLayout>
@@ -153,6 +158,7 @@
                                 android:gravity="start"
                                 android:text=""
                                 android:textColor="@color/black_color"
+                                android:textSize="@dimen/_11sdp"
                                 android:visibility="visible" />
 
                         </LinearLayout>
@@ -165,9 +171,9 @@
 
                             <ImageView
                                 android:id="@+id/iv_call"
-                                android:layout_width="@dimen/_28sdp"
-                                android:layout_height="@dimen/_28sdp"
-                                android:src="@mipmap/ic_launcher_round" />
+                                android:layout_width="@dimen/_32sdp"
+                                android:layout_height="@dimen/_32sdp"
+                                android:src="@mipmap/ic_launcher" />
 
                         </androidx.cardview.widget.CardView>
 
@@ -184,7 +190,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="@dimen/_10sdp"
+                    android:layout_margin="@dimen/_5sdp"
                     android:orientation="horizontal">
 
                     <LinearLayout
@@ -198,8 +204,8 @@
                         android:orientation="vertical">
 
                         <ImageView
-                            android:layout_width="@dimen/_36sdp"
-                            android:layout_height="@dimen/_36sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:src="@drawable/ic_call_info" />
 
                         <TextView
@@ -227,8 +233,8 @@
                         android:orientation="vertical">
 
                         <ImageView
-                            android:layout_width="@dimen/_36sdp"
-                            android:layout_height="@dimen/_36sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:src="@drawable/ic_add_contact_" />
 
                         <TextView
@@ -257,8 +263,8 @@
                         android:orientation="vertical">
 
                         <ImageView
-                            android:layout_width="@dimen/_36sdp"
-                            android:layout_height="@dimen/_36sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:src="@drawable/ic_message_info" />
 
                         <TextView
@@ -286,8 +292,8 @@
                         android:orientation="vertical">
 
                         <ImageView
-                            android:layout_width="@dimen/_36sdp"
-                            android:layout_height="@dimen/_36sdp"
+                            android:layout_width="@dimen/_34sdp"
+                            android:layout_height="@dimen/_34sdp"
                             android:src="@drawable/ic_contact_" />
 
                         <TextView
@@ -314,7 +320,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="@dimen/_10sdp"
-                android:layout_marginTop="@dimen/_10sdp"
+                android:layout_marginTop="@dimen/_5sdp"
                 app:cardBackgroundColor="@color/main_color"
                 app:cardCornerRadius="@dimen/_10sdp"
                 app:strokeWidth="0dp">
@@ -323,7 +329,6 @@
                     android:id="@+id/wsfw_tabslayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="7dp"
                     android:background="@color/main_color"
                     app:tabIconTint="@color/tab_icon_selector"
                     app:tabIndicatorColor="@color/white_" />
@@ -578,7 +583,7 @@
 
         </LinearLayout>
 
-        <RelativeLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/rlFullAd"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -588,7 +593,11 @@
                 android:id="@+id/fullAdContainer"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical" />
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <LinearLayout
                 android:id="@+id/ivClose"
@@ -597,7 +606,9 @@
                 android:layout_alignParentEnd="true"
                 android:layout_margin="@dimen/_8sdp"
                 android:padding="@dimen/_3sdp"
-                android:visibility="gone">
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
                 <ImageView
                     android:layout_width="@dimen/_23sdp"
@@ -610,7 +621,7 @@
 
             </LinearLayout>
 
-        </RelativeLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </LinearLayout>
 
 

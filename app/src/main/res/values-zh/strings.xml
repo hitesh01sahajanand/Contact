@@ -370,5 +370,11 @@
     <string name="feel_like">体感温度</string>
     <string name="this_action_may_contains_ads">此操作可能包含广告</string>
 
+    <string name="whatsapp">WhatsApp</string>
+    <string name="voice_call">语音通话</string>
+    <string name="type">类型</string>
+    <string name="enable_notification_permission">启用通知权限，以实时获取重要提醒、来电和应用更新。</string>
+    <string name="selected">已选择 %1$d 项</string>
+
 
 </resources>

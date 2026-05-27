@@ -369,4 +369,10 @@
     <string name="feel_like">รู้สึกเหมือน</string>
     <string name="this_action_may_contains_ads">การดำเนินการนี้อาจมีโฆษณา</string>
 
+    <string name="whatsapp">วอตส์แอป</string>
+    <string name="voice_call">การโทรด้วยเสียง</string>
+    <string name="type">ประเภท</string>
+    <string name="enable_notification_permission">เปิดใช้งานสิทธิ์การแจ้งเตือนเพื่อรับการแจ้งเตือนสำคัญ สายเรียกเข้า และการอัปเดตแอปแบบเรียลไทม์</string>
+    <string name="selected">เลือกแล้ว %1$d รายการ</string>
+
 </resources>

@@ -231,8 +231,7 @@ class RecentAdapter(
             val isSelected = isSelectionMode && selectedEntries.contains(data)
             binding.llMainView.setBackgroundResource(backgroundRes)
             if (isSelected) {
-                binding.llMainView.backgroundTintList =
-                    ColorStateList.valueOf(ContextCompat.getColor(context, R.color.border_color_2))
+                binding.llMainView.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.border_color_2))
             } else {
                 binding.llMainView.backgroundTintList = null
             }

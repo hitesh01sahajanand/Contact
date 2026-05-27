@@ -5,21 +5,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.ColorStateList;
-import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.ContactsContract;
+import android.os.Looper;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.WindowInsets;
-import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.RatingBar;
@@ -79,20 +76,17 @@ import com.phonecall.dialcontacts.calldialer.utils.Common;
 import com.phonecall.dialcontacts.calldialer.utils.Constance;
 
 import dagger.hilt.android.AndroidEntryPoint;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
-import kotlinx.coroutines.CoroutineScope;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Executors;
 
 import com.phonecall.dialcontacts.calldialer.utils.OnClickHandler;
 
 @AndroidEntryPoint
 public class CallEndActivity extends AppCompatActivity implements OnClickHandler {
     ActivityCallEndBinding binding;
+    private Boolean isAdsShowComplete = false;
 
     /**
      * When true, do not push overlay permission flow (call end opened via full-screen / lock notification).
@@ -159,16 +153,22 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
         binding.setOnClickHandler(this);
         Common.INSTANCE.hideSystemUI(this);
 
-        View mainView = binding.main;
-        ViewCompat.setOnApplyWindowInsetsListener(mainView, (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.white));
-
-        Log.e("TAG", "onCreate dfgdgd: " + getIntent().getBooleanExtra("is_from_fcm", false));
+//        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.white));
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowInsetsController controller = getWindow().getInsetsController();
+            if (controller != null) {
+                controller.setSystemBarsAppearance(
+                        WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                        WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+                );
+            }
+        }*/
 
         if (getIntent() != null && getIntent().getBooleanExtra("is_from_fcm", false)) {
             boolean notif = ADSMainClass.isNotificationGranted(this);
@@ -183,7 +183,6 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
                 ADSUtilitis.trackScreen(this, "FB_Notification_show_CallEnd_Allow1");
             }
         }
-        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.white));
 
 
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -214,12 +213,13 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
 
 
         setCallEndEvent();
-        setOverLayPermission();
+//        setOverLayPermission();
         setAppRetention();
 
         String callType = getIntent().getStringExtra("CallType");
         boolean isFirebaseFlow = "Notification".equalsIgnoreCase(callType) || "call_end".equalsIgnoreCase(callType);
         if (isFirebaseFlow) {
+            Common.INSTANCE.showSystemUI(this);
             binding.main.setVisibility(View.GONE);
             binding.rlFullAd.setVisibility(View.VISIBLE);
             binding.fullAdContainer.setVisibility(View.VISIBLE);
@@ -246,6 +246,7 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
 
                 if (ADSMainClass.getCallEndBottomAdsShow()) {
                     if (ADSMainClass.getCallEndBottomAdsType().equalsIgnoreCase("native")) {
+                        Common.INSTANCE.showSystemUI(this);
                         loadAdmobNative(this);
                     } else {
                         loadAdmobBannerAd();
@@ -253,19 +254,9 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
                 } else {
                     binding.linearBannerShimmer.setVisibility(View.GONE);
                 }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    WindowInsetsController controller = getWindow().getInsetsController();
-                    if (controller != null) {
-                        controller.hide(WindowInsets.Type.navigationBars());
-                        controller.setSystemBarsBehavior(
-                                WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                        );
-                    }
-                }
+                Common.INSTANCE.hideSystemUI(this);
 //                getDetails();
             }
-
-            Log.e("TAG", "onCreate:dggdggd " + ADSMainClass.getCloseButtonShowOnFullNativeAds());
 
             if (ADSMainClass.getCloseButtonShowOnFullNativeAds()) {
                 binding.ivClose.setVisibility(View.VISIBLE);
@@ -273,26 +264,21 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
                 binding.ivClose.setVisibility(View.GONE);
             }
         } else {
+            Common.INSTANCE.hideSystemUI(this);
             binding.main.setVisibility(View.VISIBLE);
             binding.fullAdContainer.setVisibility(View.GONE);
             binding.rlFullAd.setVisibility(View.GONE);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                WindowInsetsController controller = getWindow().getInsetsController();
-                if (controller != null) {
-                    controller.hide(WindowInsets.Type.navigationBars());
-                    controller.setSystemBarsBehavior(
-                            WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                    );
-                }
-            }
+            Common.INSTANCE.hideSystemUI(this);
             getDetails();
         }
 
         if (!isFirebaseFlow) {
             if (ADSMainClass.getCallEndBottomAdsShow()) {
                 if (ADSMainClass.getCallEndBottomAdsType().equalsIgnoreCase("native")) {
+                    Common.INSTANCE.showSystemUI(this);
                     loadAdmobNative(this);
                 } else {
+                    Common.INSTANCE.hideSystemUI(this);
                     loadAdmobBannerAd();
                 }
             } else {
@@ -410,7 +396,7 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
         });
 
         if (ADSUtilitis.IsNetworkConnected(this) && ADSMainClass.shouldShowCallEndAd(this)) {
-            CallEndInterAd.admobFullScreenAdLoad(this);
+            CallEndInterAd.loadAd(this);
         }
         sendFirebaseEvent(this, "CallEndActivity", "CallEndActivity");
     }
@@ -556,6 +542,7 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
     }*/
 
     public void getBack() {
+
         String callType = getIntent().getStringExtra("CallType");
         boolean isFirebaseFlow = "Notification".equalsIgnoreCase(callType) || "call_end".equalsIgnoreCase(callType);
 
@@ -565,14 +552,40 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
         } else {
             showAd = ADSMainClass.shouldShowCallEndAd(this);
         }
+        int openCount = getIntent().getIntExtra("open_count", 0);
+        int limit = ADSMainClass.getCallEndAgainOpenCount();
 
-        if (showAd && !ADSMainClass.getAds_Free()) {
-            CallEndInterAd.fullScreenAdShow(this, b -> {
-                if (b) {
-                    ADSMainClass.updateCallEndAdCount(this);
+        if (openCount < limit) {
+            if (!isAdsShowComplete) {
+                Context appContext = getApplicationContext();
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    try {
+                        Intent intent = new Intent(appContext, CallEndActivity.class);
+                        if (getIntent().getExtras() != null) {
+                            intent.putExtras(getIntent().getExtras());
+                        }
+                        intent.putExtra("open_count", openCount + 1);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK 
+                                | Intent.FLAG_ACTIVITY_CLEAR_TOP 
+                                | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        appContext.startActivity(intent);
+                    } catch (Exception e) {
+                        Log.e("TAG", "Failed to start activity from app context", e);
+                    }
+                }, 2000);
+                finish();
+            } else {
+                if (showAd && !ADSMainClass.getAds_Free()) {
+                    CallEndInterAd.fullScreenAdShow(this, b -> {
+                        if (b) {
+                            ADSMainClass.updateCallEndAdCount(this);
+                        }
+                        new Handler().postDelayed(this::finish, 1000);
+                    });
+                } else {
+                    finish();
                 }
-                new Handler().postDelayed(this::finish, 1000);
-            });
+            }
         } else {
             finish();
         }
@@ -669,6 +682,8 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
         }
     }
 
+
+
     @Override
     protected void onDestroy() {
         if (adView != null) {
@@ -744,12 +759,14 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
             @Override
             public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
                 super.onAdFailedToLoad(loadAdError);
+                isAdsShowComplete = false;
                 binding.linearBannerShimmer.setVisibility(View.GONE);
             }
 
             @Override
             public void onAdLoaded() {
                 super.onAdLoaded();
+                isAdsShowComplete = true;
                 binding.linearBannerShimmer.setVisibility(View.GONE);
             }
         });
@@ -758,6 +775,8 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
     public void loadAdmobNative(final Context context) {
         AdLoader.Builder builder = new AdLoader.Builder(context, ADSMainClass.getStringValue(ADSMainClass.CALL_END_Native).trim())
                 .forNativeAd(nativeAd -> {
+
+                    isAdsShowComplete = true;
                     binding.linearBannerShimmer.setVisibility(View.GONE);
                     FirebaseAnalytics firebaseAnalytics;
                     firebaseAnalytics = FirebaseAnalytics.getInstance(context);
@@ -789,6 +808,7 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
         AdLoader adLoader = builder.withAdListener(new AdListener() {
                     @Override
                     public void onAdFailedToLoad(LoadAdError adError) {
+                        isAdsShowComplete = false;
                         if (AdmobNativeAd != null) {
                             AdmobNativeAd = null;
                         }
@@ -806,7 +826,6 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
     }
 
     public static void PopulateUnifiedFullNativeAdView(NativeAd nativeAd, NativeAdView adView, boolean flag) {
-        Log.e("TAG", "PopulateUnifiedFullNativeAdView: kkkkk");
         MediaView mediaView = adView.findViewById(R.id.ad_media);
 
         adView.setMediaView(mediaView);
@@ -973,6 +992,8 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
         } else if (id == binding.llContact.getId()) {
             Common.INSTANCE.openHomeActivity(this, "contacts");
             finish();
+        } else if (id == binding.llHeaderContainer.getId()) {
+            openMainActivity();
         }
     }
 }

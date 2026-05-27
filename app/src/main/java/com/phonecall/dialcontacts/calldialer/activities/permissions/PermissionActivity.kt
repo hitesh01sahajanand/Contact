@@ -4,6 +4,7 @@ import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.telecom.TelecomManager
@@ -35,7 +36,7 @@ import com.phonecall.dialcontacts.calldialer.utils.Common.isValidClick
 import com.phonecall.dialcontacts.calldialer.utils.OnClickHandler
 import com.phonecall.dialcontacts.calldialer.utils.ThemeManager
 import dagger.hilt.android.AndroidEntryPoint
-import kotlin.jvm.java
+import androidx.core.net.toUri
 
 @AndroidEntryPoint
 class PermissionActivity : AppCompatActivity(), OnClickHandler {
@@ -98,7 +99,18 @@ class PermissionActivity : AppCompatActivity(), OnClickHandler {
 
         val termsClickable = object : ClickableSpan() {
             override fun onClick(widget: View) {
-                Toast.makeText(widget.context, "Terms clicked", Toast.LENGTH_SHORT).show()
+                val privacyPolicyUrl = ADSMainClass.getPrivacyPolicy()
+                if (privacyPolicyUrl != null && privacyPolicyUrl != "") {
+                    val intent = Intent(Intent.ACTION_VIEW, privacyPolicyUrl.toUri())
+                    startActivity(intent)
+                } else {
+                    Toast.makeText(
+                        this@PermissionActivity,
+                        "Something went wrong!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+//                Toast.makeText(widget.context, "Terms clicked", Toast.LENGTH_SHORT).show()
             }
 
             override fun updateDrawState(ds: TextPaint) {
@@ -115,6 +127,17 @@ class PermissionActivity : AppCompatActivity(), OnClickHandler {
 
         val privacyClickable = object : ClickableSpan() {
             override fun onClick(widget: View) {
+                val privacyPolicyUrl = ADSMainClass.getPrivacyPolicy()
+                if (privacyPolicyUrl != null && privacyPolicyUrl != "") {
+                    val intent = Intent(Intent.ACTION_VIEW, privacyPolicyUrl.toUri())
+                    startActivity(intent)
+                } else {
+                    Toast.makeText(
+                        this@PermissionActivity,
+                        "Something went wrong!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
 
             }
 

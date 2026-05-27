@@ -22,6 +22,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -129,6 +130,18 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         binding.onClickHandler = this
         binding.inIncomingLayout.onClickHandler = this
         binding.inOutgoingCallLayout.onClickHandler = this
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.inOutgoingCallLayout.nestedScrollview) { view, insets ->
+            val statusBarInsets = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+            view.setPadding(
+                view.paddingLeft,
+                statusBarInsets.top,
+                view.paddingRight,
+                view.paddingBottom
+            )
+
+            insets
+        }
 
         makeFullScreenImmersive()
 
@@ -577,11 +590,12 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
 
         call?.playDtmfTone(charValue)
 
-        val isDialPadSound = com.phonecall.dialcontacts.calldialer.utils.SharedPreferenceManager.getBoolean(
-            this,
-            Constance.DIAL_PAD_SOUND,
-            false
-        )
+        val isDialPadSound =
+            com.phonecall.dialcontacts.calldialer.utils.SharedPreferenceManager.getBoolean(
+                this,
+                Constance.DIAL_PAD_SOUND,
+                false
+            )
         if (isDialPadSound) {
             toneMap[viewId]?.let { tone ->
                 toneGenerator?.startTone(tone, 150)

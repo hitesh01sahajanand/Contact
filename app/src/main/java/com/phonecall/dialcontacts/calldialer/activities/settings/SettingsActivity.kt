@@ -11,8 +11,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.media.MediaScannerConnection
-import android.net.Uri
 import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -37,10 +37,10 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSBannerSmall
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSNativeDisplay
-import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.activities.blockNumbers.BlockNumbersActivity
 import com.phonecall.dialcontacts.calldialer.activities.language.LanguageActivity
@@ -404,6 +404,18 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
             }
 
             binding.llPrivacyPolicy.id -> {
+                if (!ADSMainClass.getPrivacyPolicy().equals("")) {
+                    ADSAppManage.isAppOpenBlocked = true
+                    startActivity(
+                        Intent(
+                            "android.intent.action.VIEW",
+                            Uri.parse(ADSMainClass.getPrivacyPolicy())
+                        )
+                    )
+                } else {
+                    Toast.makeText(this, "Something went wrong!", Toast.LENGTH_SHORT)
+                        .show()
+                }
 
             }
         }

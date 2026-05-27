@@ -369,4 +369,10 @@
     <string name="feel_like">Ощущается как</string>
     <string name="this_action_may_contains_ads">Это действие может содержать рекламу</string>
 
+    <string name="whatsapp">WhatsApp</string>
+    <string name="voice_call">Голосовой вызов</string>
+    <string name="type">Тип</string>
+    <string name="enable_notification_permission">Включите разрешение на уведомления, чтобы получать важные оповещения, входящие звонки и обновления приложения в режиме реального времени.</string>
+    <string name="selected">%1$d выбрано</string>
+
 </resources>

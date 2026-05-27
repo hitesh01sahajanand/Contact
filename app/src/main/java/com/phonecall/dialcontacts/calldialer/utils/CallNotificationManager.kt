@@ -142,11 +142,11 @@ class CallNotificationManager(private val context: Context) {
         )
 
         val builder = NotificationCompat.Builder(context, CALL_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_call)
+            .setSmallIcon(R.drawable.notification_call)
             .setLargeIcon(
                 BitmapFactory.decodeResource(
                     context.resources,
-                    R.mipmap.ic_launcher_round
+                    R.drawable.notification_call
                 )
             )
             .setColor(ContextCompat.getColor(context, R.color.main_color))
@@ -175,11 +175,11 @@ class CallNotificationManager(private val context: Context) {
 
     private fun buildEmptyNotification(): Notification {
         return NotificationCompat.Builder(context, CALL_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_call)
+            .setSmallIcon(R.drawable.notification_call)
             .setLargeIcon(
                 BitmapFactory.decodeResource(
                     context.resources,
-                    R.mipmap.ic_launcher_round
+                    R.drawable.notification_call
                 )
             )
             .setColor(ContextCompat.getColor(context, R.color.main_color))
@@ -215,7 +215,7 @@ class CallNotificationManager(private val context: Context) {
             .setLargeIcon(
                 BitmapFactory.decodeResource(
                     context.resources,
-                    R.mipmap.ic_launcher_round
+                    R.drawable.notification_call
                 )
             )
             .setColor(ContextCompat.getColor(context, R.color.red))

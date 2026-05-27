@@ -369,4 +369,10 @@
     <string name="feel_like">Ressenti</string>
     <string name="this_action_may_contains_ads">Cette action peut contenir des publicités</string>
 
+    <string name="whatsapp">WhatsApp</string>
+    <string name="voice_call">Appel vocal</string>
+    <string name="type">Type</string>
+    <string name="enable_notification_permission">Activez l autorisation des notifications pour rester informé en temps réel des alertes importantes, des appels entrants et des mises à jour de l application.</string>
+    <string name="selected">%1$d sélectionné(s)</string>
+
 </resources>

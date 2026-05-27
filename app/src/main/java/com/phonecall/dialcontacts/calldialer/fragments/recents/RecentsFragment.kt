@@ -191,10 +191,15 @@ class RecentsFragment : Fragment(), OnClickHandler {
             binding.cvSearch.isVisible = !isSelectionMode*/
             if (!isSelectionMode) {
                 binding.cbSelectAll.isChecked = false
+                binding.tvCount.text = ""
             }
         }
 
-        binding.llAll.setOnClickListener {
+        adapter.onSelectionCountChanged = { count ->
+            binding.tvCount.text = requireActivity().getString(R.string.selected, count)
+        }
+
+        binding.llSelectionContact.setOnClickListener {
             val isChecked = !binding.cbSelectAll.isChecked
             binding.cbSelectAll.isChecked = isChecked
 
@@ -205,7 +210,7 @@ class RecentsFragment : Fragment(), OnClickHandler {
             }
         }
 
-        binding.tvDoneSelection.setOnClickListener {
+        binding.ivDelete.setOnClickListener {
             val selected = adapter.getSelectedEntries()
             if (selected.isNotEmpty()) {
                 viewModel.deleteHistory(selected)
@@ -306,6 +311,10 @@ class RecentsFragment : Fragment(), OnClickHandler {
                     selectedTypeFilter = type
                     updateAdapterList()
                 })
+            }
+
+            binding.ivBack.id -> {
+                adapter.clearSelection()
             }
         }
     }
@@ -428,6 +437,7 @@ class RecentsFragment : Fragment(), OnClickHandler {
             dialog.dismiss()
         }
     }
+
     fun clearSearch() {
         if (::binding.isInitialized) {
             binding.edtSearch.setText("")

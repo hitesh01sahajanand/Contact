@@ -368,4 +368,10 @@
     <string name="phone_number_not_found">Telefonnummer nicht gefunden</string>
     <string name="feel_like">Gefühlt wie</string>
     <string name="this_action_may_contains_ads">Diese Aktion kann Werbung enthalten</string>
+
+    <string name="whatsapp">WhatsApp</string>
+    <string name="voice_call">Sprachanruf</string>
+    <string name="type">Typ</string>
+    <string name="enable_notification_permission">Aktivieren Sie die Benachrichtigungsberechtigung, um wichtige Hinweise, eingehende Anrufe und App-Updates in Echtzeit zu erhalten.</string>
+    <string name="selected">%1$d ausgewählt</string>
 </resources>

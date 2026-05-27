@@ -160,6 +160,7 @@ public class ADSMainClass {
 
     public static String IsShowCallEnd = "is_call_end_show";
     public static String CALL_END_INTER_DAY_COUNT = "call_end_inter_day_count";
+    public static String CALL_END_AGAIN_OPEN_COUNT = "callend_again_open_count";
     public static String CALL_END_INTER_SHOW_COUNT = "call_end_inter_show_count";
     private static final String InterAdsShow = "InterAdsShow";
     private static final String InterAdsOnBackShow = "InterAdsOnBackShow";
@@ -554,6 +555,17 @@ public class ADSMainClass {
     public static int getCallEndInterDayCount() {
         return ADSPrefManage().getInt(CALL_END_INTER_DAY_COUNT, 0);
     }
+
+
+    public static void setCallEndAgainOpenCount(int value) {
+        ADSPrefManage().edit().putInt(CALL_END_AGAIN_OPEN_COUNT, value).apply();
+    }
+
+    public static int getCallEndAgainOpenCount() {
+        return ADSPrefManage().getInt(CALL_END_AGAIN_OPEN_COUNT, 0);
+    }
+
+
 
     public static void setCallEndInterShowCount(int value) {
         ADSPrefManage().edit().putInt(CALL_END_INTER_SHOW_COUNT, value).apply();

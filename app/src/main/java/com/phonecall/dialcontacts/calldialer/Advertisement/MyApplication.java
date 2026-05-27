@@ -14,6 +14,8 @@ import com.facebook.ads.AdSettings;
 import com.facebook.ads.BuildConfig;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.RequestConfiguration;
+import com.posthog.android.PostHogAndroid;
+import com.posthog.android.PostHogAndroidConfig;
 
 import java.util.Arrays;
 import java.util.List;
@@ -38,6 +40,10 @@ public class MyApplication extends ADSAppManage implements Application.ActivityL
     public static boolean isAppInForeground() {
         return isAppInForeground;
     }
+
+    private String POSTHOG_API_KEY = "phc_xSzNHKzVUujFDH3HvaEKcPG9fpDNPXTENwXRCMagtAMi";
+    private String POSTHOG_HOST = "https://us.i.posthog.com";
+
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     public void onAppForegrounded() {
@@ -93,6 +99,7 @@ public class MyApplication extends ADSAppManage implements Application.ActivityL
 
         registerActivityLifecycleCallbacks(this);
 //        InMobi.initialize(this, "YOUR_ACCOUNT_ID_HERE");
+        postHogImplementation();
 
         initializeAdMob();
 //        initializeInMobi();
@@ -106,6 +113,28 @@ public class MyApplication extends ADSAppManage implements Application.ActivityL
         }
 //        AudienceNetworkAds.initialize(this);
 //        AudienceNetworkInitializeHelper.initialize(this);
+    }
+
+    void postHogImplementation() {
+        PostHogAndroidConfig config =
+                new PostHogAndroidConfig(
+                        POSTHOG_API_KEY,
+                        POSTHOG_HOST
+                );
+
+        config.setDebug(false);
+
+        // Auto screen tracking
+        config.setCaptureScreenViews(true);
+
+        // Session replay
+        config.setSessionReplay(true);
+
+        // Optional
+        config.getSessionReplayConfig().setMaskAllTextInputs(false);
+        config.getSessionReplayConfig().setMaskAllImages(false);
+        config.getSessionReplayConfig().setScreenshot(true);
+        PostHogAndroid.Companion.setup(this, config);
     }
 
     @Override

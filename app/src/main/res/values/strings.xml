@@ -376,5 +376,6 @@
     <string name="voice_call">Voice Call</string>
     <string name="type">Type</string>
     <string name="enable_notification_permission">Enable notification permission to stay updated with important alerts, incoming calls, and app updates in real time.</string>
+    <string name="selected">%1$d Selected</string>
 
 </resources>

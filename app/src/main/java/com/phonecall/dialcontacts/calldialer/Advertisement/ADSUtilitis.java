@@ -16,6 +16,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.facebook.ads.BuildConfig;
+import com.google.android.gms.ads.AdValue;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.phonecall.dialcontacts.calldialer.R;
 
@@ -165,6 +166,18 @@ public class ADSUtilitis {
 
     public interface No_debug {
         void no_debug();
+    }
+
+    public static void logAdRevenue(Context context, AdValue adValue) {
+        FirebaseAnalytics firebaseAnalytics = FirebaseAnalytics.getInstance(context);
+        double revenue = adValue.getValueMicros() / 1_000_000.0;
+        String currency = adValue.getCurrencyCode();
+        Bundle adRevenueParams = new Bundle();
+        adRevenueParams.putString(FirebaseAnalytics.Param.AD_PLATFORM, "Google Ad Manager");
+        adRevenueParams.putString(FirebaseAnalytics.Param.CURRENCY, currency);
+        adRevenueParams.putDouble(FirebaseAnalytics.Param.VALUE, revenue);
+//        Log.e("TAG11111", "logAdRevenue: " + revenue);
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.AD_IMPRESSION, adRevenueParams);
     }
 
 
