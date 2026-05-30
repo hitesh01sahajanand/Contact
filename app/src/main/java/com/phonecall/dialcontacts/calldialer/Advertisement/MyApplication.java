@@ -9,6 +9,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.OnLifecycleEvent;
+import androidx.work.Configuration;
+import androidx.work.WorkManager;
 
 import com.facebook.ads.AdSettings;
 import com.facebook.ads.BuildConfig;
@@ -24,7 +26,7 @@ import dagger.hilt.android.HiltAndroidApp;
 import kotlin.jvm.Volatile;
 
 @HiltAndroidApp
-public class MyApplication extends ADSAppManage implements Application.ActivityLifecycleCallbacks {
+public class MyApplication extends ADSAppManage implements Application.ActivityLifecycleCallbacks, Configuration.Provider {
 
     private static final String TAG = "MyApplication";
 
@@ -111,6 +113,16 @@ public class MyApplication extends ADSAppManage implements Application.ActivityL
         if (BuildConfig.DEBUG) {
             AdSettings.setTestMode(false);
         }
+
+        if (!WorkManager.isInitialized()) {
+            WorkManager.initialize(this, getWorkManagerConfiguration());
+        }
+
+        try {
+            ADSMainClass.scheduleInstallDayWorker(this);
+        } catch (Exception e) {
+            // Timber.e(e, "Failed to schedule InstallDayWorker")
+        }
 //        AudienceNetworkAds.initialize(this);
 //        AudienceNetworkInitializeHelper.initialize(this);
     }
@@ -150,6 +162,14 @@ public class MyApplication extends ADSAppManage implements Application.ActivityL
         MobileAds.setRequestConfiguration(configuration);
         MobileAds.initialize(this, initializationStatus -> {
         });
+    }
+
+    @NonNull
+    @Override
+    public Configuration getWorkManagerConfiguration() {
+        return new Configuration.Builder()
+                .setMinimumLoggingLevel(Log.INFO)
+                .build();
     }
 
 //    private void initializeInMobi() {

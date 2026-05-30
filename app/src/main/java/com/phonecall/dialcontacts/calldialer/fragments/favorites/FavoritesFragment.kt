@@ -182,6 +182,7 @@ class FavoritesFragment : Fragment(), OnClickHandler {
 
         }
     }
+
     fun clearSearch() {
         if (::binding.isInitialized) {
             binding.edtSearch.setText("")

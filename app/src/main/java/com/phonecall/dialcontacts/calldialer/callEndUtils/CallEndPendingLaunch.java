@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 import androidx.core.app.NotificationManagerCompat;
 
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage;
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass;
 import com.phonecall.dialcontacts.calldialer.activities.endCall.CallEndActivity;
 
@@ -79,7 +80,7 @@ public final class CallEndPendingLaunch {
         long endMs = p.getLong(KEY_END, 0L);
         String callType = p.getString(KEY_TYPE, "");
         String duration = p.getString(KEY_DURATION, "00:00");
-
+        ADSAppManage.isAppOpenBlocked = true;
         Intent intent = new Intent(app, CallEndActivity.class);
         intent.putExtra("mobile_number", number);
         intent.putExtra("StartTime", startMs);

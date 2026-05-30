@@ -25,8 +25,10 @@ class SuggestionAdapter(
                 val filtered = if (charString.isEmpty()) {
                     contactList
                 } else {
+                    val normalizedQuery = normalizeDialSearch(charString)
                     contactList.filter {
-                        it.number?.contains(charString, ignoreCase = true) == true
+                        val number = it.number ?: return@filter false
+                        normalizeDialSearch(number).contains(normalizedQuery, ignoreCase = true)
                     }
                 }
                 return FilterResults().apply { values = filtered }
@@ -75,10 +77,33 @@ class SuggestionAdapter(
         notifyDataSetChanged()
     }
 
+    /**
+     * Updates the full contact list and immediately applies [query] filter.
+     * If [query] is non-empty, skips the intermediate notifyDataSetChanged so
+     * all contacts never flash on screen before filtering completes.
+     */
+    fun addAllAndFilter(list: ArrayList<ContactModel>, query: String) {
+        contactList.clear()
+        contactList.addAll(list)
+        if (query.isEmpty()) {
+            filteredList.clear()
+            filteredList.addAll(list)
+            notifyDataSetChanged()
+            onFilterComplete(filteredList.size)
+        } else {
+            // Do NOT notify yet — let filter's publishResults handle the single update
+            filter.filter(query)
+        }
+    }
+
     fun filter(query: String): List<ContactModel> {
         filter.filter(query)
-        return filteredList // Note: this will return the OLD list until publishResults is called, but KeypadFragment only uses it for visibility which might be a problem.
+        return filteredList
     }
+
+    /** Strips spaces/dashes etc. so "79900 88990" matches dial-pad input "7990088990". */
+    private fun normalizeDialSearch(value: String): String =
+        value.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }
 
     class SuggestionHolder(private val binding: SuggestionDesignBinding) :
         RecyclerView.ViewHolder(binding.root) {

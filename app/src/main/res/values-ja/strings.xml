@@ -99,6 +99,7 @@
     <string name="about">情報</string>
     <string name="rate_us">評価する</string>
     <string name="privacy_policy">プライバシーポリシー</string>
+    <string name="terms_of_service">利用規約</string>
     <string name="mobile">モバイル</string>
     <string name="dark_mode">ダークモード</string>
     <string name="set_default">デフォルトモード</string>
@@ -159,7 +160,7 @@
     <string name="smart_contact_app_to_">通話、番号、お気に入りを簡単に管理できる\nスマートな連絡先アプリ</string>
     <string name="call_search_and_save_contacts">通話、検索、連絡先の保存</string>
     <string name="sync_from_all_gmail_sim_amp_phone"><![CDATA[Gmail、SIM、電話から同期]]></string>
-    <string name="we_don_t_collect_personal">個人情報や機密データは収集しません。データはデバイス内に安全に保持されます。利用規約およびプライバシーポリシー</string>
+    <string name="we_don_t_collect_personal">個人情報や機密データは収集しません。データはデバイス内に安全に保持されます。%1$sおよび%2$s</string>
     <string name="to_make_receive_calls_set_this_app">通話の発信・受信を行うには、このアプリを\nデフォルトのダイヤラーに設定してください。スキップも可能です</string>
     <string name="permissions_required">権限</string>
     <string name="call_logs">通話履歴</string>
@@ -375,5 +376,9 @@
     <string name="type">タイプ</string>
     <string name="enable_notification_permission">重要な通知、着信、アプリの更新情報をリアルタイムで受け取るために、通知権限を有効にしてください。</string>
     <string name="selected">%1$d 件選択済み</string>
+    <string name="leave_page">ページを離れますか？</string>
+    <string name="your_changes_won_t_be_saved">変更内容は保存されません。</string>
+    <string name="okay">OK</string>
+    <string name="sync_contact_successfully">連絡先の同期が完了しました</string>
 
 </resources>

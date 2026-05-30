@@ -152,7 +152,7 @@
                     android:layout_marginTop="@dimen/_5sdp">
 
 
-                    <EditText
+                    <com.phonecall.dialcontacts.calldialer.fragments.keypad.DialPadDisplayEditText
                         android:id="@+id/edt_display_number"
                         style="@style/TextStyle.Large"
                         android:layout_width="match_parent"
@@ -160,7 +160,7 @@
                         android:background="@null"
                         android:backgroundTint="@color/border_color"
                         android:gravity="center"
-                        android:maxLength="22"
+                        android:importantForAutofill="no"
                         android:paddingHorizontal="@dimen/_30sdp"
                         android:paddingVertical="@dimen/_6sdp"
                         android:singleLine="true"

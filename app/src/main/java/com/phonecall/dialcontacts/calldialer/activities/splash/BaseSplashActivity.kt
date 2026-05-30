@@ -25,7 +25,6 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppStarting
-import com.phonecall.dialcontacts.calldialer.Advertisement.ADSInterDisplayClick
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass.SHOW_FULL_SCREEN_INTENT_PERMISSION
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSUtilitis
@@ -39,9 +38,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
-import kotlin.text.equals
 
-abstract class BaseSplashActivity : AppCompatActivity() {
+abstract class
+BaseSplashActivity : AppCompatActivity() {
     lateinit var decrypted: String
     var iv_firebaseRemoteConfig: FirebaseRemoteConfig? = null
     private lateinit var version: String
@@ -436,7 +435,7 @@ abstract class BaseSplashActivity : AppCompatActivity() {
                         )
 
 
-                        /*ADSMainClass.setStringValue(ADSMainClass.PERMISSION_SCREEN_NATIVE, permission_native_id)
+                        ADSMainClass.setStringValue(ADSMainClass.PERMISSION_SCREEN_NATIVE, permission_native_id)
                         ADSMainClass.setStringValue(ADSMainClass.PERMISSION_SCREEN_BANNER, permission_banner_id)
 
                         ADSMainClass.setStringValue(ADSMainClass.LANGUAGE_SCREEN_NATIVE, language_native_id)
@@ -444,8 +443,8 @@ abstract class BaseSplashActivity : AppCompatActivity() {
 
                         ADSMainClass.setStringValue(ADSMainClass.HOME_SCREEN_NATIVE, home_native_id)
                         ADSMainClass.setStringValue(ADSMainClass.HOME_SCREEN_BANNER, home_banner_id)
-                        ADSMainClass.setStringValue(ADSMainClass.HOME_SCREEN_NATIVE1, home_screen_native1)
-                        ADSMainClass.setStringValue(ADSMainClass.HOME_SCREEN_NATIVE2, home_screen_native2)
+                        /*ADSMainClass.setStringValue(ADSMainClass.HOME_SCREEN_NATIVE1, home_screen_native1)
+                        ADSMainClass.setStringValue(ADSMainClass.HOME_SCREEN_NATIVE2, home_screen_native2)*/
 
                         ADSMainClass.setStringValue(ADSMainClass.CONTACT_DETAIL_SCREEN_NATIVE, contact_details_screen_native_id)
                         ADSMainClass.setStringValue(ADSMainClass.CONTACT_DETAIL_SCREEN_BANNER, contact_details_screen_banner_id)
@@ -465,10 +464,10 @@ abstract class BaseSplashActivity : AppCompatActivity() {
                         ADSMainClass.setStringValue(ADSMainClass.INTER_SECOND_TIME, inter_second_time)
                         ADSMainClass.setStringValue(ADSMainClass.OTHER_SCREEN_NATIVE, other_native_id)
                         ADSMainClass.setStringValue(ADSMainClass.OTHER_SCREEN_BANNER, other_banner_id)
-                        ADSMainClass.setStringValue(ADSMainClass.EXIT_SCREEN_NATIVE, exit_native_id)*/
+                        ADSMainClass.setStringValue(ADSMainClass.EXIT_SCREEN_NATIVE, exit_native_id)
 
 
-                        ADSMainClass.setStringValue(
+                        /*ADSMainClass.setStringValue(
                             ADSMainClass.LANGUAGE_SCREEN_NATIVE,
                             "ca-app-pub-3940256099942544/2247696110"
                         )
@@ -568,7 +567,7 @@ abstract class BaseSplashActivity : AppCompatActivity() {
                         ADSMainClass.setStringValue(
                             ADSMainClass.OTHER_SCREEN_BANNER,
                             "ca-app-pub-3940256099942544/9214589741"
-                        )
+                        )*/
 
 
 

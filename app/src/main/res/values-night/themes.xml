@@ -4,12 +4,18 @@
         <!-- Customize your dark theme here. -->
         <item name="colorPrimary">@color/main_color</item>
         <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/black_color</item>
         <item name="android:windowBackground">@color/bg_color</item>
         <item name="android:statusBarColor">@color/bg_color</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
 
-    <style name="TransparentTheme" parent="@style/Theme.AppCompat.DayNight.NoActionBar">
+    <style name="TransparentTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/main_color</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/black_color</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowContentOverlay">@null</item>

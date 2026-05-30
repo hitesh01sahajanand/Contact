@@ -92,11 +92,14 @@ dependencies {
     implementation("com.facebook.android:facebook-android-sdk:18.2.3")
     implementation("com.facebook.android:audience-network-sdk:6.21.0")
     implementation("com.facebook.infer.annotation:infer-annotation:0.18.0")
-    implementation("com.google.ads.mediation:facebook:6.21.0.0")
+    implementation("com.google.ads.mediation:facebook:6.21.0.0") {
+        // Jacoco is a desktop/test tool; R8 fails on java.lang.instrument.* references
+        exclude(group = "org.jacoco", module = "org.jacoco.core")
+    }
     implementation("com.facebook.shimmer:shimmer:0.5.0")
 
     //google
-    implementation("com.google.android.gms:play-services-ads:23.3.0")
+    implementation("com.google.android.gms:play-services-ads:24.7.0")
 
     //firebase
     implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
@@ -108,9 +111,6 @@ dependencies {
     //gson
     implementation("com.google.code.gson:gson:2.13.1")
 
-    //onesignal
-    implementation("com.onesignal:OneSignal:5.1.6")
-
     //PostHog
     implementation("com.posthog:posthog-android:3.+")
 
@@ -120,5 +120,8 @@ dependencies {
     // in-app update
     implementation("com.google.android.play:app-update:2.1.0")
     implementation("com.google.android.play:app-update-ktx:2.1.0")
+
+    //Work Manager
+    implementation("androidx.work:work-runtime:2.8.1")
 
 }

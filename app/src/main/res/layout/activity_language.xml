@@ -40,7 +40,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                style="@style/TextStyle.Large"
+                style="@style/TextStyle.MediumLarge"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -60,7 +60,7 @@
                 android:paddingHorizontal="@dimen/_20sdp"
                 android:paddingVertical="@dimen/_8sdp"
                 android:text="@string/done"
-                android:textColor="@color/white"
+                android:textColor="@color/white_"
                 app:backgroundTint="@color/main_color"
                 app:cornerRadius="@dimen/_25sdp"
                 app:elevation="0dp" />

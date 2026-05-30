@@ -48,6 +48,7 @@ import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass.EXIT_SCR
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSNativeDisplay
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSUtilitis
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
+import com.phonecall.dialcontacts.calldialer.Advertisement.IPAddressHelper
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.callEndUtils.PreferenceDayCycle
 import com.phonecall.dialcontacts.calldialer.databinding.ActivityHomeBinding
@@ -216,11 +217,7 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
 
         enableEdgeToEdge()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_home)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        Common.setStableStatusBarInsets(findViewById(R.id.main))
         Common.hideSystemUI(this)
         appUpdateManager = AppUpdateManagerFactory.create(this)
         if (ADSMainClass.shouldShowAppUpdate()) {
@@ -239,6 +236,21 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
             ADSMainClass.IS_AD_SHOWING = 0
         } else {
             setAppRetention()
+        }
+
+
+        if (ADSMainClass.getCountryGetWithIp()) {
+            IPAddressHelper.getCountryName(this, object : IPAddressHelper.IPCallback {
+                override fun onResponse(countryName: String?) {
+                    if (!countryName.isNullOrEmpty()) {
+                        ADSMainClass.setIpCountryName(countryName)
+                    }
+                }
+
+                override fun onFailure(e: java.lang.Exception?) {
+//                    Log.e("MainActivity", "IP Country fetch failed: ${e?.message}")
+                }
+            })
         }
     }
 

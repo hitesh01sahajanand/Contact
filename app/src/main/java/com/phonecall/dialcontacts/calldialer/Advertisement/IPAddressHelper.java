@@ -14,7 +14,8 @@ import java.util.concurrent.Executors;
 
 public class IPAddressHelper {
 
-    private static final String API_URL = "https://ip.smartproxy.com/json";
+    private static final String API_URL =
+            "https://pro.ip-api.com/json/?key=RrtTUs6AdrbN4q0&fields=status,countryCode,city,query,proxy,hosting,regionName,country";
     private static final String TAG = "IPAddressHelper";
 
     public interface IPCallback {
@@ -46,10 +47,9 @@ public class IPAddressHelper {
                     in.close();
 
                     JSONObject jsonObject = new JSONObject(response.toString());
-                    if (jsonObject.has("country")) {
-                        JSONObject countryObject = jsonObject.getJSONObject("country");
-                        String countryName = countryObject.optString("name", "");
-                        
+                    if ("success".equalsIgnoreCase(jsonObject.optString("status"))
+                            && jsonObject.has("country")) {
+                        String countryName = jsonObject.optString("country", "");
                         handler.post(() -> callback.onResponse(countryName));
                     } else {
                         handler.post(() -> callback.onFailure(new Exception("Country data not found in response")));
@@ -59,7 +59,7 @@ public class IPAddressHelper {
                 }
                 urlConnection.disconnect();
             } catch (Exception e) {
-                Log.e(TAG, "Error fetching IP data: " + e.getMessage());
+//                Log.e(TAG, "Error fetching IP data: " + e.getMessage());
                 handler.post(() -> callback.onFailure(e));
             }
         });

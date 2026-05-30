@@ -99,6 +99,7 @@
     <string name="about">关于</string>
     <string name="rate_us">给我们评分</string>
     <string name="privacy_policy">隐私政策</string>
+    <string name="terms_of_service">服务条款</string>
     <string name="mobile">手机</string>
     <string name="dark_mode">深色模式</string>
     <string name="set_default">默认模式</string>
@@ -159,7 +160,7 @@
     <string name="smart_contact_app_to_">智能联系人应用，轻松管理通话、\n号码和收藏</string>
     <string name="call_search_and_save_contacts">拨打、搜索并保存联系人</string>
     <string name="sync_from_all_gmail_sim_amp_phone"><![CDATA[从 Gmail、SIM 和手机同步]]></string>
-    <string name="we_don_t_collect_personal">我们不会收集个人或敏感数据。你的数据保持私密。服务条款和隐私政策</string>
+    <string name="we_don_t_collect_personal">我们不会收集个人或敏感数据。你的数据保持私密。%1$s和%2$s</string>
     <string name="to_make_receive_calls_set_this_app">要拨打和接听电话，请将此应用设为默认拨号器，或取消以跳过</string>
     <string name="permissions_required">权限</string>
     <string name="call_logs">通话记录</string>
@@ -375,6 +376,10 @@
     <string name="type">类型</string>
     <string name="enable_notification_permission">启用通知权限，以实时获取重要提醒、来电和应用更新。</string>
     <string name="selected">已选择 %1$d 项</string>
+    <string name="leave_page">离开页面？</string>
+    <string name="your_changes_won_t_be_saved">您的更改将不会被保存。</string>
+    <string name="okay">确定</string>
+    <string name="sync_contact_successfully">联系人同步成功</string>
 
 
 </resources>

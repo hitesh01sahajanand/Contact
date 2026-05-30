@@ -79,7 +79,7 @@
                 android:gravity="center"
                 android:padding="@dimen/_10sdp"
                 android:text="@string/ok"
-                android:textColor="@color/white" />
+                android:textColor="@color/white_" />
 
         </LinearLayout>
 

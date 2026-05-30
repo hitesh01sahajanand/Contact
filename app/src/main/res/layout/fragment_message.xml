@@ -264,7 +264,7 @@
                                 android:gravity="center"
                                 android:paddingVertical="@dimen/_7sdp"
                                 android:text="Yes"
-                                android:textColor="@color/white"
+                                android:textColor="@color/white_"
                                 android:textSize="@dimen/_14sdp" />
 
                             <TextView
@@ -279,7 +279,7 @@
                                 android:gravity="center"
                                 android:paddingVertical="@dimen/_7sdp"
                                 android:text="No"
-                                android:textColor="@color/white"
+                                android:textColor="@color/white_"
                                 android:textSize="@dimen/_14sdp" />
 
                         </LinearLayout>

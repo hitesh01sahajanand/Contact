@@ -2,14 +2,11 @@ package com.phonecall.dialcontacts.calldialer.activities.language
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -64,23 +61,25 @@ class LanguageActivity : AppCompatActivity(), OnClickHandler {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_language)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        Common.setStableStatusBarInsets(findViewById(R.id.main))
         Common.hideSystemUI(this)
         initView()
+    }
+
+    // Prevent black-screen flash: when setApplicationLocales() triggers a recreation
+    // right before finish(), skip recreating this activity since it's already closing.
+    // SettingsActivity (in the back stack) will still be recreated correctly by the system.
+    override fun recreate() {
+        if (!isFinishing) {
+            super.recreate()
+        }
     }
 
     private fun initView() {
         binding.onClickHandler = this
 
         if (ADSMainClass.getLanguageScreenBottomAdShow()) {
-            Log.e("TAG", "onCreate: 1111" )
             if (ADSMainClass.getLanguageAdsType().equals("native")) {
-
-                Log.e("TAG", "onCreate: 222" )
                 ADSNativeDisplay.loadAdmobNativeAdBig(
                     ADSMainClass.getStringValue(ADSMainClass.LANGUAGE_SCREEN_NATIVE),
                     findViewById(R.id.flNativeSmallPlaceholder),
@@ -187,24 +186,19 @@ class LanguageActivity : AppCompatActivity(), OnClickHandler {
                         this@LanguageActivity,
                         ADSMainClass.getStringValue(INTER_FIRST_TIME),
                         { msg ->
-                            Log.e("TAG", "onClick: 11111 " + msg)
-                            pendingLanguageToApply = selectedLanguage.code
-                            if (showIcon) {
-                                Log.e("TAG", "onClick: 2222 ")
-                                shouldFinishOnResume = true
-                            } else {
-                                Log.e("TAG", "onClick: 3333 ")
-                                pendingNavigation = {
+                            LanguageManager.setLanguage(selectedLanguage.code)
+                            binding.root.postDelayed({
+                                if (showIcon) {
+                                    finish()
+                                } else {
                                     if (ADSMainClass.getSplashToLanguage()) {
                                         if (!ADSMainClass.getLanguageScreen()) {
-                                            Log.e("TAG", "onClick: 44444 ")
                                             val intent = Intent(this@LanguageActivity, PermissionActivity::class.java)
                                             intent.putExtra("language", true)
                                             startActivity(intent)
                                             finish()
                                         }
                                     } else {
-                                        Log.e("TAG", "onClick: 55555 ")
                                         ADSMainClass.setLanguageScreen(true)
                                         val firebaseAnalytics = FirebaseAnalytics.getInstance(this@LanguageActivity)
                                         val bundle = Bundle()
@@ -214,30 +208,36 @@ class LanguageActivity : AppCompatActivity(), OnClickHandler {
                                         finish()
                                     }
                                 }
-                            }
+                            }, 200)
                         })
 
                 } else {
-                    Log.e("TAG", "onClick: 66666 ")
-                    if (ADSMainClass.getSplashToLanguage()) {
-                        if (!ADSMainClass.getLanguageScreen()) {
-                            Log.e("TAG", "onClick: 77777 ")
-                            val intent = Intent(this, PermissionActivity::class.java)
-                            intent.putExtra("language", true)
-                            startActivity(intent)
-                            finish()
-                            LanguageManager.setLanguage(selectedLanguage.code)
-                        }
-                    } else {
-                        Log.e("TAG", "onClick: 8888 ")
-                        ADSMainClass.setLanguageScreen(true)
-                        val firebaseAnalytics = FirebaseAnalytics.getInstance(this)
-                        val bundle = Bundle()
-                        bundle.putBoolean("RemoveLanguageFromBack", true)
-                        firebaseAnalytics.logEvent("RemoveLanguageFromBack", bundle)
-                        startActivity(Intent(this, HomeActivity::class.java))
+                    if (showIcon) {
+                        // Opened from Settings — finish first so isFinishing=true
+                        // when AppCompat calls recreate(), suppressing the black flash.
                         finish()
                         LanguageManager.setLanguage(selectedLanguage.code)
+                    } else if (ADSMainClass.getSplashToLanguage()) {
+                        if (!ADSMainClass.getLanguageScreen()) {
+                            LanguageManager.setLanguage(selectedLanguage.code)
+                            binding.root.postDelayed({
+                                val intent = Intent(this@LanguageActivity, PermissionActivity::class.java)
+                                intent.putExtra("language", true)
+                                startActivity(intent)
+                                finish()
+                            }, 200)
+                        }
+                    } else {
+                        LanguageManager.setLanguage(selectedLanguage.code)
+                        binding.root.postDelayed({
+                            ADSMainClass.setLanguageScreen(true)
+                            val firebaseAnalytics = FirebaseAnalytics.getInstance(this@LanguageActivity)
+                            val bundle = Bundle()
+                            bundle.putBoolean("RemoveLanguageFromBack", true)
+                            firebaseAnalytics.logEvent("RemoveLanguageFromBack", bundle)
+                            startActivity(Intent(this@LanguageActivity, HomeActivity::class.java))
+                            finish()
+                        }, 200)
                     }
                 }
             }
@@ -258,9 +258,9 @@ class LanguageActivity : AppCompatActivity(), OnClickHandler {
                 ADSMainClass.getStringValue(ADSMainClass.INTER_SECOND_TIME),
                 { _ ->
                     if (needsDefaultLang) {
-                        pendingLanguageToApply = "en"
+                        LanguageManager.setLanguage("en")
                         SharedPreferenceManager.putBoolean(this@LanguageActivity, Constance.IS_LOG_IN, true)
-                        shouldFinishOnResume = true
+                        finish()
                     } else {
                         finish()
                     }
@@ -271,27 +271,31 @@ class LanguageActivity : AppCompatActivity(), OnClickHandler {
         if (ADSMainClass.getSplashToLanguage()) {
             if (!ADSMainClass.getLanguageScreen()) {
                 ADSUtilitis.trackScreen(this@LanguageActivity, "LANGUAGE_TO_PERMISSION")
-                val intent = Intent(this, PermissionActivity::class.java)
-                intent.putExtra("language", true)
-                startActivity(intent)
-                finish()
                 if (needsDefaultLang) {
                     LanguageManager.setLanguage("en")
                     SharedPreferenceManager.putBoolean(this, Constance.IS_LOG_IN, true)
                 }
+                binding.root.postDelayed({
+                    val intent = Intent(this@LanguageActivity, PermissionActivity::class.java)
+                    intent.putExtra("language", true)
+                    startActivity(intent)
+                    finish()
+                }, 200)
             }
         } else {
-            ADSMainClass.setLanguageScreen(true)
-            val firebaseAnalytics = FirebaseAnalytics.getInstance(this)
-            val bundle = Bundle()
-            bundle.putBoolean("RemoveLanguageFromBack", true)
-            firebaseAnalytics.logEvent("RemoveLanguageFromBack", bundle)
-            startActivity(Intent(this, HomeActivity::class.java))
-            finish()
             if (needsDefaultLang) {
                 LanguageManager.setLanguage("en")
                 SharedPreferenceManager.putBoolean(this, Constance.IS_LOG_IN, true)
             }
+            binding.root.postDelayed({
+                ADSMainClass.setLanguageScreen(true)
+                val firebaseAnalytics = FirebaseAnalytics.getInstance(this@LanguageActivity)
+                val bundle = Bundle()
+                bundle.putBoolean("RemoveLanguageFromBack", true)
+                firebaseAnalytics.logEvent("RemoveLanguageFromBack", bundle)
+                startActivity(Intent(this@LanguageActivity, HomeActivity::class.java))
+                finish()
+            }, 200)
         }
     }
 
@@ -309,8 +313,8 @@ class LanguageActivity : AppCompatActivity(), OnClickHandler {
             } else {
                 val nav = pendingNavigation
                 pendingNavigation = null
-                nav?.invoke()
                 LanguageManager.setLanguage(langCode)
+                nav?.invoke()
             }
         }
     }

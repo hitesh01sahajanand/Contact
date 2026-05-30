@@ -99,6 +99,7 @@
     <string name="about">À propos</string>
     <string name="rate_us">Évaluez-nous</string>
     <string name="privacy_policy">Politique de confidentialité</string>
+    <string name="terms_of_service">Conditions d utilisation</string>
     <string name="mobile">Mobile</string>
     <string name="dark_mode">Mode sombre</string>
     <string name="set_default">Mode par défaut</string>
@@ -159,7 +160,7 @@
     <string name="smart_contact_app_to_">Application de contacts intelligente pour gérer les appels,\nnuméros et favoris facilement</string>
     <string name="call_search_and_save_contacts">Appeler, rechercher et enregistrer des contacts</string>
     <string name="sync_from_all_gmail_sim_amp_phone"><![CDATA[Synchroniser depuis Gmail, SIM & Téléphone]]></string>
-    <string name="we_don_t_collect_personal">Nous ne collectons pas de données personnelles ou sensibles. Vos données restent privées. Conditions d utilisation et politique de confidentialité</string>
+    <string name="we_don_t_collect_personal">Nous ne collectons pas de données personnelles ou sensibles. Vos données restent privées. %1$s et %2$s</string>
     <string name="to_make_receive_calls_set_this_app">Pour passer et recevoir des appels, définissez cette application comme\ndéfinie ou annulez pour ignorer</string>
     <string name="permissions_required">Autorisation</string>
     <string name="call_logs">Journal des appels</string>
@@ -374,5 +375,10 @@
     <string name="type">Type</string>
     <string name="enable_notification_permission">Activez l autorisation des notifications pour rester informé en temps réel des alertes importantes, des appels entrants et des mises à jour de l application.</string>
     <string name="selected">%1$d sélectionné(s)</string>
+
+    <string name="leave_page">Quitter la page ?</string>
+    <string name="your_changes_won_t_be_saved">Vos modifications ne seront pas enregistrées.</string>
+    <string name="okay">D accord</string>
+    <string name="sync_contact_successfully">Contact synchronisé avec succès</string>
 
 </resources>

@@ -8,7 +8,6 @@
             name="OnClickHandler"
             type="com.phonecall.dialcontacts.calldialer.utils.OnClickHandler" />
 
-
     </data>
 
     <LinearLayout
@@ -30,8 +29,8 @@
 
         <com.google.android.material.circularreveal.cardview.CircularRevealCardView
             android:id="@+id/cv_filter"
-            android:layout_width="@dimen/_35sdp"
-            android:layout_height="@dimen/_35sdp"
+            android:layout_width="@dimen/_36sdp"
+            android:layout_height="@dimen/_36sdp"
             android:layout_gravity="center_vertical"
             android:foreground="?attr/selectableItemBackground"
             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
@@ -45,7 +44,7 @@
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:padding="@dimen/_10sdp"
+                android:padding="@dimen/_9sdp"
                 android:src="@drawable/ic_filter"
                 app:tint="@color/black_color" />
 
@@ -53,8 +52,8 @@
 
         <com.google.android.material.circularreveal.cardview.CircularRevealCardView
             android:id="@+id/cv_add"
-            android:layout_width="@dimen/_35sdp"
-            android:layout_height="@dimen/_35sdp"
+            android:layout_width="@dimen/_36sdp"
+            android:layout_height="@dimen/_36sdp"
             android:layout_gravity="center_vertical"
             android:foreground="?attr/selectableItemBackground"
             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
@@ -68,7 +67,7 @@
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:padding="@dimen/_10sdp"
+                android:padding="@dimen/_9sdp"
                 android:src="@drawable/ic_add"
                 app:tint="@color/black_color" />
 
@@ -76,8 +75,8 @@
 
         <com.google.android.material.circularreveal.cardview.CircularRevealCardView
             android:id="@+id/cv_more"
-            android:layout_width="@dimen/_35sdp"
-            android:layout_height="@dimen/_35sdp"
+            android:layout_width="@dimen/_36sdp"
+            android:layout_height="@dimen/_36sdp"
             android:layout_gravity="center_vertical"
             android:foreground="?attr/selectableItemBackground"
             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
@@ -92,7 +91,7 @@
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:padding="@dimen/_10sdp"
+                android:padding="@dimen/_9sdp"
                 android:src="@drawable/ic_more"
                 app:tint="@color/black_color" />
 

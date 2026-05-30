@@ -98,6 +98,7 @@
     <string name="about">About</string>
     <string name="rate_us">Rate Us</string>
     <string name="privacy_policy">Privacy Policy</string>
+    <string name="terms_of_service">Terms of Service</string>
     <string name="mobile">Mobile</string>
     <string name="dark_mode">Dark Mode</string>
     <string name="set_default">Default Mode</string>
@@ -159,7 +160,7 @@
     <string name="smart_contact_app_to_">Smart contact app to manage calls,\nnumbers, favorites easily</string>
     <string name="call_search_and_save_contacts">Call, Search and Save Contacts</string>
     <string name="sync_from_all_gmail_sim_amp_phone"><![CDATA[Sync from all Gmail, SIM & Phone]]></string>
-    <string name="we_don_t_collect_personal">We don’t collect personal or sensitive data.Your data stays private. Terms of Service and Privacy Policy</string>
+    <string name="we_don_t_collect_personal">We don’t collect personal or sensitive data. Your data stays private. %1$s and %2$s</string>
     <string name="to_make_receive_calls_set_this_app">To make receive calls. set this app as the\ndefault dialer or cancel to skip</string>
     <string name="permissions_required">Permission</string>
     <string name="call_logs">Call Logs</string>
@@ -229,6 +230,7 @@
     <string name="select_account_for_import">Select Account for Import</string>
     <string name="importing_contacts">Importing contacts...</string>
     <string name="no_contacts_found_in_file">No contacts found in file</string>
+    <string name="please_select_vcf_file_only">Please select a .vcf contact file only</string>
     <string name="contacts_imported_successfully">%1$d contacts imported successfully</string>
     <string name="error_importing_contacts">Error importing contacts: %1$s</string>
     <string name="import_">import</string>
@@ -377,5 +379,9 @@
     <string name="type">Type</string>
     <string name="enable_notification_permission">Enable notification permission to stay updated with important alerts, incoming calls, and app updates in real time.</string>
     <string name="selected">%1$d Selected</string>
+    <string name="leave_page">Leave Page?</string>
+    <string name="your_changes_won_t_be_saved">Your changes won’t be saved.</string>
+    <string name="okay">Okay</string>
+    <string name="sync_contact_successfully">Sync Contact Successfully</string>
 
 </resources>

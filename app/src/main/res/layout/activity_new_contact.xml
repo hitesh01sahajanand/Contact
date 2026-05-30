@@ -44,7 +44,7 @@
 
             <TextView
                 android:id="@+id/tv_title"
-                style="@style/TextStyle.Medium"
+                style="@style/TextStyle.MediumSemiBold"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -78,7 +78,7 @@
                     android:layout_gravity="center"
                     android:gravity="center"
                     android:paddingHorizontal="@dimen/_18sdp"
-                    android:paddingVertical="@dimen/_8sdp"
+                    android:paddingVertical="@dimen/_7sdp"
                     android:text="@string/save"
                     android:textColor="@color/black_color" />
 
@@ -92,6 +92,8 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginTop="@dimen/_10sdp"
+            android:clipToPadding="false"
+            android:fillViewport="true"
             app:layout_constraintBottom_toTopOf="@+id/banner"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -146,7 +148,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/_10sdp"
-                    android:layout_marginVertical="@dimen/_24sdp"
+                    android:layout_marginTop="@dimen/_24sdp"
                     android:orientation="vertical">
 
                     <com.google.android.material.card.MaterialCardView
@@ -186,7 +188,8 @@
                         android:layout_marginTop="@dimen/_10sdp"
                         android:gravity="center"
                         android:text="@string/add_photo"
-                        android:textColor="@color/black_color" />
+                        android:textColor="@color/black_color"
+                        android:textSize="@dimen/_14sdp" />
 
                 </LinearLayout>
 
@@ -195,7 +198,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/_12sdp"
-                    android:layout_marginTop="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_24sdp"
                     android:background="@drawable/bg_create2"
                     android:orientation="horizontal"
                     android:padding="@dimen/_10sdp"
@@ -345,7 +348,7 @@
                                     android:background="@null"
                                     android:backgroundTint="@color/white"
                                     android:hint="@string/number"
-                                    android:inputType="number"
+                                    android:inputType="phone"
                                     android:paddingHorizontal="@dimen/_5sdp"
                                     android:paddingVertical="@dimen/_8sdp"
                                     android:singleLine="true"
@@ -1104,10 +1107,9 @@
 
             <FrameLayout
                 android:id="@+id/flBannerSmallPlaceholder"
-                style="@style/NativeAdsView" />>
+                style="@style/NativeAdsView" />
 
         </LinearLayout>
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

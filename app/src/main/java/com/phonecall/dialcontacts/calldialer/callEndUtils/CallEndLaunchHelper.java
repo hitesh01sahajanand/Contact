@@ -9,6 +9,7 @@ import android.os.Build;
 import android.provider.Settings;
 import android.util.Log;
 
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage;
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass;
 import com.phonecall.dialcontacts.calldialer.R;
 import com.phonecall.dialcontacts.calldialer.activities.endCall.CallEndActivity;
@@ -49,6 +50,7 @@ public final class CallEndLaunchHelper {
             String formattedDuration,
             boolean isFromFcm
     ) {
+        ADSAppManage.isAppOpenBlocked = true;
         Intent intent = new Intent(context, CallEndActivity.class);
         intent.putExtra("mobile_number", mobileNumber);
         intent.putExtra("StartTime", startMs);
@@ -57,8 +59,9 @@ public final class CallEndLaunchHelper {
         intent.putExtra("formattedDuration", formattedDuration);
         intent.putExtra("is_from_fcm", isFromFcm);
         intent.putExtra(CallEndActivity.EXTRA_SKIP_OVERLAY_PROMPT, true);
-        // Default to NOT showing on top of lock screen (FCM requirement).
-        intent.putExtra(CallEndActivity.EXTRA_ALLOW_SHOW_ON_LOCKSCREEN, false);
+        // Local call end: allow showing on lock screen (screen may be off when call ends)
+        // FCM: do NOT show on lock screen (user is not interacting)
+        intent.putExtra(CallEndActivity.EXTRA_ALLOW_SHOW_ON_LOCKSCREEN, !isFromFcm);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                 | Intent.FLAG_ACTIVITY_CLEAR_TOP
                 | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -215,6 +218,7 @@ public final class CallEndLaunchHelper {
         KeyguardManager km = (KeyguardManager) app.getSystemService(Context.KEYGUARD_SERVICE);
         boolean keyguardLocked = km != null && km.isKeyguardLocked();
 
+        // Always save pending launch so USER_PRESENT broadcast can recover if all else fails
         CallEndPendingLaunch.save(
                 app,
                 intent.getStringExtra("mobile_number"),
@@ -223,6 +227,8 @@ public final class CallEndLaunchHelper {
                 intent.getStringExtra("CallType"),
                 formattedDuration
         );
+
+        // Always post the high-priority full-screen intent notification so it is visible in the drawer/lockscreen
         CallEndFullscreenNotificationHelper.notifyCallEndStyle(
                 app,
                 intent,
@@ -230,17 +236,15 @@ public final class CallEndLaunchHelper {
                 CallEndPendingLaunch.NOTIFICATION_ID
         );
 
-        if (!keyguardLocked) {
-            try {
-                app.startActivity(intent);
-                Log.d(TAG, "openCallEndIntent: started (unlocked)");
-            } catch (Exception e) {
-                Log.e(TAG, "openCallEndIntent: startActivity failed while unlocked", e);
-            }
-        } else {
-            Log.d(TAG, "openCallEndIntent: posted lock-screen notification");
+        // Always attempt direct startActivity as well (for instant UI launch fallback)
+        try {
+            app.startActivity(intent);
+            Log.d(TAG, "openCallEndIntent: direct startActivity triggered (keyguardLocked=" + keyguardLocked + ")");
+        } catch (Exception e) {
+            Log.e(TAG, "openCallEndIntent: direct startActivity failed", e);
         }
     }
+
 
     private static long parseLongSafe(String s, long defaultValue) {
         if (s == null || s.isEmpty()) {

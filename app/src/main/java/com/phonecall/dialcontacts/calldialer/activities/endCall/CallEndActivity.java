@@ -74,6 +74,7 @@ import com.phonecall.dialcontacts.calldialer.callEndUtils.CallEndPendingLaunch;
 import com.phonecall.dialcontacts.calldialer.callEndUtils.PreferenceDayCycle;
 import com.phonecall.dialcontacts.calldialer.utils.Common;
 import com.phonecall.dialcontacts.calldialer.utils.Constance;
+import com.phonecall.dialcontacts.calldialer.utils.ThemeManager;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -131,6 +132,7 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
         } catch (IllegalStateException e) {
             // Ignore the exception if the device still complains about non-fullscreen opaque activities
         }
+        ThemeManager.INSTANCE.applyAppTheme(this);
         super.onCreate(savedInstanceState);
 
         boolean allowShowWhenLocked = getIntent() != null
@@ -146,6 +148,9 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
                         | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
                 getWindow().addFlags(flags);
             }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(false);
+            setTurnScreenOn(false);
         }
 
         EdgeToEdge.enable(this);
@@ -415,7 +420,6 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
             boolean locked = km != null && km.isKeyguardLocked();
             if (!locked) {
                 CallEndPendingLaunch.clear(this);
-            } else {
                 CallEndPendingLaunch.cancelCallEndNotification(this);
             }
         } catch (Exception ignored) {
@@ -557,23 +561,28 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
 
         if (openCount < limit) {
             if (!isAdsShowComplete) {
-                Context appContext = getApplicationContext();
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    try {
-                        Intent intent = new Intent(appContext, CallEndActivity.class);
-                        if (getIntent().getExtras() != null) {
-                            intent.putExtras(getIntent().getExtras());
+                if (ADSUtilitis.IsNetworkConnected(this)) {
+                    Context appContext = getApplicationContext();
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        try {
+                            ADSAppManage.isAppOpenBlocked = true;
+                            Intent intent = new Intent(appContext, CallEndActivity.class);
+                            if (getIntent().getExtras() != null) {
+                                intent.putExtras(getIntent().getExtras());
+                            }
+                            intent.putExtra("open_count", openCount + 1);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                                    | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                    | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                            appContext.startActivity(intent);
+                        } catch (Exception e) {
+                            Log.e("TAG", "Failed to start activity from app context", e);
                         }
-                        intent.putExtra("open_count", openCount + 1);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK 
-                                | Intent.FLAG_ACTIVITY_CLEAR_TOP 
-                                | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                        appContext.startActivity(intent);
-                    } catch (Exception e) {
-                        Log.e("TAG", "Failed to start activity from app context", e);
-                    }
-                }, 2000);
-                finish();
+                    }, 2000);
+                    finish();
+                } else {
+                    finish();
+                }
             } else {
                 if (showAd && !ADSMainClass.getAds_Free()) {
                     CallEndInterAd.fullScreenAdShow(this, b -> {
@@ -681,7 +690,6 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
             ADSMainClass.setCallEndShow100(true);
         }
     }
-
 
 
     @Override
@@ -976,9 +984,10 @@ public class CallEndActivity extends AppCompatActivity implements OnClickHandler
         int id = view.getId();
         if (id == binding.llCall.getId() || id == binding.ivCall.getId()) {
             if (mobileNumber != null) {
-                Common.INSTANCE.actionCall(mobileNumber, this, false);
+                Common.INSTANCE.actionCall(mobileNumber, this, false, this::finish);
+            } else {
+                finish();
             }
-            finish();
 //            finishAndRemoveTask();
         } else if (id == binding.llAddContact.getId()) {
             Intent intent = new Intent(this, NewContactActivity.class);

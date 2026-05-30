@@ -342,7 +342,7 @@ class AllContactsAdapter(
                 tvCollapseName.text = data.displayName
                 if (!data.number.isNullOrEmpty()) {
                     tvExpandedContactNumber.visibility = View.VISIBLE
-                    tvExpandedContactNumber.text = "Mobile +${data.number}"
+                    tvExpandedContactNumber.text = "Mobile ${data.number}"
                 } else {
                     tvExpandedContactNumber.visibility = View.GONE
                 }

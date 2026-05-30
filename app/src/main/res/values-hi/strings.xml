@@ -99,6 +99,7 @@
     <string name="about">के बारे में</string>
     <string name="rate_us">रेट करें</string>
     <string name="privacy_policy">गोपनीयता नीति</string>
+    <string name="terms_of_service">सेवा की शर्तें</string>
     <string name="mobile">मोबाइल</string>
     <string name="dark_mode">डार्क मोड</string>
     <string name="set_default">डिफ़ॉल्ट मोड</string>
@@ -159,7 +160,7 @@
     <string name="smart_contact_app_to_">कॉल, नंबर और पसंदीदा को आसानी से प्रबंधित करने के लिए स्मार्ट संपर्क ऐप</string>
     <string name="call_search_and_save_contacts">कॉल करें, खोजें और संपर्क सेव करें</string>
     <string name="sync_from_all_gmail_sim_amp_phone"><![CDATA[सभी Gmail, SIM और फोन से सिंक करें]]></string>
-    <string name="we_don_t_collect_personal">हम व्यक्तिगत या संवेदनशील डेटा एकत्र नहीं करते। आपका डेटा सुरक्षित रहता है।</string>
+    <string name="we_don_t_collect_personal">हम व्यक्तिगत या संवेदनशील डेटा एकत्र नहीं करते। आपका डेटा सुरक्षित रहता है। %1$s और %2$s</string>
     <string name="to_make_receive_calls_set_this_app">कॉल करने और प्राप्त करने के लिए इस ऐप को डिफ़ॉल्ट डायलर सेट करें या छोड़ दें</string>
     <string name="permissions_required">अनुमति</string>
     <string name="call_logs">कॉल लॉग</string>
@@ -373,5 +374,10 @@
     <string name="type">प्रकार</string>
     <string name="enable_notification_permission">महत्वपूर्ण अलर्ट, आने वाली कॉल और ऐप अपडेट की रियल-टाइम जानकारी पाने के लिए नोटिफिकेशन अनुमति सक्षम करें।</string>
     <string name="selected">%1$d चयनित</string>
+
+    <string name="leave_page">पेज छोड़ें?</string>
+    <string name="your_changes_won_t_be_saved">आपके परिवर्तन सहेजे नहीं जाएंगे।</string>
+    <string name="okay">ठीक है</string>
+    <string name="sync_contact_successfully">संपर्क सफलतापूर्वक सिंक हो गया</string>
 
 </resources>

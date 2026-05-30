@@ -30,7 +30,6 @@ import com.phonecall.dialcontacts.calldialer.Advertisement.ADSBannerSmall
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSInterDisplayClick
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSNativeDisplay
-import com.phonecall.dialcontacts.calldialer.Advertisement.ADSUtilitis
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.activities.history.HistoryActivity
 import com.phonecall.dialcontacts.calldialer.activities.newContact.NewContactActivity
@@ -64,11 +63,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
         enableEdgeToEdge()
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_contacts_details)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        Common.setStableStatusBarInsets(findViewById(R.id.main))
         Common.hideSystemUI(this)
 
         viewModel.contactData.observe(this) {
@@ -210,16 +205,7 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
             binding.tvVoiceCall.text = it.stringNumber
             binding.tvVideoCall.text = it.stringNumber
 
-            val number = it.stringNumber
-            if (!number.isNullOrEmpty()) {
-                val hasWhatsApp = isWhatsAppInstalled() && getWhatsAppId(
-                    number, "vnd.android.cursor.item/vnd.com.whatsapp.profile"
-                ) != null
-                binding.llWhatsapp.isVisible = hasWhatsApp
-            } else {
-                binding.llWhatsapp.isVisible = false
-            }
-
+            updateWhatsAppVisibility(it.stringNumber)
         }
 
         binding.tvNumber.setOnLongClickListener {
@@ -277,15 +263,18 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
                         )
                     }"
                     try {
+                        ADSAppManage.isAppOpenBlocked = true
                         val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                         intent.setPackage("com.whatsapp")
                         startActivity(intent)
                     } catch (e: Exception) {
                         try {
+                            ADSAppManage.isAppOpenBlocked = true
                             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                             intent.setPackage("com.whatsapp.w4b")
                             startActivity(intent)
                         } catch (e2: Exception) {
+                            ADSAppManage.isAppOpenBlocked = true
                             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                             startActivity(intent)
                         }
@@ -295,69 +284,23 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
 
             binding.rlVoiceCall.id -> {
                 contactDetail?.stringNumber?.let { number ->
-                    val id =
-                        getWhatsAppId(number, "vnd.android.cursor.item/vnd.com.whatsapp.voip.call")
-                    if (id != null) {
-                        try {
-                            val intent = Intent(Intent.ACTION_VIEW)
-                            intent.setDataAndType(
-                                "content://com.android.contacts/data/$id".toUri(),
-                                "vnd.android.cursor.item/vnd.com.whatsapp.voip.call"
-                            )
-                            intent.setPackage("com.whatsapp")
-                            startActivity(intent)
-                        } catch (e: Exception) {
-                            try {
-                                val intent = Intent(Intent.ACTION_VIEW)
-                                intent.setDataAndType(
-                                    "content://com.android.contacts/data/$id".toUri(),
-                                    "vnd.android.cursor.item/vnd.com.whatsapp.voip.call"
-                                )
-                                intent.setPackage("com.whatsapp.w4b")
-                                startActivity(intent)
-                            } catch (e2: Exception) {
-                                Toast.makeText(
-                                    this,
-                                    getString(R.string.failed_to_start_video_call),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                    }
+                    launchWhatsAppCall(
+                        number,
+                        "vnd.android.cursor.item/vnd.com.whatsapp.voip.call",
+                        "vnd.android.cursor.item/vnd.com.whatsapp.w4b.voip.call",
+                        getString(R.string.failed_to_start_video_call)
+                    )
                 }
             }
 
             binding.rlVideoCall.id -> {
                 contactDetail?.stringNumber?.let { number ->
-                    val id =
-                        getWhatsAppId(number, "vnd.android.cursor.item/vnd.com.whatsapp.video.call")
-                    if (id != null) {
-                        try {
-                            val intent = Intent(Intent.ACTION_VIEW)
-                            intent.setDataAndType(
-                                "content://com.android.contacts/data/$id".toUri(),
-                                "vnd.android.cursor.item/vnd.com.whatsapp.video.call"
-                            )
-                            intent.setPackage("com.whatsapp")
-                            startActivity(intent)
-                        } catch (e: Exception) {
-                            try {
-                                val intent = Intent(Intent.ACTION_VIEW)
-                                intent.setDataAndType(
-                                    "content://com.android.contacts/data/$id".toUri(),
-                                    "vnd.android.cursor.item/vnd.com.whatsapp.video.call"
-                                )
-                                intent.setPackage("com.whatsapp.w4b")
-                                startActivity(intent)
-                            } catch (e2: Exception) {
-                                Toast.makeText(
-                                    this,
-                                    getString(R.string.unable_to_start_whatsapp_video_call),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                    }
+                    launchWhatsAppCall(
+                        number,
+                        "vnd.android.cursor.item/vnd.com.whatsapp.video.call",
+                        "vnd.android.cursor.item/vnd.com.whatsapp.w4b.video.call",
+                        getString(R.string.unable_to_start_whatsapp_video_call)
+                    )
                 }
             }
 
@@ -602,6 +545,8 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
         } else {
             binding.linearLayoutCall.isVisible = false
         }
+
+        updateWhatsAppVisibility(data.phones.firstOrNull()?.value ?: contactDetail?.stringNumber)
 
         // Emails
         binding.containerEmail.removeAllViews()
@@ -914,30 +859,84 @@ class ContactsDetailsActivity : AppCompatActivity(), OnClickHandler {
         }
     }
 
-    private fun getWhatsAppId(number: String, mimeType: String): String? {
-        val normalizedNumber = number.replace("[^0-9]".toRegex(), "")
-        if (normalizedNumber.isEmpty()) return null
+    private fun updateWhatsAppVisibility(number: String?) {
+        if (number.isNullOrEmpty() || !isWhatsAppInstalled()) {
+            binding.llWhatsapp.isVisible = false
+            return
+        }
 
-        val cursor = contentResolver.query(
-            ContactsContract.Data.CONTENT_URI,
-            arrayOf(ContactsContract.Data._ID, ContactsContract.Data.DATA1),
-            "${ContactsContract.Data.MIMETYPE} = ?",
-            arrayOf(mimeType),
-            null
-        )
-        cursor?.use {
-            val idColumn = it.getColumnIndex(ContactsContract.Data._ID)
-            val dataColumn = it.getColumnIndex(ContactsContract.Data.DATA1)
-            while (it.moveToNext()) {
-                val data = it.getString(dataColumn) ?: ""
-                val normalizedData = data.replace("[^0-9]".toRegex(), "")
-                val lastN =
-                    if (normalizedNumber.length >= 10) normalizedNumber.takeLast(10) else normalizedNumber
-                if (normalizedData.endsWith(lastN)) {
-                    return it.getString(idColumn)
-                }
+        binding.llWhatsapp.isVisible = true
+        binding.rlVoiceCall.isVisible = true
+        binding.rlVideoCall.isVisible = true
+    }
+
+    private fun launchWhatsAppCall(
+        number: String,
+        regularMimeType: String,
+        businessMimeType: String,
+        errorMessage: String
+    ) {
+        val regularId = Common.getVideoCallID(this, number, regularMimeType)
+        if (regularId != null) {
+            ADSAppManage.isAppOpenBlocked = true
+            ADSAppManage.blockAppOpenAd(3000)
+            Common.launchContactIntent(this, regularId, Constance.WHATSAPP, regularMimeType)
+            return
+        }
+
+        val businessId = Common.getVideoCallID(this, number, businessMimeType)
+        if (businessId != null) {
+            ADSAppManage.isAppOpenBlocked = true
+            ADSAppManage.blockAppOpenAd(3000)
+            Common.launchContactIntent(
+                this,
+                businessId,
+                Constance.WHATSAPP_BUSINESS,
+                businessMimeType
+            )
+            return
+        }
+
+        val formattedNumber = number.replace("+", "").replace(" ", "").replace("-", "")
+        val isVideoCall = regularMimeType.contains("video")
+        val deepLinkUrl = if (isVideoCall) {
+            "https://wa.me/$formattedNumber?video=1"
+        } else {
+            "https://wa.me/call/$formattedNumber"
+        }
+
+        for (pkg in listOf(Constance.WHATSAPP, Constance.WHATSAPP_BUSINESS)) {
+            try {
+                ADSAppManage.isAppOpenBlocked = true
+                ADSAppManage.blockAppOpenAd(3000)
+                startActivity(
+                    Intent(Intent.ACTION_VIEW, deepLinkUrl.toUri()).apply {
+                        setPackage(pkg)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                )
+                return
+            } catch (_: Exception) {
+                continue
             }
         }
-        return null
+
+        if (!isVideoCall) {
+            try {
+                ADSAppManage.isAppOpenBlocked = true
+                ADSAppManage.blockAppOpenAd(3000)
+                startActivity(
+                    Intent(Intent.ACTION_VIEW, "https://wa.me/$formattedNumber".toUri()).apply {
+                        setPackage(Constance.WHATSAPP)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                )
+                return
+            } catch (_: Exception) {
+                // Fall through to error toast
+            }
+        }
+
+        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
     }
 }

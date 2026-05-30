@@ -42,7 +42,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                style="@style/TextStyle.Medium"
+                style="@style/TextStyle.MediumSemiBold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -72,7 +72,7 @@
 
 
                 <TextView
-                    style="@style/TextStyle.Regular"
+                    style="@style/TextStyle.Medium"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_gravity="center_vertical"
@@ -108,7 +108,7 @@
                             android:src="@drawable/ic_caller_id" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -143,7 +143,7 @@
                             android:src="@drawable/ic_call_information" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -202,7 +202,7 @@
                             android:src="@drawable/ic_app_theme" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -259,7 +259,7 @@
                             android:src="@drawable/ic_language" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -335,7 +335,7 @@
                             android:src="@drawable/ic_block_number" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -370,7 +370,7 @@
                             android:src="@drawable/ic_speed_dialer" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -407,7 +407,7 @@
                             android:src="@drawable/ic_quick_response" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -444,7 +444,7 @@
                             android:src="@drawable/ic_vibration" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -481,7 +481,7 @@
                             android:src="@drawable/ic_sim_pref" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -516,7 +516,8 @@
                         android:background="@drawable/ripple_effect_bg"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:padding="@dimen/_8sdp">
+                        android:padding="@dimen/_8sdp"
+                        android:visibility="gone">
 
                         <ImageView
                             android:layout_width="@dimen/_34sdp"
@@ -525,7 +526,7 @@
                             android:src="@drawable/ic_merge_duplicate" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -565,7 +566,7 @@
                             android:src="@drawable/ic_dial_pad_sound" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -604,7 +605,7 @@
                             android:src="@drawable/ic_flash" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -643,7 +644,7 @@
                             android:src="@drawable/ic_swape_action" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -683,7 +684,7 @@
                             android:src="@drawable/ic_change_ring" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -732,7 +733,7 @@
                             android:src="@drawable/ic_export" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -770,7 +771,7 @@
                             android:src="@drawable/ic_import" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -830,7 +831,7 @@
                             android:src="@drawable/ic_share_" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -868,7 +869,7 @@
                             android:src="@drawable/ic_rate" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"
@@ -905,7 +906,7 @@
                             android:src="@drawable/ic_privacy_policy" />
 
                         <TextView
-                            style="@style/TextStyle.Regular"
+                            style="@style/TextStyle.Medium"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center_vertical"

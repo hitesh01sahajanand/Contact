@@ -357,16 +357,14 @@ class EndCallActivity : AppCompatActivity(), OnClickHandler {
         when (view.id) {
             binding.llCall.id -> {
                 mobileNumber?.let { number ->
-                    Common.actionCall(number, this)
-                }
-                finishAndRemoveTask()
+                    Common.actionCall(number, this, onFinished = Runnable { finishAndRemoveTask() })
+                } ?: finishAndRemoveTask()
             }
 
             binding.ivCall.id -> {
                 mobileNumber?.let { number ->
-                    Common.actionCall(number, this)
-                }
-                finishAndRemoveTask()
+                    Common.actionCall(number, this, onFinished = Runnable { finishAndRemoveTask() })
+                } ?: finishAndRemoveTask()
             }
 
             binding.llAddContact.id -> {

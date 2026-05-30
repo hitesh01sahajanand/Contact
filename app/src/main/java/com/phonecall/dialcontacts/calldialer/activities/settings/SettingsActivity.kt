@@ -17,13 +17,15 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.ContactsContract
+import android.provider.OpenableColumns
 import android.provider.Settings
 import android.telecom.TelecomManager
 import android.telephony.SubscriptionManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
+import android.view.WindowManager
+import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -83,11 +85,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_settings)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        Common.setStableStatusBarInsets(findViewById(R.id.main))
         Common.hideSystemUI(this)
 
         initView()
@@ -198,8 +196,8 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
         val appTheme = SharedPreferenceManager.getString(this, Constance.APP_THEME)
         if (appTheme.isNotEmpty()) {
             val name = when (appTheme) {
-                getString(R.string.light_mode_app) -> getString(R.string.light_mode_app)
-                getString(R.string.dark_mode) -> getString(R.string.dark_mode)
+                "light", getString(R.string.light_mode_app) -> getString(R.string.light_mode_app)
+                "dark", getString(R.string.dark_mode) -> getString(R.string.dark_mode)
                 else -> getString(R.string.set_default)
             }
             binding.tvThemeType.text = name
@@ -272,6 +270,9 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                     if (theme == currentTheme) return@showAppThemeBottomSheet
 
                     SharedPreferenceManager.putString(this, Constance.APP_THEME, theme)
+                    // Theme change calls recreate(); block app-open ads for this internal restart window.
+                    ADSAppManage.isAppOpenBlocked = true
+                    ADSAppManage.blockAppOpenAd(3000)
                     ThemeManager.applyAppTheme(this)
                     recreate()
                 })
@@ -362,7 +363,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
 
             binding.llImportContact.id -> {
                 ADSAppManage.isAppOpenBlocked = true
-                importFileLauncher.launch("*/*")
+                importFileLauncher.launch(VCF_MIME_TYPES)
             }
 
             binding.llShare.id -> {
@@ -547,21 +548,26 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
         return sortedAccounts.toMutableList()
     }
 
+    private fun setupAccountSelectionDialogWindow(dialog: Dialog, root: View) {
+        val horizontalMargin = (16 * resources.displayMetrics.density).toInt()
+        val dialogHeight = (resources.displayMetrics.heightPixels * 0.85).toInt()
+        dialog.window?.setLayout(
+            resources.displayMetrics.widthPixels - horizontalMargin * 2,
+            dialogHeight
+        )
+        root.layoutParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        )
+    }
+
     private fun showExportContactsDialog() {
         val dialog = Dialog(this)
         val accountBinding = ExportContactDialogBinding.inflate(LayoutInflater.from(this))
         dialog.setContentView(accountBinding.root)
         dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         dialog.setCancelable(false)
-
-        val margin = (15 * resources.displayMetrics.density).toInt()
-        val displayMetrics = resources.displayMetrics
-        val screenWidth = displayMetrics.widthPixels
-
-        dialog.window?.setLayout(
-            screenWidth - (margin * 3),
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+        setupAccountSelectionDialogWindow(dialog, accountBinding.root)
 
         // Show loader while fetching accounts
         accountBinding.llExportContact.visibility = View.GONE
@@ -766,8 +772,6 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                     output.flush()
                 }
 
-                Log.d("Export", "Bytes written to file: $bytesWritten")
-
                 if (bytesWritten == 0L) {
                     withContext(Dispatchers.Main) {
                         dialog.dismiss()
@@ -852,8 +856,16 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
         }
 
     private val importFileLauncher =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             if (uri != null) {
+                if (!isVcfFile(uri)) {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.please_select_vcf_file_only),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@registerForActivityResult
+                }
                 importFileUri = uri
                 val permissionsToRequest = mutableListOf(
                     Manifest.permission.READ_CONTACTS,
@@ -900,15 +912,7 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
         dialog.setContentView(accountBinding.root)
         dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         dialog.setCancelable(false)
-
-        val margin = (15 * resources.displayMetrics.density).toInt()
-        val displayMetrics = resources.displayMetrics
-        val screenWidth = displayMetrics.widthPixels
-
-        dialog.window?.setLayout(
-            screenWidth - (margin * 3),
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+        setupAccountSelectionDialogWindow(dialog, accountBinding.root)
 
         // Show loader while fetching accounts
         accountBinding.llExportContact.visibility = View.GONE
@@ -1006,6 +1010,37 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
         }
 
         dialog.show()
+    }
+
+    private fun isVcfFile(uri: Uri): Boolean {
+        try {
+            contentResolver.query(
+                uri,
+                arrayOf(OpenableColumns.DISPLAY_NAME),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (nameIndex >= 0) {
+                        val name = cursor.getString(nameIndex).orEmpty()
+                        if (name.endsWith(".vcf", ignoreCase = true)) return true
+                    }
+                }
+            }
+            val mime = contentResolver.getType(uri)?.lowercase(Locale.getDefault()).orEmpty()
+            if (mime == "text/vcard" || mime == "text/x-vcard" || mime.contains("vcard")) {
+                return true
+            }
+            contentResolver.openInputStream(uri)?.bufferedReader()?.use { reader ->
+                val firstLine = reader.readLine()?.trim().orEmpty()
+                return firstLine.startsWith("BEGIN:VCARD", ignoreCase = true)
+            }
+        } catch (e: Exception) {
+            Log.e("Settings", "isVcfFile: ${e.message}")
+        }
+        return false
     }
 
     private fun parseVCard(fileUri: Uri): List<VCardContact> {
@@ -1206,6 +1241,10 @@ class SettingsActivity : AppCompatActivity(), OnClickHandler {
                 binding.tvSimPref.text = getString(R.string.ask_every_time)
             }
         }
+    }
+
+    companion object {
+        private val VCF_MIME_TYPES = arrayOf("text/vcard", "text/x-vcard")
     }
 
     fun openDefaultAppDialog(context: Context) {

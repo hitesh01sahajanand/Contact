@@ -67,7 +67,7 @@
             android:backgroundTint="@color/main_color"
             android:text="Tap To exit"
             android:textAllCaps="false"
-            android:textColor="@color/white"
+            android:textColor="@color/white_"
             android:textSize="18sp" />
 
     </LinearLayout>

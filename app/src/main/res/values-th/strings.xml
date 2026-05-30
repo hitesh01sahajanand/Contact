@@ -99,6 +99,7 @@
     <string name="about">เกี่ยวกับ</string>
     <string name="rate_us">ให้คะแนนเรา</string>
     <string name="privacy_policy">นโยบายความเป็นส่วนตัว</string>
+    <string name="terms_of_service">ข้อกำหนดการให้บริการ</string>
     <string name="mobile">มือถือ</string>
     <string name="dark_mode">โหมดมืด</string>
     <string name="set_default">โหมดเริ่มต้น</string>
@@ -159,7 +160,7 @@
     <string name="smart_contact_app_to_">แอปรายชื่ออัจฉริยะสำหรับจัดการสาย,\nหมายเลข และรายการโปรดได้อย่างง่ายดาย</string>
     <string name="call_search_and_save_contacts">โทร ค้นหา และบันทึกรายชื่อ</string>
     <string name="sync_from_all_gmail_sim_amp_phone"><![CDATA[ซิงค์จาก Gmail, SIM และโทรศัพท์ทั้งหมด]]></string>
-    <string name="we_don_t_collect_personal">เราไม่เก็บข้อมูลส่วนตัวหรือข้อมูลที่ละเอียดอ่อน ข้อมูลของคุณจะถูกเก็บเป็นส่วนตัว</string>
+    <string name="we_don_t_collect_personal">เราไม่เก็บข้อมูลส่วนตัวหรือข้อมูลที่ละเอียดอ่อน ข้อมูลของคุณจะถูกเก็บเป็นส่วนตัว %1$s และ %2$s</string>
     <string name="to_make_receive_calls_set_this_app">เพื่อโทรและรับสาย ให้ตั้งแอปนี้เป็น\nแอปโทรศัพท์เริ่มต้น หรือกดยกเลิกเพื่อข้าม</string>
     <string name="permissions_required">สิทธิ์</string>
     <string name="call_logs">บันทึกการโทร</string>
@@ -374,5 +375,10 @@
     <string name="type">ประเภท</string>
     <string name="enable_notification_permission">เปิดใช้งานสิทธิ์การแจ้งเตือนเพื่อรับการแจ้งเตือนสำคัญ สายเรียกเข้า และการอัปเดตแอปแบบเรียลไทม์</string>
     <string name="selected">เลือกแล้ว %1$d รายการ</string>
+
+    <string name="leave_page">ออกจากหน้านี้หรือไม่?</string>
+    <string name="your_changes_won_t_be_saved">การเปลี่ยนแปลงของคุณจะไม่ถูกบันทึก</string>
+    <string name="okay">ตกลง</string>
+    <string name="sync_contact_successfully">ซิงค์รายชื่อติดต่อสำเร็จ</string>
 
 </resources>

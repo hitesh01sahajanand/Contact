@@ -94,7 +94,7 @@ class CallNotificationManager(private val context: Context) {
 
         val isIncoming = state == Call.STATE_RINGING
 
-        // Notification View (RemoteViews)
+        // Collapsed notification view (shown in notification shade)
         val remoteViews = RemoteViews(context.packageName, R.layout.notification_view)
         if (name.isNullOrBlank()) {
             remoteViews.setViewVisibility(R.id.pop_name, View.GONE)
@@ -105,6 +105,17 @@ class CallNotificationManager(private val context: Context) {
         remoteViews.setTextViewText(R.id.pop_number, number)
         remoteViews.setImageViewBitmap(R.id.pop_image, Common.generateAvatar(finalName))
 
+        // Heads-up view — separate instance to avoid shared-state issues on MIUI/POCO
+        val headsUpViews = RemoteViews(context.packageName, R.layout.notification_view)
+        if (name.isNullOrBlank()) {
+            headsUpViews.setViewVisibility(R.id.pop_name, View.GONE)
+        } else {
+            headsUpViews.setViewVisibility(R.id.pop_name, View.VISIBLE)
+            headsUpViews.setTextViewText(R.id.pop_name, name)
+        }
+        headsUpViews.setTextViewText(R.id.pop_number, number)
+        headsUpViews.setImageViewBitmap(R.id.pop_image, Common.generateAvatar(finalName))
+
         // Accept Action
         val acceptIntent = Intent(context, CallActionReceiver::class.java).apply {
             action = "ANSWER"
@@ -114,6 +125,7 @@ class CallNotificationManager(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         remoteViews.setOnClickPendingIntent(R.id.pop_accept, acceptPendingIntent)
+        headsUpViews.setOnClickPendingIntent(R.id.pop_accept, acceptPendingIntent)
 
         // Decline Action
         val declineIntent = Intent(context, CallActionReceiver::class.java).apply {
@@ -124,22 +136,36 @@ class CallNotificationManager(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         remoteViews.setOnClickPendingIntent(R.id.pop_decline, declinePendingIntent)
+        headsUpViews.setOnClickPendingIntent(R.id.pop_decline, declinePendingIntent)
 
-        // Visibility based on state
+        // Show/hide accept+decline buttons based on call state
         if (isIncoming) {
             remoteViews.setViewVisibility(R.id.pop_accept, View.VISIBLE)
             remoteViews.setViewVisibility(R.id.pop_decline, View.VISIBLE)
+            headsUpViews.setViewVisibility(R.id.pop_accept, View.VISIBLE)
+            headsUpViews.setViewVisibility(R.id.pop_decline, View.VISIBLE)
         } else {
             remoteViews.setViewVisibility(R.id.pop_accept, View.GONE)
             remoteViews.setViewVisibility(R.id.pop_decline, View.GONE)
+            headsUpViews.setViewVisibility(R.id.pop_accept, View.GONE)
+            headsUpViews.setViewVisibility(R.id.pop_decline, View.GONE)
         }
 
-        // Fullscreen Intent
+        // Fullscreen Intent (for lock-screen / incoming call)
         val activityIntent = CallActivity.getStartIntent(context)
         val activityPendingIntent = PendingIntent.getActivity(
             context, 2, activityIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+
+        // Determine priority:
+        //   isIncoming && NOT lowPriority  → HIGH  (heads-up + full-screen)
+        //   everything else                → LOW   (silent ongoing)
+        val priority = if (isIncoming && !lowPriority) {
+            NotificationCompat.PRIORITY_HIGH
+        } else {
+            NotificationCompat.PRIORITY_LOW
+        }
 
         val builder = NotificationCompat.Builder(context, CALL_CHANNEL_ID)
             .setSmallIcon(R.drawable.notification_call)
@@ -150,12 +176,18 @@ class CallNotificationManager(private val context: Context) {
                 )
             )
             .setColor(ContextCompat.getColor(context, R.color.main_color))
+            // Use separate RemoteViews instances — fixes MIUI/POCO clipping bug
             .setCustomContentView(remoteViews)
-            .setCustomHeadsUpContentView(remoteViews)
-            .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-            .setContentTitle(if (name.isNullOrBlank()) number else name)
-            .setContentText(if (name.isNullOrBlank()) null else number)
-            .setPriority(if (isIncoming) NotificationCompat.PRIORITY_LOW else NotificationCompat.PRIORITY_HIGH)
+            .setCustomHeadsUpContentView(headsUpViews)
+            // DO NOT use DecoratedCustomViewStyle — it wraps a second chrome layer
+            // around custom views on MIUI/POCO causing the UI to be cut off.
+            .setContentTitle(finalName)
+            .setContentText(if (isIncoming) context.getString(R.string.incoming_call) else context.getString(R.string.calling))
+            .setPriority(priority)
+            .setVisibility(
+                if (isIncoming) NotificationCompat.VISIBILITY_PUBLIC
+                else NotificationCompat.VISIBILITY_PRIVATE
+            )
             .setCategory(NotificationCompat.CATEGORY_CALL)
             .setOngoing(true)
             .setContentIntent(activityPendingIntent)
@@ -163,10 +195,7 @@ class CallNotificationManager(private val context: Context) {
 
         if (isIncoming && !lowPriority) {
             builder.setFullScreenIntent(activityPendingIntent, true)
-        } else {
-            builder.setPriority(NotificationCompat.PRIORITY_LOW)
         }
-
 
         val notification = builder.build()
         notificationManager.notify(CALL_NOTIFICATION_ID, notification)

@@ -1,4 +1,4 @@
-package com.smsmessenger.chat.Advertisement
+package com.phonecall.dialcontacts.calldialer.Advertisement
 
 import android.util.Base64
 import javax.crypto.Cipher

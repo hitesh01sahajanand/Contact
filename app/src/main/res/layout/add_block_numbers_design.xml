@@ -98,7 +98,7 @@
                 android:gravity="center"
                 android:padding="@dimen/_10sdp"
                 android:text="@string/block"
-                android:textColor="@color/white" />
+                android:textColor="@color/white_" />
 
         </LinearLayout>
 

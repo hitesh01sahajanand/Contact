@@ -99,6 +99,7 @@
     <string name="about">정보</string>
     <string name="rate_us">평가하기</string>
     <string name="privacy_policy">개인정보 처리방침</string>
+    <string name="terms_of_service">서비스 약관</string>
     <string name="mobile">휴대폰</string>
     <string name="dark_mode">다크 모드</string>
     <string name="set_default">기본 모드</string>
@@ -159,7 +160,7 @@
     <string name="smart_contact_app_to_">통화, 번호, 즐겨찾기를 쉽게 관리하는\n스마트 연락처 앱</string>
     <string name="call_search_and_save_contacts">통화, 검색 및 연락처 저장</string>
     <string name="sync_from_all_gmail_sim_amp_phone"><![CDATA[모든 Gmail, SIM 및 휴대폰에서 동기화]]></string>
-    <string name="we_don_t_collect_personal">개인 또는 민감한 데이터를 수집하지 않습니다. 데이터는 안전하게 보호됩니다.</string>
+    <string name="we_don_t_collect_personal">개인 또는 민감한 데이터를 수집하지 않습니다. 데이터는 안전하게 보호됩니다. %1$s 및 %2$s</string>
     <string name="to_make_receive_calls_set_this_app">통화를 하려면 이 앱을\n기본 전화 앱으로 설정하세요</string>
     <string name="permissions_required">권한</string>
     <string name="call_logs">통화 기록</string>
@@ -375,5 +376,9 @@
     <string name="type">유형</string>
     <string name="enable_notification_permission">중요한 알림, 수신 전화 및 앱 업데이트를 실시간으로 받으려면 알림 권한을 활성화하세요.</string>
     <string name="selected">%1$d개 선택됨</string>
+    <string name="leave_page">페이지를 나가시겠습니까?</string>
+    <string name="your_changes_won_t_be_saved">변경 사항이 저장되지 않습니다.</string>
+    <string name="okay">확인</string>
+    <string name="sync_contact_successfully">연락처가 성공적으로 동기화되었습니다</string>
 
 </resources>

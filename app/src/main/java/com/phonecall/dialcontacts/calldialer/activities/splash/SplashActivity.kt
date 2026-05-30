@@ -46,9 +46,6 @@ class SplashActivity : BaseSplashActivity() {
 
             val callGranted = permissions[Manifest.permission.CALL_PHONE] == true
 
-            Log.d("Permission", "Notification: $notificationGranted")
-            Log.d("Permission", "Call: $callGranted")
-
             if (notificationGranted) {
                 ADSUtilitis.trackScreen(this@SplashActivity, "Notification_Allow")
             }
@@ -69,11 +66,7 @@ class SplashActivity : BaseSplashActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        com.phonecall.dialcontacts.calldialer.utils.Common.setStableStatusBarInsets(findViewById(R.id.main))
         initView()
 
         // Fetch FCM Token immediately on startup
@@ -81,9 +74,9 @@ class SplashActivity : BaseSplashActivity() {
             .addOnCompleteListener { task: Task<String?>? ->
                 if (task!!.isSuccessful) {
                     val token = task.getResult()
-                    Log.d("FCM_TOKEN", "Startup FCM Token: $token")
+//                    Log.d("FCM_TOKEN", "Startup FCM Token: $token")
                 } else {
-                    Log.e("FCM_TOKEN", "Startup FCM Token fetch failed", task.exception)
+//                    Log.e("FCM_TOKEN", "Startup FCM Token fetch failed", task.exception)
                 }
             }
 

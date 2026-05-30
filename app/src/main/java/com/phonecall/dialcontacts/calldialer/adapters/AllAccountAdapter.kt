@@ -71,6 +71,10 @@ class AllAccountAdapter(
             )
             val firstChar = itemData.email.firstOrNull()?.uppercase() ?: ""
             binding.tvContactName.text = firstChar
+            if (firstChar.isEmpty()){
+                val nextChar = itemData.name.firstOrNull()?.uppercase() ?: ""
+                binding.tvContactName.text = nextChar
+            }
         }
     }
 }

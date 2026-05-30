@@ -53,6 +53,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -60,6 +61,8 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.activities.home.HomeActivity
 import com.phonecall.dialcontacts.calldialer.adapters.AllAccountAdapter
@@ -84,10 +87,6 @@ import com.phonecall.dialcontacts.calldialer.models.AccountModel
 import com.phonecall.dialcontacts.calldialer.models.ContactModel
 import com.phonecall.dialcontacts.calldialer.models.QuickResponseModel
 import com.phonecall.dialcontacts.calldialer.receivers.ReminderReceiver
-import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.phonecall.dialcontacts.calldialer.Advertisement.ADSBannerSmall
-import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
-import com.phonecall.dialcontacts.calldialer.Advertisement.ADSNativeDisplay
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -225,6 +224,19 @@ object Common {
     }
 
 
+    @JvmStatic
+    fun setStableStatusBarInsets(view: View) {
+        var statusBarHeight = 0
+        ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            if (systemBars.top > 0) {
+                statusBarHeight = systemBars.top
+            }
+            v.setPadding(systemBars.left, statusBarHeight, systemBars.right, systemBars.bottom)
+            insets
+        }
+    }
+
     fun hideSystemUI(activity: Activity) {
         activity.window?.decorView?.post {
             activity.window?.let { window ->
@@ -263,6 +275,11 @@ object Common {
         }
     }
 
+    fun isKeyboardOpen(activity: Activity): Boolean {
+        val rootView = activity.findViewById<View>(android.R.id.content)
+        val insets = ViewCompat.getRootWindowInsets(rootView)
+        return insets?.isVisible(WindowInsetsCompat.Type.ime()) == true
+    }
 
     fun generateAvatar(input: String): Bitmap {
         val text = input.trim()
@@ -505,7 +522,11 @@ object Common {
                 )
 
                 // Create temporary file in cache
-                val fileName = "Contact_${System.currentTimeMillis()}.vcf"
+//                val fileName = "Contact_${System.currentTimeMillis()}.vcf"
+                val safeName = (displayName ?: "Contact")
+                    .replace(Regex("[\\\\/:*?\"<>|]"), "_")
+
+                val fileName = "${safeName}.vcf"
                 val cacheFile = File(context.cacheDir, fileName)
 
                 var success = false
@@ -597,7 +618,6 @@ object Common {
         option1Click: () -> Unit,
         option2Click: () -> Unit
     ) {
-
         val popUpBinding = PopUpMenuDesignBinding.inflate(
             LayoutInflater.from(context),
             null,
@@ -611,7 +631,7 @@ object Common {
             true
         )
 
-        popupWindow.elevation = 10f
+        popupWindow.elevation = 5f
         /*popupWindow.isOutsideTouchable = true
         popupWindow.isFocusable = true*/
 
@@ -628,6 +648,7 @@ object Common {
         val xOffset = anchorView.width - popupWidth - margin
 
         popupWindow.showAsDropDown(anchorView, xOffset, 20)
+
 
         popUpBinding.tvOption1.setOnClickListener {
             option1Click()
@@ -845,9 +866,9 @@ object Common {
         context: Context,
         onItemClick: (String) -> Unit
     ) {
-
-        val dialog = Dialog(context)
-        val bindingSendMessage = EditQuickMessageBinding.inflate(LayoutInflater.from(context))
+        val themedContext = android.view.ContextThemeWrapper(context, R.style.Theme_ContanctManager)
+        val dialog = Dialog(themedContext)
+        val bindingSendMessage = EditQuickMessageBinding.inflate(LayoutInflater.from(themedContext))
 
         dialog.setContentView(bindingSendMessage.root)
         dialog.setCancelable(false)
@@ -961,17 +982,17 @@ object Common {
         }
 
         bindingAppTheme.llLightMode.setOnClickListener {
-            onItemClick(bindingAppTheme.tvLightMode.text.toString())
+            onItemClick("light")
             dialog.dismiss()
         }
 
         bindingAppTheme.llDarkMode.setOnClickListener {
-            onItemClick(bindingAppTheme.tvDarkMode.text.toString())
+            onItemClick("dark")
             dialog.dismiss()
         }
 
         bindingAppTheme.llDefaultMode.setOnClickListener {
-            onItemClick(bindingAppTheme.tvDefaultMode.text.toString())
+            onItemClick("default")
             dialog.dismiss()
         }
 
@@ -1169,7 +1190,8 @@ object Common {
         context: Context,
         contactName: String,
         numbers: List<Pair<String, String>>,
-        onNumberSelected: (String) -> Unit
+        onNumberSelected: (String) -> Unit,
+        onDismiss: (() -> Unit)? = null
     ) {
         val dialog = Dialog(context)
         val binding = SimSelectionDesignBinding.inflate(LayoutInflater.from(context))
@@ -1196,6 +1218,8 @@ object Common {
         )
         params.setMargins(0, 5, 0, 5)
 
+        var numberSelected = false
+
         numbers.forEach { (number, type) ->
             val llItem = LinearLayout(context).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -1208,6 +1232,7 @@ object Common {
                  )*/
                 background = ContextCompat.getDrawable(context, R.drawable.ripple_effect_bg)
                 setOnClickListener {
+                    numberSelected = true
                     onNumberSelected(number)
                     dialog.dismiss()
                 }
@@ -1255,6 +1280,12 @@ object Common {
             llItem.addView(ivIcon)
             llItem.addView(llText)
             binding.llSimContainer.addView(llItem, params)
+        }
+
+        dialog.setOnDismissListener {
+            if (!numberSelected) {
+                onDismiss?.invoke()
+            }
         }
 
         dialog.show()
@@ -1420,8 +1451,25 @@ object Common {
         return sb.toString()
     }
 
-    fun actionCall(number: String?, context: Context, showSelection: Boolean = true) {
-        if (number.isNullOrEmpty()) return
+    @JvmOverloads
+    fun actionCall(
+        number: String?,
+        context: Context,
+        showSelection: Boolean = true,
+        onFinished: Runnable? = null
+    ) {
+        fun complete() {
+            onFinished?.run()
+        }
+
+        if (number.isNullOrEmpty()) {
+            complete()
+            return
+        }
+
+        if (context is Activity && (context.isFinishing || context.isDestroyed)) {
+            return
+        }
 
         if (showSelection && PermissionManager.hasContactPermissions(context)) {
             val allNumbers = getNumbersForContactByNumber(context, number)
@@ -1430,10 +1478,12 @@ object Common {
                 showNumberSelectionDialog(
                     context,
                     contact?.displayName ?: number,
-                    allNumbers
-                ) { selectedNumber ->
-                    actionCall(selectedNumber, context, false)
-                }
+                    allNumbers,
+                    onNumberSelected = { selectedNumber ->
+                        actionCall(selectedNumber, context, false, onFinished)
+                    },
+                    onDismiss = { complete() }
+                )
                 return
             }
         }
@@ -1444,21 +1494,26 @@ object Common {
                 context.getString(R.string.number_already_in_a_call),
                 Toast.LENGTH_SHORT
             ).show()
+            complete()
             return
         }
 
         // If app is not default dialer, then direct call (Call Anyway)
         if (!PermissionManager.isDefaultDialer(context)) {
             try {
+                ADSAppManage.isAppOpenBlocked = true
+                ADSAppManage.blockAppOpenAd(3000)
                 val intent = Intent(Intent.ACTION_CALL, Uri.fromParts("tel", number, null))
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 context.startActivity(intent)
             } catch (e: Exception) {
-                Log.e("TAG", "actionCall: ${e.message}")
+                ADSAppManage.isAppOpenBlocked = true
+                ADSAppManage.blockAppOpenAd(3000)
                 val intent = Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null))
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 context.startActivity(intent)
             }
+            complete()
             return
         }
 
@@ -1467,17 +1522,23 @@ object Common {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             try {
+                ADSAppManage.isAppOpenBlocked = true
+                ADSAppManage.blockAppOpenAd(3000)
                 val intent = Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null))
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 context.startActivity(intent)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+            complete()
             return
         }
 
         val telecomManager =
-            context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager ?: return
+            context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager ?: run {
+                complete()
+                return
+            }
 
         val callUri = Uri.fromParts("tel", number, null)
         val callBundle = Bundle().apply {
@@ -1500,6 +1561,7 @@ object Common {
                         )
                     }
                     telecomManager.placeCall(callUri, callBundlePref)
+                    complete()
                     return
                 }
             }
@@ -1556,7 +1618,9 @@ object Common {
                 binding.llSimContainer.addView(tvSim, params)
             }
 
+            simDialog.setOnDismissListener { complete() }
             simDialog.show()
+            return
 
         } else {
             // Single SIM or SIM preference not set/matched
@@ -1570,11 +1634,13 @@ object Common {
                         )
                     }
                     telecomManager.placeCall(callUri, callBundlePref)
+                    complete()
                     return
                 }
             }
             telecomManager.placeCall(callUri, callBundle)
         }
+        complete()
     }
 
 

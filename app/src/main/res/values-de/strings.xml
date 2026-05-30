@@ -99,6 +99,7 @@
     <string name="about">Über</string>
     <string name="rate_us">Bewerten Sie uns</string>
     <string name="privacy_policy">Datenschutzrichtlinie</string>
+    <string name="terms_of_service">Nutzungsbedingungen</string>
     <string name="mobile">Mobil</string>
     <string name="dark_mode">Dunkler Modus</string>
     <string name="set_default">Standardmodus</string>
@@ -159,7 +160,7 @@
     <string name="smart_contact_app_to_">Intelligente Kontakt-App zum Verwalten von Anrufen,\nNummern und Favoriten</string>
     <string name="call_search_and_save_contacts">Anrufen, Suchen und Kontakte speichern</string>
     <string name="sync_from_all_gmail_sim_amp_phone"><![CDATA[Von Gmail, SIM & Telefon synchronisieren]]></string>
-    <string name="we_don_t_collect_personal">Wir erfassen keine persönlichen oder sensiblen Daten. Ihre Daten bleiben privat. Nutzungsbedingungen und Datenschutzrichtlinie</string>
+    <string name="we_don_t_collect_personal">Wir erfassen keine persönlichen oder sensiblen Daten. Ihre Daten bleiben privat. %1$s und %2$s</string>
     <string name="to_make_receive_calls_set_this_app">Um Anrufe zu tätigen/empfangen, setzen Sie diese App als\nStandard-Telefon-App oder überspringen Sie</string>
     <string name="permissions_required">Berechtigung</string>
     <string name="call_logs">Anrufprotokolle</string>
@@ -374,4 +375,8 @@
     <string name="type">Typ</string>
     <string name="enable_notification_permission">Aktivieren Sie die Benachrichtigungsberechtigung, um wichtige Hinweise, eingehende Anrufe und App-Updates in Echtzeit zu erhalten.</string>
     <string name="selected">%1$d ausgewählt</string>
+    <string name="leave_page">Seite verlassen?</string>
+    <string name="your_changes_won_t_be_saved">Ihre Änderungen werden nicht gespeichert.</string>
+    <string name="okay">OK</string>
+    <string name="sync_contact_successfully">Kontakt erfolgreich synchronisiert</string>
 </resources>

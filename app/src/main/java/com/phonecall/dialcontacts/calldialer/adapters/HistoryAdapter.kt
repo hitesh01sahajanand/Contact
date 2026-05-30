@@ -4,6 +4,7 @@ import android.provider.CallLog
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.databinding.HeaderItemDesignBinding
@@ -71,13 +72,12 @@ class HistoryAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             // logic for rounded background
             val isFirst =
                 position == 0 || (historyList.getOrNull(position - 1) is HistoryListItem.Header)
-            val isLast =
-                position == historyList.size - 1 || (historyList.getOrNull(position + 1) is HistoryListItem.Header)
+            val isLast = position == historyList.size - 1 || (historyList.getOrNull(position + 1) is HistoryListItem.Header)
 
             val backgroundRes = when {
                 isFirst && isLast -> R.drawable.bg_all_rounded
                 isFirst -> R.drawable.bg_top_rounded
-                isLast -> R.drawable.bg_bottom_rounded
+                isLast -> {R.drawable.bg_bottom_rounded}
                 else -> R.drawable.bg_middle
             }
 
@@ -117,6 +117,7 @@ class HistoryAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                     )
                 )
             }
+            binding.viewSep.isVisible = !isLast
         }
     }
 }

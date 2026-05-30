@@ -11,6 +11,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/_10sdp"
         android:orientation="vertical"
+        app:cardElevation="0dp"
         app:cardBackgroundColor="@color/white"
         app:cardCornerRadius="@dimen/_12sdp"
         app:strokeWidth="0dp">
@@ -22,8 +23,8 @@
 
             <TextView
                 android:id="@+id/tv_option_1"
-                style="@style/TextStyle.Small"
-                android:layout_width="@dimen/_120sdp"
+                style="@style/TextStyle.Medium"
+                android:layout_width="@dimen/_136sdp"
                 android:layout_height="wrap_content"
                 android:background="@drawable/ripple_effect_bg"
                 android:paddingHorizontal="@dimen/_10sdp"
@@ -39,8 +40,8 @@
 
             <TextView
                 android:id="@+id/tv_option_2"
-                style="@style/TextStyle.Small"
-                android:layout_width="@dimen/_120sdp"
+                style="@style/TextStyle.Medium"
+                android:layout_width="@dimen/_136sdp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="start"
                 android:background="@drawable/ripple_effect_bg"

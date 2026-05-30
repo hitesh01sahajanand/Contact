@@ -13,6 +13,7 @@
     <color name="setting_grey_color">#B0B0B0</color>
     <color name="bg_color">#121212</color>
     <color name="main_color">#327DFF</color>
+    <color name="index_color">#FFFFFFFF</color>
     <color name="black_color">#FFFFFFFF</color>
     <color name="border_color">#333333</color>
     <color name="border_color_2">#3D3D3D</color>

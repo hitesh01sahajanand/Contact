@@ -4,8 +4,10 @@ import android.content.Intent
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.Bundle
+import android.text.InputType
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
@@ -36,6 +38,7 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class KeypadFragment : Fragment(), OnClickHandler {
+
     private lateinit var binding: FragmentKeypadBinding
     private val viewModel: ContactViewModel by viewModels()
     private val speedDialViewModel: SpeedDialViewModel by viewModels()
@@ -73,6 +76,7 @@ class KeypadFragment : Fragment(), OnClickHandler {
     )
 
     private var toneGenerator: ToneGenerator? = null
+    private var isDialPadInput = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -85,15 +89,45 @@ class KeypadFragment : Fragment(), OnClickHandler {
 
     override fun onResume() {
         super.onResume()
+        hideKeypadKeyboard()
         if (PermissionManager.hasContactPermissions(requireActivity())) {
             viewModel.loadAllContacts()
         }
     }
 
+    override fun onPause() {
+        if (::binding.isInitialized) {
+            binding.edtDisplayNumber.clearFocus()
+        }
+        super.onPause()
+    }
+
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
-        if (!hidden && PermissionManager.hasContactPermissions(requireActivity())) {
-            viewModel.loadAllContacts()
+        if (hidden) {
+            if (::binding.isInitialized) {
+                binding.edtDisplayNumber.clearFocus()
+            }
+        } else {
+            hideKeypadKeyboard()
+            if (PermissionManager.hasContactPermissions(requireActivity())) {
+                viewModel.loadAllContacts()
+            }
+        }
+    }
+
+    private fun hideKeypadKeyboard() {
+        if (!::binding.isInitialized) return
+        binding.edtDisplayNumber.clearFocus()
+        binding.root.apply {
+            isFocusableInTouchMode = true
+            requestFocus()
+        }
+        val decorView = requireActivity().window.decorView
+        Common.hideKeyboard(requireContext(), decorView)
+        decorView.post {
+            binding.edtDisplayNumber.clearFocus()
+            Common.hideKeyboard(requireContext(), decorView)
         }
     }
 
@@ -104,13 +138,30 @@ class KeypadFragment : Fragment(), OnClickHandler {
         binding.inHeader.tvTitle.text = requireActivity().getString(R.string.phone)
         binding.inHeader.cvMore.isVisible = true
         binding.edtDisplayNumber.apply {
+            inputType = InputType.TYPE_CLASS_TEXT
             showSoftInputOnFocus = false
             isFocusable = true
             isFocusableInTouchMode = true
+            isCursorVisible = true
+            setOnFocusChangeListener { view, hasFocus ->
+                if (hasFocus) {
+                    Common.hideKeyboard(requireContext(), view)
+                    isCursorVisible = true
+                }
+            }
+            setOnTouchListener { view, event ->
+                if (event.action == MotionEvent.ACTION_UP) {
+                    Common.hideKeyboard(requireContext(), view)
+                    isCursorVisible = true
+                }
+                false
+            }
         }
 
         adapter = SuggestionAdapter(onClick = { model ->
-            binding.edtDisplayNumber.setText(model.number)
+            val number = model.number.orEmpty()
+            binding.edtDisplayNumber.setText(number)
+            safeSetSelection(number.length)
         }, onFilterComplete = { count ->
             val query = binding.edtDisplayNumber.text.toString().trim()
             if (query.isEmpty()) {
@@ -134,21 +185,39 @@ class KeypadFragment : Fragment(), OnClickHandler {
                 val list = allContacts
                     .filterIsInstance<ContactListItem.Contact>()
                     .map { it.data }
-                adapter.addAll(ArrayList(list))
+                val currentQuery = binding.edtDisplayNumber.text.toString().trim()
+                // addAllAndFilter: if query is present, skips intermediate notify to avoid blink
+                adapter.addAllAndFilter(ArrayList(list), currentQuery)
             } else {
                 binding.rvSuggestions.isVisible = false
                 binding.llOptionsSuggestions.isVisible = false
             }
         }
 
-        binding.edtDisplayNumber.addTextChangedListener { editable ->
-            val query = editable.toString().trim()
-            if (query.isEmpty()) {
-                binding.rvSuggestions.isVisible = false
-                binding.llOptionsSuggestions.isVisible = false
+        var textLengthBeforeChange = 0
+        binding.edtDisplayNumber.addTextChangedListener(
+            beforeTextChanged = { text, _, _, _ ->
+                textLengthBeforeChange = text?.length ?: 0
+            },
+            afterTextChanged = { editable ->
+                val query = editable.toString().trim()
+                binding.buttonDelete.visibility =
+                    if (editable.isNullOrEmpty()) View.INVISIBLE else View.VISIBLE
+                if (query.isEmpty()) {
+                    binding.rvSuggestions.isVisible = false
+                    binding.llOptionsSuggestions.isVisible = false
+                }
+                adapter.filter(query)
+
+                if (!isDialPadInput) {
+                    val newLength = editable?.length ?: 0
+                    if (newLength - textLengthBeforeChange > 1) {
+                        scheduleCursorToEnd()
+                    }
+                }
+                isDialPadInput = false
             }
-            adapter.filter(query)
-        }
+        )
 
         binding.buttonDelete.setOnLongClickListener {
             clearNumber()
@@ -163,6 +232,25 @@ class KeypadFragment : Fragment(), OnClickHandler {
         }
     }
 
+    private fun scheduleCursorToEnd() {
+        binding.edtDisplayNumber.post {
+            binding.edtDisplayNumber.post {
+                moveCursorToEnd()
+            }
+        }
+    }
+
+    private fun moveCursorToEnd() {
+        val edt = binding.edtDisplayNumber
+        val length = edt.text?.length ?: 0
+        if (length == 0) return
+        if (!edt.hasFocus()) {
+            edt.requestFocus()
+        }
+        edt.isCursorVisible = true
+        edt.setSelection(length)
+    }
+
     private fun appendDigit(viewId: Int) {
         val value = keyMap[viewId] ?: return
 
@@ -170,11 +258,30 @@ class KeypadFragment : Fragment(), OnClickHandler {
             playTone(viewId)
         }
 
-        binding.edtDisplayNumber.append(value)
+        insertAtCursor(value)
+    }
 
-        if (binding.edtDisplayNumber.text.isNotEmpty()) {
-            binding.buttonDelete.visibility = View.VISIBLE
+    private fun insertAtCursor(value: String) {
+        val edt = binding.edtDisplayNumber
+        if (!edt.hasFocus()) {
+            edt.requestFocus()
         }
+        edt.isCursorVisible = true
+        val text = edt.text ?: return
+        val currentLength = text.length
+        val start = edt.selectionStart.coerceIn(0, currentLength)
+        val end = edt.selectionEnd.coerceIn(start, currentLength)
+        isDialPadInput = true
+        text.replace(start, end, value)
+        safeSetSelection(start + value.length)
+    }
+
+    private fun safeSetSelection(index: Int) {
+        val edt = binding.edtDisplayNumber
+        val length = edt.text?.length ?: 0
+        if (length == 0) return
+        edt.isCursorVisible = true
+        edt.setSelection(index.coerceIn(0, length))
     }
 
     private fun playTone(viewId: Int) {
@@ -205,8 +312,7 @@ class KeypadFragment : Fragment(), OnClickHandler {
             val digitStr = keyMap[view.id]
             if (digitStr == "0") {
                 view.setOnLongClickListener {
-                    binding.edtDisplayNumber.append("+")
-                    binding.buttonDelete.visibility = View.VISIBLE
+                    insertAtCursor("+")
                     true
                 }
             } else if (digitStr != null && digitStr.matches(Regex("[1-9]"))) {
@@ -233,22 +339,23 @@ class KeypadFragment : Fragment(), OnClickHandler {
     }
 
     private fun deleteLastDigit() {
-        val text = binding.edtDisplayNumber.text.toString()
+        val edt = binding.edtDisplayNumber
+        val text = edt.text ?: return
+        val currentLength = text.length
+        val start = edt.selectionStart.coerceIn(0, currentLength)
+        val end = edt.selectionEnd.coerceIn(start, currentLength)
 
-        if (text.isNotEmpty()) {
-            val updated = text.dropLast(1)
-            binding.edtDisplayNumber.setText(updated)
-            binding.edtDisplayNumber.setSelection(updated.length)
-        }
-
-        if (binding.edtDisplayNumber.text.isEmpty()) {
-            binding.buttonDelete.visibility = View.INVISIBLE
+        if (start != end) {
+            text.delete(start, end)
+            safeSetSelection(start)
+        } else if (start > 0) {
+            text.delete(start - 1, start)
+            safeSetSelection(start - 1)
         }
     }
 
     private fun clearNumber() {
         binding.edtDisplayNumber.setText("")
-        binding.buttonDelete.visibility = View.INVISIBLE
     }
 
 
@@ -302,46 +409,52 @@ class KeypadFragment : Fragment(), OnClickHandler {
             }
 
             binding.llCreateNewContact.id -> {
-                if (binding.edtDisplayNumber.text.isNotEmpty()) {
-                    val intent = Intent(requireActivity(), NewContactActivity::class.java)
-                    intent.putExtra("Number", binding.edtDisplayNumber.text.toString())
-                    requireActivity().startActivity(intent)
-                } else {
-                    Toast.makeText(
-                        requireActivity(),
-                        requireActivity().getString(R.string.enter_number),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                binding.edtDisplayNumber.text?.let {
+                    if (it.isNotEmpty()) {
+                        val intent = Intent(requireActivity(), NewContactActivity::class.java)
+                        intent.putExtra("Number", binding.edtDisplayNumber.text.toString())
+                        requireActivity().startActivity(intent)
+                    } else {
+                        Toast.makeText(
+                            requireActivity(),
+                            requireActivity().getString(R.string.enter_number),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
 
             binding.llVideoCall.id -> {
-                if (binding.edtDisplayNumber.text.isNotEmpty()) {
-                    Common.showVideoAppChooser(
-                        requireActivity(),
-                        binding.edtDisplayNumber.text.toString()
-                    )
-                } else {
-                    Toast.makeText(
-                        requireActivity(),
-                        requireActivity().getString(R.string.enter_number),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                binding.edtDisplayNumber.text?.let {
+                    if (it.isNotEmpty()) {
+                        Common.showVideoAppChooser(
+                            requireActivity(),
+                            binding.edtDisplayNumber.text.toString()
+                        )
+                    } else {
+                        Toast.makeText(
+                            requireActivity(),
+                            requireActivity().getString(R.string.enter_number),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
 
             binding.llSendMessage.id -> {
-                if (binding.edtDisplayNumber.text.isNotEmpty()) {
-                    Common.showMessageAppChooser(
-                        requireActivity(),
-                        binding.edtDisplayNumber.text.toString()
-                    )
-                } else {
-                    Toast.makeText(
-                        requireActivity(),
-                        requireActivity().getString(R.string.enter_number),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                binding.edtDisplayNumber.text?.let {
+                    if (it.isNotEmpty()) {
+                        Common.showMessageAppChooser(
+                            requireActivity(),
+                            binding.edtDisplayNumber.text.toString()
+                        )
+                    } else {
+                        Toast.makeText(
+                            requireActivity(),
+                            requireActivity().getString(R.string.enter_number),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
         }

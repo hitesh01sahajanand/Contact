@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.Toast
@@ -26,9 +27,11 @@ import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSBannerSmall
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSInterDisplayClick
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
@@ -63,6 +66,12 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
     private var isContactSaved = false
     private var contactId: String? = null
 
+    private var initialSnapshot: FullContactData? = null
+    private var initialPhotoUri: Uri? = null
+    private var initialAccountKey: String? = null
+    private var isInitialSnapshotReady = false
+    private var isContactDataLoaded = false
+
     // Tracking dynamic views
     private val phoneViews = mutableListOf<ItemAddContactFieldBinding>()
     private val emailViews = mutableListOf<ItemAddContactFieldBinding>()
@@ -75,14 +84,60 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_new_contact)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        setupWindowInsets()
+        setupScrollOnFocus()
         Common.hideSystemUI(this)
         initView()
         loadAds()
+    }
+
+    private fun setupWindowInsets() {
+        var statusBarHeight = 0
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
+            if (systemBars.top > 0) {
+                statusBarHeight = systemBars.top
+            }
+            v.setPadding(systemBars.left, statusBarHeight, systemBars.right, systemBars.bottom)
+            binding.banner.visibility = if (insets.isVisible(WindowInsetsCompat.Type.ime())) View.GONE else View.VISIBLE
+            binding.scrollView.updatePadding(bottom = imeInsets.bottom)
+            insets
+        }
+        ViewCompat.requestApplyInsets(binding.main)
+    }
+
+    private val scrollOnFocusListener = View.OnFocusChangeListener { v, hasFocus ->
+        if (hasFocus) {
+            binding.scrollView.postDelayed({ scrollToView(v) }, 300)
+        }
+    }
+
+    private fun setupScrollOnFocus() {
+        applyEditTextFocusListener(binding.scrollView)
+    }
+
+    private fun applyEditTextFocusListener(view: View) {
+        if (view is EditText) {
+            view.onFocusChangeListener = scrollOnFocusListener
+        } else if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                applyEditTextFocusListener(view.getChildAt(i))
+            }
+        }
+    }
+
+    private fun scrollToView(view: View) {
+        val scrollView = binding.scrollView
+        val viewLocation = IntArray(2)
+        view.getLocationOnScreen(viewLocation)
+        val scrollLocation = IntArray(2)
+        scrollView.getLocationOnScreen(scrollLocation)
+        val relativeTop = viewLocation[1] - scrollLocation[1]
+        val scrollAmount = relativeTop - scrollView.height / 4
+        if (scrollAmount > 0) {
+            scrollView.smoothScrollBy(0, scrollAmount)
+        }
     }
 
     private fun loadAds() {
@@ -199,6 +254,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
                 updateAccountUI(defaultAccount)
                 accountModel = defaultAccount
             }
+            trySaveInitialSnapshot()
         }
 
         viewModel.fullContactData.observe(this) { data ->
@@ -221,6 +277,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             )
             updateAccountUI(itemData)
             accountModel = itemData
+            trySaveInitialSnapshot()
         }
 
         viewModel.newContactId.observe(this) { newId ->
@@ -258,9 +315,45 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                loadInterAd()
+                handleBackPress()
             }
         })
+    }
+
+    private fun trySaveInitialSnapshot() {
+        if (isInitialSnapshotReady) return
+        if (isContactSaved) {
+            if (!isContactDataLoaded || accountModel == null) return
+        } else if (accountModel == null) {
+            return
+        }
+        saveInitialSnapshot()
+    }
+
+    private fun saveInitialSnapshot() {
+        initialSnapshot = collectData()
+        initialPhotoUri = selectedImageUri
+        initialAccountKey = accountKey(accountModel)
+        isInitialSnapshotReady = true
+    }
+
+    private fun accountKey(model: AccountModel?): String? =
+        model?.let { "${it.email}|${it.name}|${it.accountType}" }
+
+    private fun hasUnsavedChanges(): Boolean {
+        if (!isInitialSnapshotReady) return false
+        if (collectData() != initialSnapshot) return true
+        if (selectedImageUri?.toString() != initialPhotoUri?.toString()) return true
+        if (accountKey(accountModel) != initialAccountKey) return true
+        return false
+    }
+
+    private fun handleBackPress() {
+        if (hasUnsavedChanges()) {
+            showExitDialog()
+        } else {
+            loadInterAd()
+        }
     }
 
     fun loadInterAd() {
@@ -406,6 +499,8 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
                 )
             }
         }
+        isContactDataLoaded = true
+        trySaveInitialSnapshot()
     }
 
     private fun addNewField(
@@ -477,6 +572,8 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             container.removeView(fieldBinding.root)
             viewList.remove(fieldBinding)
         }
+
+        applyEditTextFocusListener(fieldBinding.root)
 
         container.addView(fieldBinding.root)
         viewList.add(fieldBinding)
@@ -597,7 +694,18 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
                 hint = getString(R.string.website)
             )
 
-            binding.ivBack.id -> onBackPressedDispatcher.onBackPressed()
+            binding.ivBack.id -> handleBackPress()
+        }
+    }
+
+    private fun showExitDialog() {
+        Common.alertDialog(
+            this,
+            getString(R.string.leave_page),
+            getString(R.string.your_changes_won_t_be_saved),
+            getString(R.string.okay)
+        ) {
+            loadInterAd()
         }
     }
 
@@ -912,6 +1020,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
     }
 
     private fun showImagePickerDialog() {
+        ADSAppManage.isAppOpenBlocked = true
         pickImageLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
 

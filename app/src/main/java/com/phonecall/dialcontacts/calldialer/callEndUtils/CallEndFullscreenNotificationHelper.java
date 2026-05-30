@@ -79,14 +79,15 @@ public final class CallEndFullscreenNotificationHelper {
                 notificationId,
                 CHANNEL_CALL_END,
                 "See call Information",
-                "",
-                "",
+                big,
+                big,
                 NotificationCompat.CATEGORY_CALL,
                 R.drawable.notification_call,
                 defaultNotificationSound(),
                 true
         );
     }
+
 
     public static void notifyCallEndNotificationOnly(
             Context context,

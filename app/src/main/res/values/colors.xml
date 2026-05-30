@@ -17,6 +17,7 @@
     <color name="setting_grey_color">#828C98</color>
     <color name="bg_color">#F4F8FA</color>
     <color name="main_color">#327DFF</color>
+    <color name="index_color">#327DFF</color>
     <color name="black_color">#151515</color>
     <color name="border_color">#CDD1D6</color>
     <color name="border_color_2">#DBE2E5</color>

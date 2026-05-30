@@ -46,11 +46,13 @@
         <item name="android:textSize">@dimen/_21sdp</item>
     </style>
 
-    <style name="TransparentDialog" parent="Theme.Design.Light.BottomSheetDialog">
+    <style name="TransparentDialog" parent="Theme.Material3.DayNight.BottomSheetDialog">
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/black_color</item>
         <item name="bottomSheetStyle">@style/CustomBottomSheetStyle</item>
     </style>
 
-    <style name="CustomBottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+    <style name="CustomBottomSheetStyle" parent="Widget.Material3.BottomSheet.Modal">
         <item name="android:background">@android:color/transparent</item>
     </style>
 

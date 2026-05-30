@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
 
@@ -15,8 +16,10 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:layout_marginEnd="@dimen/_3sdp"
             android:orientation="horizontal"
-            android:padding="@dimen/_10sdp">
+            android:paddingVertical="@dimen/_10sdp">
 
             <ImageView
                 android:id="@+id/iv_play"
@@ -24,12 +27,12 @@
                 android:layout_height="@dimen/_18sdp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_play"
-                android:tint="@color/black_color" />
+                app:tint="@color/black_color" />
 
             <TextView
                 android:id="@+id/tv_ringtone_name"
                 style="@style/TextStyle.Medium"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_gravity="center_vertical"
                 android:layout_marginStart="@dimen/_10sdp"
@@ -43,9 +46,9 @@
             <RadioButton
                 android:id="@+id/rb_selection"
                 android:layout_width="wrap_content"
-                android:buttonTint="@color/main_color"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center" />
+                android:layout_gravity="center"
+                android:buttonTint="@color/main_color" />
 
         </LinearLayout>
 

@@ -42,7 +42,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                style="@style/TextStyle.Medium"
+                style="@style/TextStyle.MediumSemiBold"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -79,8 +79,8 @@
 
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/cv_add_photo"
-                        android:layout_width="@dimen/_100sdp"
-                        android:layout_height="@dimen/_100sdp"
+                        android:layout_width="@dimen/_90sdp"
+                        android:layout_height="@dimen/_90sdp"
                         android:layout_gravity="center"
                         android:layout_marginTop="@dimen/_22sdp"
                         android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
@@ -534,7 +534,7 @@
                             android:id="@+id/rl_voice_call"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/_8sdp"
+                            android:layout_marginTop="@dimen/_18sdp"
                             android:onClick="@{ (v) -> OnClickHandler.onClick(v)}">
 
                             <ImageView
@@ -590,7 +590,7 @@
                             android:id="@+id/rl_video_call"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/_8sdp"
+                            android:layout_marginTop="@dimen/_18sdp"
                             android:onClick="@{ (v) -> OnClickHandler.onClick(v)}">
 
                             <ImageView
@@ -641,7 +641,6 @@
                                 </LinearLayout>
                             </LinearLayout>
                         </RelativeLayout>
-
 
                     </LinearLayout>
 

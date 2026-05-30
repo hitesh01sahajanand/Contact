@@ -37,6 +37,7 @@ import com.phonecall.dialcontacts.calldialer.utils.OnClickHandler
 import com.phonecall.dialcontacts.calldialer.utils.ThemeManager
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.core.net.toUri
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
 
 @AndroidEntryPoint
 class PermissionActivity : AppCompatActivity(), OnClickHandler {
@@ -46,11 +47,7 @@ class PermissionActivity : AppCompatActivity(), OnClickHandler {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_permission)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        Common.setStableStatusBarInsets(findViewById(R.id.main))
         Common.hideSystemUI(this)
         intView()
         loadAds()
@@ -73,11 +70,11 @@ class PermissionActivity : AppCompatActivity(), OnClickHandler {
     private fun intView() {
         binding.onClickHandler = this
 
-        binding.lottiPermission.setAnimation(R.raw.permission_light)
+        /*binding.lottiPermission.setAnimation(R.raw.permission_light)
         binding.lottiPermission.playAnimation()
 
         binding.lottiPermissionBtn.setAnimation(R.raw.permission_btn)
-        binding.lottiPermissionBtn.playAnimation()
+        binding.lottiPermissionBtn.playAnimation()*/
 
         manageTextViews()
 
@@ -90,74 +87,47 @@ class PermissionActivity : AppCompatActivity(), OnClickHandler {
     }
 
     fun manageTextViews() {
-
-        val text = getString(R.string.we_don_t_collect_personal)
+        val terms = getString(R.string.terms_of_service)
+        val privacy = getString(R.string.privacy_policy)
+        val text = getString(R.string.we_don_t_collect_personal, terms, privacy)
         val spannable = SpannableString(text)
 
-        val termsStart = text.indexOf("Terms of Service")
-        val termsEnd = termsStart + "Terms of Service".length
-
-        val termsClickable = object : ClickableSpan() {
-            override fun onClick(widget: View) {
-                val privacyPolicyUrl = ADSMainClass.getPrivacyPolicy()
-                if (privacyPolicyUrl != null && privacyPolicyUrl != "") {
-                    val intent = Intent(Intent.ACTION_VIEW, privacyPolicyUrl.toUri())
-                    startActivity(intent)
-                } else {
-                    Toast.makeText(
-                        this@PermissionActivity,
-                        "Something went wrong!",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-//                Toast.makeText(widget.context, "Terms clicked", Toast.LENGTH_SHORT).show()
-            }
-
-            override fun updateDrawState(ds: TextPaint) {
-                super.updateDrawState(ds)
-                ds.color = ContextCompat.getColor(this@PermissionActivity, R.color.main_color)
-                ds.isUnderlineText = true
-            }
-        }
-
-        spannable.setSpan(termsClickable, termsStart, termsEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-
-        val privacyStart = text.indexOf("Privacy Policy")
-        val privacyEnd = privacyStart + "Privacy Policy".length
-
-        val privacyClickable = object : ClickableSpan() {
-            override fun onClick(widget: View) {
-                val privacyPolicyUrl = ADSMainClass.getPrivacyPolicy()
-                if (privacyPolicyUrl != null && privacyPolicyUrl != "") {
-                    val intent = Intent(Intent.ACTION_VIEW, privacyPolicyUrl.toUri())
-                    startActivity(intent)
-                } else {
-                    Toast.makeText(
-                        this@PermissionActivity,
-                        "Something went wrong!",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-
-            }
-
-            override fun updateDrawState(ds: TextPaint) {
-                super.updateDrawState(ds)
-                ds.color = ContextCompat.getColor(this@PermissionActivity, R.color.main_color)
-                ds.isUnderlineText = true
-            }
-        }
-
-        spannable.setSpan(
-            privacyClickable,
-            privacyStart,
-            privacyEnd,
-            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-        )
+        applyPolicyLinkSpan(spannable, text, terms)
+        applyPolicyLinkSpan(spannable, text, privacy)
 
         binding.tvPrivacyPolicy.text = spannable
         binding.tvPrivacyPolicy.movementMethod = LinkMovementMethod.getInstance()
         binding.tvPrivacyPolicy.highlightColor = Color.TRANSPARENT
+    }
+
+    private fun applyPolicyLinkSpan(spannable: SpannableString, fullText: String, label: String) {
+        if (label.isEmpty()) return
+        val start = fullText.indexOf(label)
+        if (start < 0) return
+        val end = start + label.length
+
+        val clickable = object : ClickableSpan() {
+            override fun onClick(widget: View) {
+                openPrivacyPolicyUrl()
+            }
+
+            override fun updateDrawState(ds: TextPaint) {
+                super.updateDrawState(ds)
+                ds.color = ContextCompat.getColor(this@PermissionActivity, R.color.main_color)
+                ds.isUnderlineText = true
+            }
+        }
+        spannable.setSpan(clickable, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+    }
+
+    private fun openPrivacyPolicyUrl() {
+        val privacyPolicyUrl = ADSMainClass.getPrivacyPolicy()
+        if (!privacyPolicyUrl.isNullOrEmpty()) {
+            ADSAppManage.isAppOpenBlocked = true
+            startActivity(Intent(Intent.ACTION_VIEW, privacyPolicyUrl.toUri()))
+        } else {
+            Toast.makeText(this, "Something went wrong!", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onClick(view: View) {

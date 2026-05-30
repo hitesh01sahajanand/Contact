@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
@@ -158,7 +159,7 @@ class ContactsFragment : Fragment(), OnClickHandler {
             val tv = TextView(context).apply {
                 text = letter
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, sizeInPx)
-                setTextColor(ContextCompat.getColor(context, R.color.main_color))
+                setTextColor(ContextCompat.getColor(context, R.color.index_color))
                 typeface = ResourcesCompat.getFont(context, R.font.fig_tree_semi_bold)
                 setPadding(4, 2, 4, 2)
             }
@@ -315,6 +316,11 @@ class ContactsFragment : Fragment(), OnClickHandler {
                     settings,
                     option1Click = {
                         viewModel.loadContacts()
+                        Toast.makeText(
+                            requireActivity(),
+                            getString(R.string.sync_contact_successfully),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     },
                     option2Click = {
                         requireActivity().startActivity(

@@ -833,10 +833,18 @@ public class ADSMainClass {
      * @return True if all conditions for the current scenario are met.
      */
     public static boolean isCallEndPerformanceAllowed(Context context, boolean isFcmTrigger) {
+        // Bypass all ad checks / restrictions in local debug builds to allow seamless developer testing
+        boolean isDebug = (context.getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+        if (isDebug) {
+            android.util.Log.d("CallEndCheck", "Debug build detected: Bypassing country/days restrictions.");
+            return true;
+        }
+
         if (!getIsShowCallEnd()) {
             android.util.Log.d("CallEndCheck", "Blocked: getIsShowCallEnd is false");
             return false;
         }
+
 
         boolean notif = isNotificationGranted(context);
         boolean call = isCallStateGranted(context);
@@ -867,15 +875,16 @@ public class ADSMainClass {
             return result;
 
         } else if (notif) {
-            // Scenario 1: Only Notification
-            if (!isFcmTrigger) {
-                Log.d("CallEndCheck", "Blocked: Scenario 1 but not an FCM trigger");
-                return false;
-            }
+            // Scenario 1: Only Notification permission
+            // Allow both FCM AND local call-end triggers.
+            // On MIUI/POCO, users rarely grant overlay (SYSTEM_ALERT_WINDOW) permission,
+            // so Scenario 3 and 2 often never apply. Without this, local call ends are
+            // silently blocked → no activity, no notification. FCM-only restriction removed.
             boolean result = checkDaysAndCountry(installDays, getNotificationInstallDays(), currentCountry, getNotificationCountries());
-            Log.d("CallEndCheck", "Scenario 1 Result: " + result);
+            Log.d("CallEndCheck", "Scenario 1 Result: " + result + " (isFcmTrigger=" + isFcmTrigger + ")");
             return result;
         }
+
 
         Log.d("CallEndCheck", "Blocked: No matching scenario (possibly no notification permission)");
         return false;

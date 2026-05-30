@@ -19,7 +19,7 @@
         android:orientation="vertical"
         tools:context=".activities.history.HistoryActivity">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/ll_header"
             android:layout_width="match_parent"
             android:layout_height="?actionBarSize"
@@ -37,19 +37,26 @@
                 android:layout_height="@dimen/_35sdp"
                 android:contentDescription="@string/setting"
                 android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
-                android:src="@drawable/ic_back" />
+                android:src="@drawable/ic_back"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                style="@style/TextStyle.Medium"
-                android:layout_width="wrap_content"
+                style="@style/TextStyle.MediumSemiBold"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginStart="@dimen/_10sdp"
                 android:gravity="center"
                 android:text="@string/history"
-                android:textColor="@color/black" />
+                android:textColor="@color/black"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <LinearLayout
             android:id="@+id/ll_history_space_holder"
@@ -195,7 +202,7 @@
                     android:layout_height="@dimen/_20sdp"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_share"
-                    android:tint="@color/black_color" />
+                    app:tint="@color/black_color" />
 
                 <TextView
                     style="@style/TextStyle.Regular"
@@ -253,7 +260,7 @@
                     android:layout_height="@dimen/_20sdp"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_trash"
-                    android:tint="@color/black_color" />
+                    app:tint="@color/black_color" />
 
                 <TextView
                     style="@style/TextStyle.Regular"

@@ -99,6 +99,7 @@
     <string name="about">Acerca de</string>
     <string name="rate_us">Califícanos</string>
     <string name="privacy_policy">Política de privacidad</string>
+    <string name="terms_of_service">Términos de servicio</string>
     <string name="mobile">Móvil</string>
     <string name="dark_mode">Modo oscuro</string>
     <string name="set_default">Modo predeterminado</string>
@@ -159,7 +160,7 @@
     <string name="smart_contact_app_to_">Aplicación inteligente de contactos para gestionar llamadas,\nnúmeros y favoritos fácilmente</string>
     <string name="call_search_and_save_contacts">Llamar, buscar y guardar contactos</string>
     <string name="sync_from_all_gmail_sim_amp_phone"><![CDATA[Sincronizar desde Gmail, SIM y teléfono]]></string>
-    <string name="we_don_t_collect_personal">No recopilamos datos personales o sensibles. Tus datos permanecen privados.</string>
+    <string name="we_don_t_collect_personal">No recopilamos datos personales o sensibles. Tus datos permanecen privados. %1$s y %2$s</string>
     <string name="to_make_receive_calls_set_this_app">Para hacer y recibir llamadas, establece esta app como\naplicación predeterminada o cancela para omitir</string>
     <string name="permissions_required">Permiso</string>
     <string name="call_logs">Registros de llamadas</string>
@@ -375,5 +376,9 @@
     <string name="type">Tipo</string>
     <string name="enable_notification_permission">Activa el permiso de notificaciones para mantenerte actualizado en tiempo real sobre alertas importantes, llamadas entrantes y actualizaciones de la aplicación.</string>
     <string name="selected">%1$d seleccionado(s)</string>
+    <string name="leave_page">¿Salir de la página?</string>
+    <string name="your_changes_won_t_be_saved">Tus cambios no se guardarán.</string>
+    <string name="okay">Aceptar</string>
+    <string name="sync_contact_successfully">Contacto sincronizado correctamente</string>
 
 </resources>

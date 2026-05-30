@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
 import com.phonecall.dialcontacts.calldialer.activities.endCall.EndCallActivity
 import com.phonecall.dialcontacts.calldialer.activities.endCall.CallEndActivity
 import com.phonecall.dialcontacts.calldialer.databinding.FragmentMoreFeaturesBinding
@@ -45,16 +46,18 @@ class MoreFeaturesFragment : Fragment(), OnClickHandler {
                 val mobileNumber = (requireActivity() as? EndCallActivity)?.mobileNumber
                     ?: (requireActivity() as? CallEndActivity)?.mobileNumber
                 if (!mobileNumber.isNullOrEmpty()) {
+                    ADSAppManage.isAppOpenBlocked = true
                     val intent = Intent(Intent.ACTION_SENDTO)
                     intent.data = "smsto:${mobileNumber}".toUri()
                     intent.putExtra("sms_body", "")
                     requireActivity().startActivity(intent)
-                    requireActivity().finishAndRemoveTask()
+                    requireActivity().finish()
                 }
             }
 
             binding.llCalender.id -> {
                 try {
+                    ADSAppManage.isAppOpenBlocked = true
                     val intent = Intent(Intent.ACTION_VIEW)
                     intent.data = "content://com.android.calendar/time".toUri()
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -62,7 +65,8 @@ class MoreFeaturesFragment : Fragment(), OnClickHandler {
                 } catch (e: ActivityNotFoundException) {
                     Toast.makeText(
                         requireActivity(),
-                        requireActivity().getString(R.string.no_calendar_app_found), Toast.LENGTH_SHORT
+                        requireActivity().getString(R.string.no_calendar_app_found),
+                        Toast.LENGTH_SHORT
                     )
                         .show()
                 } catch (e: Exception) {
@@ -82,6 +86,7 @@ class MoreFeaturesFragment : Fragment(), OnClickHandler {
                 val mobileNumber = (requireActivity() as? EndCallActivity)?.mobileNumber
                     ?: (requireActivity() as? CallEndActivity)?.mobileNumber
                 if (!mobileNumber.isNullOrEmpty()) {
+                    ADSAppManage.isAppOpenBlocked = true
                     val intent = Intent(
                         Intent.ACTION_SENDTO,
                         "mailto:${mobileNumber}".toUri()
@@ -94,6 +99,7 @@ class MoreFeaturesFragment : Fragment(), OnClickHandler {
 
             binding.llWeb.id -> {
                 try {
+                    ADSAppManage.isAppOpenBlocked = true
                     val intent = Intent(
                         Intent.ACTION_VIEW,
                         "https://www.google.com".toUri()
@@ -105,8 +111,7 @@ class MoreFeaturesFragment : Fragment(), OnClickHandler {
                         requireActivity(),
                         requireActivity().getString(R.string.no_browser_found),
                         Toast.LENGTH_SHORT
-                    )
-                        .show()
+                    ).show()
                 } catch (e: Exception) {
                     Toast.makeText(
                         requireActivity(),

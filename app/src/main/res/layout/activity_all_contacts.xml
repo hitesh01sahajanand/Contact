@@ -45,15 +45,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginStart="@dimen/_10sdp"
                 android:layout_marginEnd="@dimen/_10sdp"
                 android:background="@drawable/all_rounded_corner_bg"
                 android:foreground="?attr/selectableItemBackground"
                 android:gravity="center_vertical"
                 android:onClick="@{ (v) -> OnClickHandler.onClick(v)}"
-                android:padding="@dimen/_8sdp"
+                android:paddingHorizontal="@dimen/_18sdp"
+                android:paddingVertical="@dimen/_7sdp"
                 android:text="@string/done"
-                android:textColor="@color/blue_color" />
+                android:textColor="@color/black_color" />
 
         </LinearLayout>
 

@@ -5,10 +5,12 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.provider.CallLog
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
@@ -310,6 +312,7 @@ class RecentsFragment : Fragment(), OnClickHandler {
                 showFilterBottomSheet(requireActivity(), onClick = { type ->
                     selectedTypeFilter = type
                     updateAdapterList()
+//                    Toast.makeText(requireActivity(), type, Toast.LENGTH_SHORT).show()
                 })
             }
 
@@ -350,6 +353,9 @@ class RecentsFragment : Fragment(), OnClickHandler {
         if (query.isNotEmpty()) {
             adapter.filter(query)
         }
+
+        binding.llHistorySpaceHolder.isVisible = displayList.isEmpty()
+        binding.rvRecents.isVisible = displayList.isNotEmpty()
     }
 
     fun filterCallLogs(
