@@ -38,7 +38,7 @@ class NewMessageFragment : Fragment(), OnClickHandler {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentRemindBinding.inflate(inflater, container, false)
-        viewModel.initializeDefaultMessages()
+        viewModel.refreshForLocaleChange()
         initView()
         observeData()
         return binding.root

@@ -121,12 +121,25 @@ class PermissionActivity : AppCompatActivity(), OnClickHandler {
     }
 
     private fun openPrivacyPolicyUrl() {
-        val privacyPolicyUrl = ADSMainClass.getPrivacyPolicy()
+        /*val privacyPolicyUrl = ADSMainClass.getPrivacyPolicy()
         if (!privacyPolicyUrl.isNullOrEmpty()) {
             ADSAppManage.isAppOpenBlocked = true
             startActivity(Intent(Intent.ACTION_VIEW, privacyPolicyUrl.toUri()))
         } else {
             Toast.makeText(this, "Something went wrong!", Toast.LENGTH_SHORT).show()
+        }*/
+
+        if (!ADSMainClass.getPrivacyPolicy().equals("")) {
+            ADSAppManage.isAppOpenBlocked = true
+            startActivity(
+                Intent(
+                    "android.intent.action.VIEW",
+                    Uri.parse(ADSMainClass.getPrivacyPolicy())
+                )
+            )
+        } else {
+            Toast.makeText(this, "Something went wrong!", Toast.LENGTH_SHORT)
+                .show()
         }
     }
 

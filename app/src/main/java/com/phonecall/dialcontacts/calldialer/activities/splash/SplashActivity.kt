@@ -129,14 +129,14 @@ class SplashActivity : BaseSplashActivity() {
             }
         }
 
-        // Call Permission
+       /* // Call Permission
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.CALL_PHONE
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             permissions.add(Manifest.permission.CALL_PHONE)
-        }
+        }*/
 
         if (permissions.isNotEmpty()) {
             requestPermissionLauncher.launch(permissions.toTypedArray())

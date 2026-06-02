@@ -380,6 +380,14 @@
     <string name="your_changes_won_t_be_saved">您的更改将不会被保存。</string>
     <string name="okay">确定</string>
     <string name="sync_contact_successfully">联系人同步成功</string>
+    <string name="unfavorite">从收藏夹中移除</string>
+    <string name="tap_to_exit">点击退出</string>
+    <string name="we_access_contact_">我们会访问联系人姓名和电话号码，且仅存储在您的设备上。</string>
+    <string name="we_access_call_history_">我们会访问通话记录和电话号码，以显示和管理您的通话。</string>
+    <string name="allow">允许</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
+    <string name="no_reminder_set">未设置提醒</string>
 
 
 </resources>

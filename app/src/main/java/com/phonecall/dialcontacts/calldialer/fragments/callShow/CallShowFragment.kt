@@ -75,7 +75,7 @@ class CallShowFragment : Fragment(), OnClickHandler {
         if (!isValidClick()) return
         when (view.id) {
             binding.cvRefresh.id -> {
-                updateWeatherData()
+//                updateWeatherData()
             }
         }
     }

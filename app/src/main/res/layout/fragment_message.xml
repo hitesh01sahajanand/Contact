@@ -263,7 +263,7 @@
                                 android:backgroundTint="@color/main_color"
                                 android:gravity="center"
                                 android:paddingVertical="@dimen/_7sdp"
-                                android:text="Yes"
+                                android:text="@string/yes"
                                 android:textColor="@color/white_"
                                 android:textSize="@dimen/_14sdp" />
 
@@ -278,7 +278,7 @@
                                 android:backgroundTint="@color/grey_color"
                                 android:gravity="center"
                                 android:paddingVertical="@dimen/_7sdp"
-                                android:text="No"
+                                android:text="@string/no"
                                 android:textColor="@color/white_"
                                 android:textSize="@dimen/_14sdp" />
 
@@ -306,7 +306,7 @@
                             android:gravity="center"
                             android:minHeight="@dimen/_100sdp"
                             android:paddingVertical="@dimen/_7sdp"
-                            android:text="No Reminder set"
+                            android:text="@string/no_reminder_set"
                             android:textColor="@color/black_color"
                             android:textSize="@dimen/_14sdp"
                             android:visibility="gone" />

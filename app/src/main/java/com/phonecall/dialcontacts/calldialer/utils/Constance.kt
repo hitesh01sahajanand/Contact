@@ -37,4 +37,5 @@ object Constance {
     val videoCallList: Array<String> = arrayOf(WHATSAPP, WHATSAPP_BUSINESS, DUO)
     const val OVERLAY_PERMISSION_SKIP = "overlay_permission_skip"
     const val NOTIFICATION_PERMISSION_SKIP = "notification_permission_skip"
+    const val PERMISSION_DIALOG_SHOWN = "permission_dialog_shown"
 }

@@ -41,7 +41,7 @@ class QuickResponseActivity : AppCompatActivity(), OnClickHandler {
         Common.setStableStatusBarInsets(findViewById(R.id.main))
         Common.hideSystemUI(this)
 
-        viewModel.initializeDefaultMessages()
+        viewModel.refreshForLocaleChange()
         initView()
         observeData()
         loadAds()

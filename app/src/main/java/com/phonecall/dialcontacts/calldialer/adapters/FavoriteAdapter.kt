@@ -53,8 +53,9 @@ class FavoriteAdapter(private val onClick: (ContactModel, String) -> Unit) :
     fun addAll(newList: List<ContactModel>) {
         contactList.clear()
         filteredList.clear()
-        contactList.addAll(newList)
-        filteredList.addAll(newList)
+        val validList = newList.filter { !it.number.isNullOrBlank() }
+        contactList.addAll(validList)
+        filteredList.addAll(validList)
         expandedPosition = -1
         notifyDataSetChanged()
     }
@@ -226,7 +227,15 @@ class FavoriteAdapter(private val onClick: (ContactModel, String) -> Unit) :
 
 
                 tvName.text = itemData.displayName
-                tvExpandedContactNumber.text = context.getString(R.string.mobile_, itemData.number)
+//                tvExpandedContactNumber.isVisible = !itemData.number.isNullOrEmpty()
+                if (!itemData.number.isNullOrEmpty()) {
+                    tvExpandedContactNumber.visibility = View.VISIBLE
+                    tvExpandedContactNumber.text = context.getString(R.string.mobile_, itemData.number)
+                } else {
+                    tvExpandedContactNumber.visibility = View.GONE
+                }
+
+
 
                 if (itemData.userThumbnail.isNullOrEmpty()) {
                     tvContactName.isVisible = true

@@ -20,6 +20,12 @@ import com.phonecall.dialcontacts.calldialer.receivers.CallActionReceiver
 
 class CallNotificationManager(private val context: Context) {
 
+    private data class CallDisplayInfo(
+        val title: String,
+        val subtitle: String,
+        val showTitle: Boolean
+    )
+
     private val notificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -77,41 +83,30 @@ class CallNotificationManager(private val context: Context) {
         val call = NewCallManager.getPrimaryCall() ?: return buildEmptyNotification()
 
         val state = NewCallManager.getState()
-        val number = call.details.handle?.schemeSpecificPart ?: context.getString(R.string.unknown)
-
-        val contactName = Common.getContactName(context, number)
-        val name = if (contactName != number) {
-            contactName
-        } else if (!tag.isNullOrBlank()) {
-            tag
-        } else if (!call.details.callerDisplayName.isNullOrBlank() && call.details.callerDisplayName != number) {
-            call.details.callerDisplayName
-        } else {
-            ""
-        }
-
-        val finalName = if (name.isNullOrBlank()) number else name
+        val displayInfo = getCallDisplayInfo(call, tag)
+        val finalName = displayInfo.title
+        val number = displayInfo.subtitle
 
         val isIncoming = state == Call.STATE_RINGING
 
         // Collapsed notification view (shown in notification shade)
         val remoteViews = RemoteViews(context.packageName, R.layout.notification_view)
-        if (name.isNullOrBlank()) {
-            remoteViews.setViewVisibility(R.id.pop_name, View.GONE)
-        } else {
+        if (displayInfo.showTitle) {
             remoteViews.setViewVisibility(R.id.pop_name, View.VISIBLE)
-            remoteViews.setTextViewText(R.id.pop_name, name)
+            remoteViews.setTextViewText(R.id.pop_name, displayInfo.title)
+        } else {
+            remoteViews.setViewVisibility(R.id.pop_name, View.GONE)
         }
         remoteViews.setTextViewText(R.id.pop_number, number)
         remoteViews.setImageViewBitmap(R.id.pop_image, Common.generateAvatar(finalName))
 
         // Heads-up view — separate instance to avoid shared-state issues on MIUI/POCO
         val headsUpViews = RemoteViews(context.packageName, R.layout.notification_view)
-        if (name.isNullOrBlank()) {
-            headsUpViews.setViewVisibility(R.id.pop_name, View.GONE)
-        } else {
+        if (displayInfo.showTitle) {
             headsUpViews.setViewVisibility(R.id.pop_name, View.VISIBLE)
-            headsUpViews.setTextViewText(R.id.pop_name, name)
+            headsUpViews.setTextViewText(R.id.pop_name, displayInfo.title)
+        } else {
+            headsUpViews.setViewVisibility(R.id.pop_name, View.GONE)
         }
         headsUpViews.setTextViewText(R.id.pop_number, number)
         headsUpViews.setImageViewBitmap(R.id.pop_image, Common.generateAvatar(finalName))
@@ -182,7 +177,13 @@ class CallNotificationManager(private val context: Context) {
             // DO NOT use DecoratedCustomViewStyle — it wraps a second chrome layer
             // around custom views on MIUI/POCO causing the UI to be cut off.
             .setContentTitle(finalName)
-            .setContentText(if (isIncoming) context.getString(R.string.incoming_call) else context.getString(R.string.calling))
+            .setContentText(
+                when {
+                    isIncoming -> context.getString(R.string.incoming_call)
+                    call.isConference() -> number
+                    else -> context.getString(R.string.calling)
+                }
+            )
             .setPriority(priority)
             .setVisibility(
                 if (isIncoming) NotificationCompat.VISIBILITY_PUBLIC
@@ -256,5 +257,49 @@ class CallNotificationManager(private val context: Context) {
             .setContentIntent(activityPendingIntent)
 
         notificationManager.notify(MISSED_CALL_NOTIFICATION_ID + number.hashCode(), builder.build())
+    }
+
+    private fun getCallDisplayInfo(call: Call, tag: String?): CallDisplayInfo {
+        if (call.isConference()) {
+            val participants = NewCallManager.getConferenceCalls().joinToString(", ") { conferenceCall ->
+                val handleNumber = conferenceCall.details.handle?.schemeSpecificPart
+                    ?: context.getString(R.string.unknown)
+                getParticipantDisplayName(handleNumber, conferenceCall.details.callerDisplayName)
+            }
+            return CallDisplayInfo(
+                title = context.getString(R.string.conference_call),
+                subtitle = participants.ifEmpty {
+                    context.getString(R.string.multiple_participants)
+                },
+                showTitle = true
+            )
+        }
+
+        val number = call.details.handle?.schemeSpecificPart ?: context.getString(R.string.unknown)
+        val contactName = Common.getContactName(context, number)
+        val name = when {
+            contactName != number -> contactName
+            !tag.isNullOrBlank() -> tag
+            !call.details.callerDisplayName.isNullOrBlank() &&
+                call.details.callerDisplayName != number -> call.details.callerDisplayName
+            else -> ""
+        }
+
+        return CallDisplayInfo(
+            title = name.ifBlank { number },
+            subtitle = number,
+            showTitle = name.isNotBlank()
+        )
+    }
+
+    private fun getParticipantDisplayName(number: String, callerDisplayName: String?): String {
+        val contactName = Common.getContactName(context, number)
+        if (contactName != number) {
+            return contactName
+        }
+        if (!callerDisplayName.isNullOrBlank() && callerDisplayName != number) {
+            return callerDisplayName
+        }
+        return number
     }
 }

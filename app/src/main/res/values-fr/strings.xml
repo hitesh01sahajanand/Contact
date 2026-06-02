@@ -378,7 +378,15 @@
 
     <string name="leave_page">Quitter la page ?</string>
     <string name="your_changes_won_t_be_saved">Vos modifications ne seront pas enregistrées.</string>
-    <string name="okay">D accord</string>
+    <string name="okay">D\'accord</string>
     <string name="sync_contact_successfully">Contact synchronisé avec succès</string>
+    <string name="unfavorite">Retirer des favoris</string>
+    <string name="tap_to_exit">Appuyez pour quitter</string>
+    <string name="we_access_contact_">Nous accédons aux noms de contacts et numéros de téléphone, stockés uniquement sur votre appareil.</string>
+    <string name="we_access_call_history_">Nous accédons à l historique des appels et aux numéros de téléphone pour afficher et gérer vos appels.</string>
+    <string name="allow">Autoriser</string>
+    <string name="yes">Oui</string>
+    <string name="no">Non</string>
+    <string name="no_reminder_set">Aucun rappel défini</string>
 
 </resources>

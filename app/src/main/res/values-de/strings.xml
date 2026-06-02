@@ -379,4 +379,12 @@
     <string name="your_changes_won_t_be_saved">Ihre Änderungen werden nicht gespeichert.</string>
     <string name="okay">OK</string>
     <string name="sync_contact_successfully">Kontakt erfolgreich synchronisiert</string>
+    <string name="unfavorite">Aus Favoriten entfernen</string>
+    <string name="tap_to_exit">Tippen zum Beenden</string>
+    <string name="we_access_contact_">Wir greifen auf Kontaktnamen und Telefonnummern zu, die nur auf Ihrem Gerät gespeichert sind.</string>
+    <string name="we_access_call_history_">Wir greifen auf Anrufverlauf und Telefonnummern zu, um Ihre Anrufe anzuzeigen und zu verwalten.</string>
+    <string name="allow">Erlauben</string>
+    <string name="yes">Ja</string>
+    <string name="no">Nein</string>
+    <string name="no_reminder_set">Keine Erinnerung festgelegt</string>
 </resources>

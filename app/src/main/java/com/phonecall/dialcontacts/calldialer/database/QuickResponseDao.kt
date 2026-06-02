@@ -18,8 +18,8 @@ interface QuickResponseDao {
     @Query("SELECT * FROM quick_response_table ORDER BY id ASC")
     fun getAllMessages(): Flow<List<QuickResponseModel>>
 
-    @Query("SELECT COUNT(*) FROM quick_response_table")
-    suspend fun getMessageCount(): Int
+    @Query("SELECT * FROM quick_response_table ORDER BY id ASC")
+    suspend fun getAllMessagesSync(): List<QuickResponseModel>
 
     @Query("DELETE FROM quick_response_table WHERE id = :id")
     suspend fun deleteMessageById(id: Int)

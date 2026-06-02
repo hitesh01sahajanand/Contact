@@ -7,6 +7,7 @@ import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.graphics.Color
 import android.os.Build
 import android.provider.Settings
@@ -73,6 +74,39 @@ object PermissionManager {
             context,
             Manifest.permission.READ_CALL_LOG
         ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    fun openAppSettings(context: Context) {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", context.packageName, null)
+        }
+        context.startActivity(intent)
+    }
+
+    fun isPermissionDialogShown(context: Context): Boolean {
+        return SharedPreferenceManager.getBoolean(context, Constance.PERMISSION_DIALOG_SHOWN, false)
+    }
+
+    fun setPermissionDialogShown(context: Context) {
+        SharedPreferenceManager.putBoolean(context, Constance.PERMISSION_DIALOG_SHOWN, true)
+    }
+
+    fun shouldShowInlinePermissionCard(context: Context, hasPermission: Boolean): Boolean {
+        return !hasPermission && isPermissionDialogShown(context)
+    }
+
+    fun needsOverlayPermission(context: Context): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                !hasOverlayPermission(context) &&
+                !SharedPreferenceManager.getBoolean(context, Constance.OVERLAY_PERMISSION_SKIP)
+    }
+
+    @JvmStatic
+    fun getOverlaySettingsIntent(context: Context): Intent {
+        return Intent(
+            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            Uri.fromParts("package", context.packageName, null)
+        )
     }
 
     fun hasNotificationPermission(context: Context): Boolean {
@@ -150,6 +184,7 @@ object PermissionManager {
         return dialog
     }
 
+    @JvmStatic
     fun hasOverlayPermission(context: Context): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
 

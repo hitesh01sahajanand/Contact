@@ -19,6 +19,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.activities.details.ContactsDetailsActivity
 import com.phonecall.dialcontacts.calldialer.activities.newContact.NewContactActivity
@@ -53,35 +54,13 @@ class ContactsFragment : Fragment(), OnClickHandler {
 
     override fun onResume() {
         super.onResume()
-        if (PermissionManager.hasContactPermissions(requireActivity())) {
-            val isMerge = SharedPreferenceManager.getBoolean(
-                requireActivity(),
-                Constance.MERGE_DUPLICATE_CONTACT,
-                false
-            )
-            allContactsAdapter.setMergeDuplicate(isMerge)
-            updateAccountUI()
-
-            val showLoader = allContactsAdapter.itemCount == 0
-            viewModel.loadContacts(showLoader = showLoader)
-            viewModel.fetchAccountCounts(isMerge)
-        }
+        updatePermissionState()
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
-        if (!hidden && PermissionManager.hasContactPermissions(requireActivity())) {
-            val isMerge = SharedPreferenceManager.getBoolean(
-                requireActivity(),
-                Constance.MERGE_DUPLICATE_CONTACT,
-                false
-            )
-            allContactsAdapter.setMergeDuplicate(isMerge)
-            updateAccountUI()
-
-            val showLoader = allContactsAdapter.itemCount == 0
-            viewModel.loadContacts(showLoader = showLoader)
-            viewModel.fetchAccountCounts(isMerge)
+        if (!hidden) {
+            updatePermissionState()
         }
     }
 
@@ -93,6 +72,11 @@ class ContactsFragment : Fragment(), OnClickHandler {
         binding.inHeader.tvTitle.text = requireActivity().getString(R.string.contact)
         binding.inHeader.cvMore.isVisible = true
         binding.inHeader.cvAdd.isVisible = true
+
+        binding.cvAllow.setOnClickListener {
+            ADSAppManage.isAppOpenBlocked = true
+            PermissionManager.openAppSettings(requireActivity())
+        }
 
         allContactsAdapter = AllContactsAdapter(onClick = { contactModel, clickAction ->
             when (clickAction) {
@@ -142,6 +126,7 @@ class ContactsFragment : Fragment(), OnClickHandler {
         itemTouchHelper.attachToRecyclerView(binding.rvAllContacts)
 
         viewModel.allContactList.observe(viewLifecycleOwner) { allContacts ->
+            if (!PermissionManager.hasContactPermissions(requireActivity())) return@observe
             allContactsAdapter.addAll(allContacts)
             updateAccountUI()
             updateVisibility()
@@ -254,6 +239,7 @@ class ContactsFragment : Fragment(), OnClickHandler {
         })
 
         binding.edtSearch.addTextChangedListener { editable ->
+            if (!PermissionManager.hasContactPermissions(requireActivity())) return@addTextChangedListener
             val query = editable.toString()
             allContactsAdapter.filter(query)
             updateVisibility()
@@ -272,9 +258,45 @@ class ContactsFragment : Fragment(), OnClickHandler {
             }
         }
 
+        updatePermissionState()
+    }
+
+    private fun updatePermissionState() {
+        if (!::binding.isInitialized) return
+
+        val hasPermission = PermissionManager.hasContactPermissions(requireActivity())
+        val showPermissionCard = PermissionManager.shouldShowInlinePermissionCard(
+            requireActivity(),
+            hasPermission
+        )
+        binding.llContact.isVisible = showPermissionCard
+        binding.cvSearch.isVisible = hasPermission
+        binding.llNewGroup.isVisible = hasPermission
+
+        if (!hasPermission) {
+            binding.clContacts.isVisible = false
+            binding.llContactSpaceHolder.isVisible = false
+            binding.pbLoading.isVisible = false
+            return
+        }
+
+        val isMerge = SharedPreferenceManager.getBoolean(
+            requireActivity(),
+            Constance.MERGE_DUPLICATE_CONTACT,
+            false
+        )
+        allContactsAdapter.setMergeDuplicate(isMerge)
+        updateAccountUI()
+
+        val showLoader = allContactsAdapter.itemCount == 0
+        viewModel.loadContacts(showLoader = showLoader)
+        viewModel.fetchAccountCounts(isMerge)
+        updateVisibility()
     }
 
     private fun updateVisibility() {
+        if (!PermissionManager.hasContactPermissions(requireActivity())) return
+
         val isLoading = viewModel.isLoading.value ?: false
         val itemCount = allContactsAdapter.itemCount
 

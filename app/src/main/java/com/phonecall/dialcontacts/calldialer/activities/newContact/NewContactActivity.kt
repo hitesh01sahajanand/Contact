@@ -57,6 +57,11 @@ import kotlin.math.abs
 
 @AndroidEntryPoint
 class NewContactActivity : AppCompatActivity(), OnClickHandler {
+
+    companion object {
+        private const val MAX_FIELD_COUNT = 10
+    }
+
     private lateinit var binding: ActivityNewContactBinding
     private val viewModel: NewContactViewModel by viewModels()
     private var newDisplayList: ArrayList<AccountModel> = ArrayList()
@@ -403,7 +408,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         if (data.phones.isNotEmpty()) {
             binding.etNumber.setText(data.phones[0].value)
             binding.txtType.text = getPhoneTypeName(data.phones[0].type, data.phones[0].label)
-            for (i in 1 until data.phones.size) {
+            for (i in 1 until minOf(data.phones.size, MAX_FIELD_COUNT)) {
                 addNewField(
                     binding.containerPhonetype,
                     phoneViews,
@@ -420,7 +425,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         if (data.emails.isNotEmpty()) {
             binding.etEmail.setText(data.emails[0].value)
             binding.txtEmailType.text = getEmailTypeName(data.emails[0].type, data.emails[0].label)
-            for (i in 1 until data.emails.size) {
+            for (i in 1 until minOf(data.emails.size, MAX_FIELD_COUNT)) {
                 addNewField(
                     binding.containerEmail,
                     emailViews,
@@ -438,7 +443,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             binding.etAddress.setText(data.addresses[0].value)
             binding.txtAddressType.text =
                 getAddressTypeName(data.addresses[0].type, data.addresses[0].label)
-            for (i in 1 until data.addresses.size) {
+            for (i in 1 until minOf(data.addresses.size, MAX_FIELD_COUNT)) {
                 addNewField(
                     binding.containerAddress,
                     addressViews,
@@ -456,7 +461,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             binding.selectBirthday.text = data.events[0].value
             binding.txtBirthdayType.text =
                 getEventTypeName(data.events[0].type, data.events[0].label)
-            for (i in 1 until data.events.size) {
+            for (i in 1 until minOf(data.events.size, MAX_FIELD_COUNT)) {
                 addNewField(
                     binding.containerBirthday,
                     birthdayViews,
@@ -472,7 +477,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         // Websites
         if (data.websites.isNotEmpty()) {
             binding.etWebsite.setText(data.websites[0])
-            for (i in 1 until data.websites.size) {
+            for (i in 1 until minOf(data.websites.size, MAX_FIELD_COUNT)) {
                 addNewField(
                     binding.containerWebsite,
                     websiteViews,
@@ -487,7 +492,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             binding.etRelationperson.setText(data.relations[0].value)
             binding.txtRelationtype.text =
                 getRelationTypeName(data.relations[0].type, data.relations[0].label)
-            for (i in 1 until data.relations.size) {
+            for (i in 1 until minOf(data.relations.size, MAX_FIELD_COUNT)) {
                 addNewField(
                     binding.containerReletion,
                     relationViews,
@@ -500,6 +505,7 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
             }
         }
         isContactDataLoaded = true
+        updateAddButtonVisibility()
         trySaveInitialSnapshot()
     }
 
@@ -512,6 +518,8 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         hint: String = "",
         typeTitle: String = ""
     ) {
+        if (viewList.size >= MAX_FIELD_COUNT - 1) return
+
         val fieldBinding =
             ItemAddContactFieldBinding.inflate(LayoutInflater.from(this), container, false)
         fieldBinding.etValue.hint = hint
@@ -571,12 +579,23 @@ class NewContactActivity : AppCompatActivity(), OnClickHandler {
         fieldBinding.ivRemove.setOnClickListener {
             container.removeView(fieldBinding.root)
             viewList.remove(fieldBinding)
+            updateAddButtonVisibility()
         }
 
         applyEditTextFocusListener(fieldBinding.root)
 
         container.addView(fieldBinding.root)
         viewList.add(fieldBinding)
+        updateAddButtonVisibility()
+    }
+
+    private fun updateAddButtonVisibility() {
+        binding.newPhoneNumberAdd.isVisible = phoneViews.size < MAX_FIELD_COUNT - 1
+        binding.newEmailNumberAdd.isVisible = emailViews.size < MAX_FIELD_COUNT - 1
+        binding.newAddressAdd.isVisible = addressViews.size < MAX_FIELD_COUNT - 1
+        binding.newBirthdayAdd.isVisible = birthdayViews.size < MAX_FIELD_COUNT - 1
+        binding.newRelationAdd.isVisible = relationViews.size < MAX_FIELD_COUNT - 1
+        binding.addMoreWebsite.isVisible = websiteViews.size < MAX_FIELD_COUNT - 1
     }
 
     private fun showTypePopUpForField(

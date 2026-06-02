@@ -380,5 +380,13 @@
     <string name="your_changes_won_t_be_saved">변경 사항이 저장되지 않습니다.</string>
     <string name="okay">확인</string>
     <string name="sync_contact_successfully">연락처가 성공적으로 동기화되었습니다</string>
+    <string name="unfavorite">즐겨찾기에서 제거</string>
+    <string name="tap_to_exit">종료하려면 탭하세요</string>
+    <string name="we_access_contact_">연락처 이름과 전화번호에 액세스하며, 기기에만 저장됩니다.</string>
+    <string name="we_access_call_history_">통화 기록과 전화번호에 액세스하여 통화를 표시하고 관리합니다.</string>
+    <string name="allow">허용</string>
+    <string name="yes">예</string>
+    <string name="no">아니요</string>
+    <string name="no_reminder_set">설정된 알림 없음</string>
 
 </resources>

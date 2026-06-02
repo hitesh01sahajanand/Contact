@@ -35,6 +35,7 @@ import com.phonecall.dialcontacts.calldialer.utils.OnClickHandler
 import com.phonecall.dialcontacts.calldialer.utils.PermissionManager
 import com.phonecall.dialcontacts.calldialer.viewmodels.RecentViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -55,9 +56,7 @@ class RecentsFragment : Fragment(), OnClickHandler {
 
     override fun onResume() {
         super.onResume()
-        if (PermissionManager.hasCallLogPermissions(requireActivity())) {
-            viewModel.loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
-        }
+        updatePermissionState()
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
@@ -66,8 +65,8 @@ class RecentsFragment : Fragment(), OnClickHandler {
             if (::adapter.isInitialized) {
                 adapter.clearSelection()
             }
-        } else if (PermissionManager.hasCallLogPermissions(requireActivity())) {
-            viewModel.loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
+        } else {
+            updatePermissionState()
         }
     }
 
@@ -78,6 +77,11 @@ class RecentsFragment : Fragment(), OnClickHandler {
         binding.inHeader.cvMore.isVisible = true
         binding.inHeader.cvFilter.isVisible = true
         selectedTypeFilter = requireActivity().getString(R.string.all_calls)
+
+        binding.cvAllow.setOnClickListener {
+            ADSAppManage.isAppOpenBlocked = true
+            PermissionManager.openAppSettings(requireActivity())
+        }
 
         adapter = RecentAdapter(onClickCall = { callLogModel, clickAction ->
 
@@ -257,6 +261,7 @@ class RecentsFragment : Fragment(), OnClickHandler {
 
 
         binding.edtSearch.addTextChangedListener { editable ->
+            if (!PermissionManager.hasCallLogPermissions(requireActivity())) return@addTextChangedListener
             val query = editable.toString()
             adapter.filter(query)
             updateVisibility()
@@ -274,6 +279,7 @@ class RecentsFragment : Fragment(), OnClickHandler {
             }
         }
 
+        updatePermissionState()
     }
 
     override fun onClick(view: View) {
@@ -322,7 +328,32 @@ class RecentsFragment : Fragment(), OnClickHandler {
         }
     }
 
+    private fun updatePermissionState() {
+        if (!::binding.isInitialized) return
+
+        val hasPermission = PermissionManager.hasCallLogPermissions(requireActivity())
+        val showPermissionCard = PermissionManager.shouldShowInlinePermissionCard(
+            requireActivity(),
+            hasPermission
+        )
+        binding.llCallLog.isVisible = showPermissionCard
+        binding.cvSearch.isVisible = hasPermission
+        binding.inHeader.cvFilter.isVisible = hasPermission
+
+        if (!hasPermission) {
+            binding.rvRecents.isVisible = false
+            binding.llHistorySpaceHolder.isVisible = false
+            binding.pbLoading.isVisible = false
+            return
+        }
+
+        viewModel.loadAllRecentsHistory(0, Constance.LOAD_DATA_COUNT)
+        updateVisibility()
+    }
+
     private fun updateVisibility() {
+        if (!PermissionManager.hasCallLogPermissions(requireActivity())) return
+
         val isLoading = viewModel.isLoadingFirstTime.value ?: false
         val recentList = viewModel.allRecentCallHistory.value
         val isEmpty = adapter.getCurrentList().isEmpty()
@@ -340,6 +371,8 @@ class RecentsFragment : Fragment(), OnClickHandler {
     }
 
     private fun updateAdapterList() {
+        if (!PermissionManager.hasCallLogPermissions(requireActivity())) return
+
         val displayList =
             if (selectedTypeFilter.isEmpty() || selectedTypeFilter == getString(R.string.all_calls)) {
                 ArrayList(allList)

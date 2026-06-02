@@ -65,7 +65,7 @@
             android:layout_weight="1"
             android:background="@drawable/rate_button_solid"
             android:backgroundTint="@color/main_color"
-            android:text="Tap To exit"
+            android:text="@string/tap_to_exit"
             android:textAllCaps="false"
             android:textColor="@color/white_"
             android:textSize="18sp" />

@@ -380,5 +380,13 @@
     <string name="your_changes_won_t_be_saved">Ваши изменения не будут сохранены.</string>
     <string name="okay">ОК</string>
     <string name="sync_contact_successfully">Контакт успешно синхронизирован</string>
+    <string name="unfavorite">Удалить из избранного</string>
+    <string name="tap_to_exit">Нажмите, чтобы выйти</string>
+    <string name="we_access_contact_">Мы получаем доступ к именам контактов и номерам телефонов, которые хранятся только на вашем устройстве.</string>
+    <string name="we_access_call_history_">Мы получаем доступ к истории звонков и номерам телефонов для отображения и управления вашими звонками.</string>
+    <string name="allow">Разрешить</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+    <string name="no_reminder_set">Напоминание не установлено</string>
 
 </resources>

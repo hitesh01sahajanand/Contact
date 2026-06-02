@@ -7,26 +7,21 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.provider.Settings
 import android.view.Gravity
 import android.view.View
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
-import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.ImageViewCompat
@@ -50,6 +45,7 @@ import com.phonecall.dialcontacts.calldialer.Advertisement.ADSUtilitis
 import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
 import com.phonecall.dialcontacts.calldialer.Advertisement.IPAddressHelper
 import com.phonecall.dialcontacts.calldialer.R
+import com.phonecall.dialcontacts.calldialer.activities.overlayPermission.OverlayPermissionActivity
 import com.phonecall.dialcontacts.calldialer.callEndUtils.PreferenceDayCycle
 import com.phonecall.dialcontacts.calldialer.databinding.ActivityHomeBinding
 import com.phonecall.dialcontacts.calldialer.fragments.contacts.ContactsFragment
@@ -123,93 +119,41 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
             }
         }
 
-        val requiredPermissions = contactPermissions.filter {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                it != Manifest.permission.POST_NOTIFICATIONS
-            } else {
-                true
-            }
-        }
-
-        if (!requiredPermissions.all {
-                permissions[it] == true || ContextCompat.checkSelfPermission(
-                    this,
-                    it
-                ) == PackageManager.PERMISSION_GRANTED
-            }) {
-            // Check if any of the denied permissions are permanently denied (user clicked "Don't ask again")
-            val isPermanentlyDenied = requiredPermissions.any {
-                ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED &&
-                        !ActivityCompat.shouldShowRequestPermissionRationale(this, it)
-            }
-
-            if (isPermanentlyDenied) {
-                Toast.makeText(
-                    this,
-                    getString(R.string.permissions_are_required),
-                    Toast.LENGTH_LONG
-                ).show()
-                openAppSettings()
-                isFromPermissionRequest = true
-            } else {
-                Toast.makeText(this, getString(R.string.permission_denied), Toast.LENGTH_SHORT)
-                    .show()
-                isFromPermissionRequest = false
-            }
-        }
-    }
-
-    private fun openAppSettings() {
-        ADSAppManage.isAppOpenBlocked = true
-        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-            data = Uri.fromParts("package", packageName, null)
-        }
-        startActivity(intent)
+        handleOverlayPermissionIfNeeded()
     }
 
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
         isFromPermissionRequest = true
-        SharedPreferenceManager.putBoolean(this, Constance.OVERLAY_PERMISSION_SKIP, true)
     }
 
     private val overlayHandler = Handler(Looper.getMainLooper())
 
     private val overlayPermissionChecker = object : Runnable {
         override fun run() {
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-                if (Settings.canDrawOverlays(this@HomeActivity)) {
+                if (PermissionManager.hasOverlayPermission(this@HomeActivity)) {
                     ADSUtilitis.trackScreen(this@HomeActivity, "Overlay_Allow")
-
-                    // Permission granted
                     SharedPreferenceManager.putBoolean(
                         this@HomeActivity,
                         Constance.OVERLAY_PERMISSION_SKIP,
                         true
                     )
-
                     ADSAppManage.isAppOpenBlocked = true
+                    stopOverlayPermissionChecker()
 
-                    // App automatically foreground me aa jayegi
                     val intent = Intent(this@HomeActivity, HomeActivity::class.java)
                     intent.addFlags(
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                                Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                     )
                     startActivity(intent)
-
                     return
                 }
             }
-
-            // 500ms baad fir check karega
             overlayHandler.postDelayed(this, 500)
         }
     }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeManager.applyAppTheme(this)
@@ -256,13 +200,102 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
 
     override fun onResume() {
         super.onResume()
-        checkPermissions(showCustomDialog = !isFromPermissionRequest)
+        checkPermissions()
         isFromPermissionRequest = false
     }
 
     override fun onStop() {
         super.onStop()
         permissionDialog?.dismiss()
+    }
+
+    private fun checkPermissions() {
+        permissionDialog?.dismiss()
+
+        if (PermissionManager.isPermissionDialogShown(this)) {
+            return
+        }
+
+        if (isFromPermissionRequest) {
+            return
+        }
+
+        if (needsPermissionDialog()) {
+            permissionDialog = PermissionManager.openPermissionDialog(this) {
+                onPermissionDialogContinue()
+            }
+        }
+    }
+
+    private fun onPermissionDialogContinue() {
+        isFromPermissionRequest = true
+        PermissionManager.setPermissionDialogShown(this)
+
+        if (getMissingRuntimePermissions().isNotEmpty()) {
+            requestPermissionLauncher.launch(contactPermissions)
+        } else {
+            handleOverlayPermissionIfNeeded()
+        }
+    }
+
+    private fun getMissingRuntimePermissions(): List<String> {
+        return contactPermissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }.filter {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                it == Manifest.permission.POST_NOTIFICATIONS
+            ) {
+                !SharedPreferenceManager.getBoolean(this, Constance.NOTIFICATION_PERMISSION_SKIP)
+            } else {
+                true
+            }
+        }
+    }
+
+    private fun handleOverlayPermissionIfNeeded() {
+        if (!PermissionManager.needsOverlayPermission(this)) return
+        openOverlaySettings()
+    }
+
+    private fun openOverlaySettings() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
+
+        isFromPermissionRequest = true
+        SharedPreferenceManager.putBoolean(this, Constance.OVERLAY_PERMISSION_SKIP, true)
+        ADSAppManage.isAppOpenBlocked = true
+        overlayPermissionLauncher.launch(PermissionManager.getOverlaySettingsIntent(this))
+        startOverlayPermissionChecker()
+        overlayHandler.postDelayed({
+            startActivity(Intent(this, OverlayPermissionActivity::class.java))
+        }, 1000)
+    }
+
+    private fun startOverlayPermissionChecker() {
+        stopOverlayPermissionChecker()
+        overlayHandler.post(overlayPermissionChecker)
+    }
+
+    private fun stopOverlayPermissionChecker() {
+        overlayHandler.removeCallbacks(overlayPermissionChecker)
+    }
+
+    private fun needsPermissionDialog(): Boolean {
+        val missingPermissions = contactPermissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }.filter {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                it == Manifest.permission.POST_NOTIFICATIONS
+            ) {
+                !SharedPreferenceManager.getBoolean(this, Constance.NOTIFICATION_PERMISSION_SKIP)
+            } else {
+                true
+            }
+        }
+
+        if (missingPermissions.isNotEmpty()) return true
+
+        return !PermissionManager.hasOverlayPermission(this) &&
+                !SharedPreferenceManager.getBoolean(this, Constance.OVERLAY_PERMISSION_SKIP)
     }
 
     private fun checkForUpdates() {
@@ -347,72 +380,6 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
         }
         massageBox.show()
     }
-
-    private fun checkPermissions(showCustomDialog: Boolean) {
-        permissionDialog?.dismiss()
-        val missingPermissions = contactPermissions.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-        }.filter {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && it == Manifest.permission.POST_NOTIFICATIONS) {
-                !SharedPreferenceManager.getBoolean(this, Constance.NOTIFICATION_PERMISSION_SKIP)
-            } else {
-                true
-            }
-        }
-
-        if (missingPermissions.isNotEmpty()) {
-            if (showCustomDialog) {
-                permissionDialog = PermissionManager.openPermissionDialog(this) {
-                    isFromPermissionRequest = true
-                    requestPermissionLauncher.launch(contactPermissions)
-                }
-            } else {
-                permissionDialog = PermissionManager.openPermissionDialog(this) {
-                    isFromPermissionRequest = true
-                    requestPermissionLauncher.launch(contactPermissions)
-                }
-            }
-        } else if (!PermissionManager.hasOverlayPermission(this) && !SharedPreferenceManager.getBoolean(
-                this,
-                Constance.OVERLAY_PERMISSION_SKIP
-            )
-        ) {
-
-            if (showCustomDialog) {
-                permissionDialog = PermissionManager.openPermissionDialog(this) {
-                    isFromPermissionRequest = true
-                    SharedPreferenceManager.putBoolean(
-                        this,
-                        Constance.OVERLAY_PERMISSION_SKIP,
-                        true
-                    )
-                    val intent = Intent(
-                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        "package:$packageName".toUri()
-                    )
-                    overlayPermissionLauncher.launch(intent)
-                    overlayHandler.post(overlayPermissionChecker)
-                    ADSAppManage.isAppOpenBlocked = true
-                }
-            } else {
-                // Just allowed Contacts/Call Log: go directly to Overlay settings for a seamless experience
-                isFromPermissionRequest = true
-                SharedPreferenceManager.putBoolean(this, Constance.OVERLAY_PERMISSION_SKIP, true)
-                val intent = Intent(
-                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    "package:$packageName".toUri()
-                )
-                overlayPermissionLauncher.launch(intent)
-                overlayHandler.post(overlayPermissionChecker)
-                ADSAppManage.isAppOpenBlocked = true
-            }
-        }
-
-        if (PermissionManager.hasContactPermissions(this)) {
-            initView()
-        }
-    }
-
 
     private fun initView() {
         if (isViewInitialized) return
@@ -697,8 +664,7 @@ class HomeActivity : AppCompatActivity(), OnClickHandler {
 
     override fun onDestroy() {
         super.onDestroy()
-        overlayHandler.removeCallbacks(overlayPermissionChecker)
+        stopOverlayPermissionChecker()
     }
-
 
 }

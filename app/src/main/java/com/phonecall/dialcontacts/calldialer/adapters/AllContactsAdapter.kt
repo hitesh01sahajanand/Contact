@@ -92,13 +92,35 @@ class AllContactsAdapter(
 
     override fun getItemCount(): Int = filteredList.size
 
+    private fun withoutContactsMissingNumber(list: List<ContactListItem>): List<ContactListItem> {
+        val result = mutableListOf<ContactListItem>()
+        var pendingHeader: ContactListItem.Header? = null
+
+        list.forEach { item ->
+            when (item) {
+                is ContactListItem.Header -> pendingHeader = item
+                is ContactListItem.Contact -> {
+                    if (!item.data.number.isNullOrBlank()) {
+                        pendingHeader?.let {
+                            result.add(it)
+                            pendingHeader = null
+                        }
+                        result.add(item)
+                    }
+                }
+            }
+        }
+        return result
+    }
+
     fun addAll(newList: List<ContactListItem>) {
         contactList.clear()
-        contactList.addAll(newList)
+        val validList = withoutContactsMissingNumber(newList)
+        contactList.addAll(validList)
 
         // Store initial favorite status for all contacts (unique by ID)
         // and re-apply pending changes
-        newList.filterIsInstance<ContactListItem.Contact>().forEach { contactItem ->
+        validList.filterIsInstance<ContactListItem.Contact>().forEach { contactItem ->
             val id = contactItem.data.contactId
             if (id != null) {
                 if (!initialFavoriteStatus.containsKey(id)) {
@@ -133,6 +155,8 @@ class AllContactsAdapter(
                 }
 
                 is ContactListItem.Contact -> {
+                    if (item.data.number.isNullOrBlank()) return@forEach
+
                     val displayName = item.data.displayName ?: ""
 
                     val matchQuery = searchText.isEmpty() ||
@@ -342,7 +366,7 @@ class AllContactsAdapter(
                 tvCollapseName.text = data.displayName
                 if (!data.number.isNullOrEmpty()) {
                     tvExpandedContactNumber.visibility = View.VISIBLE
-                    tvExpandedContactNumber.text = "Mobile ${data.number}"
+                    tvExpandedContactNumber.text = context.getString(R.string.mobile_, data.number)
                 } else {
                     tvExpandedContactNumber.visibility = View.GONE
                 }

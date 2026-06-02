@@ -117,7 +117,7 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_call)
 
         lifecycleScope.launch {
-            quickResponseViewModel.initializeDefaultMessages()
+            quickResponseViewModel.refreshForLocaleChange()
             quickResponseViewModel.messages.collectLatest {
                 quickMessages = it
             }
@@ -663,7 +663,7 @@ class CallActivity : AppCompatActivity(), OnClickHandler {
     }
 
     /**
-     * Apply toggle UI for ALL buttons in ll_all_buttons.
+     * Appl toggle UI for ALL buttons in ll_all_buttons.
      * Active state  → grey card background + white icon tint.
      * Inactive state → normal bg_color card + black icon tint.
      *

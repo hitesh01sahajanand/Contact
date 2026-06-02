@@ -12,6 +12,9 @@ import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSBannerSmall
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSMainClass
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSNativeDisplay
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.adapters.AllContactsAdapter
 import com.phonecall.dialcontacts.calldialer.databinding.ActivityAllContactsBinding
@@ -41,6 +44,32 @@ class AllContactsActivity : AppCompatActivity(), OnClickHandler {
         }
 
         initView()
+        loadAds()
+    }
+
+    private fun loadAds() {
+        if (ADSMainClass.getContactDetailSmallAdsShow()) {
+            if (ADSMainClass.getContactDetailAdsType().equals("native")) {
+                ADSNativeDisplay.loadAdmobNativeAdBig(
+                    ADSMainClass.getStringValue(ADSMainClass.OTHER_SCREEN_NATIVE),
+                    findViewById(R.id.flNativeSmallPlaceholder),
+                    findViewById(R.id.shimmer_container_banner),
+                    "small",
+                    this
+                )
+            } else {
+                ADSBannerSmall.loadAdMobBanner(
+                    ADSMainClass.getStringValue(ADSMainClass.OTHER_SCREEN_BANNER),
+                    findViewById(R.id.flBannerSmallPlaceholder),
+                    findViewById(R.id.shimmer_container_banner),
+                    this
+                )
+            }
+        } else {
+            findViewById<View>(R.id.shimmer_container_banner).visibility = View.GONE
+            findViewById<View>(R.id.flNativeSmallPlaceholder).visibility = View.GONE
+            findViewById<View>(R.id.flBannerSmallPlaceholder).visibility = View.GONE
+        }
     }
 
     override fun onResume() {

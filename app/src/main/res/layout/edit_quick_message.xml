@@ -82,7 +82,7 @@
                 android:layout_gravity="center"
                 android:gravity="center"
                 android:padding="@dimen/_12sdp"
-                android:text="@string/ok"
+                android:text="@string/okay"
                 android:textColor="@color/index_color" />
 
         </com.google.android.material.card.MaterialCardView>

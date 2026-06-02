@@ -380,5 +380,13 @@
     <string name="your_changes_won_t_be_saved">Tus cambios no se guardarán.</string>
     <string name="okay">Aceptar</string>
     <string name="sync_contact_successfully">Contacto sincronizado correctamente</string>
+    <string name="unfavorite">Quitar de favoritos</string>
+    <string name="tap_to_exit">Toca para salir</string>
+    <string name="we_access_contact_">Accedemos a nombres de contactos y números de teléfono, almacenados solo en tu dispositivo.</string>
+    <string name="we_access_call_history_">Accedemos al historial de llamadas y números de teléfono para mostrar y gestionar tus llamadas.</string>
+    <string name="allow">Permitir</string>
+    <string name="yes">Sí</string>
+    <string name="no">No</string>
+    <string name="no_reminder_set">No hay recordatorio configurado</string>
 
 </resources>

@@ -152,6 +152,7 @@ public class ADSMainClass {
     private static final String SplashAppOpenVisitCount = "SplashAppOpenVisitCount";
 
     private static final String AppOpenBackgroundShow = "AppOpenBackgroundShow";
+    private static final String BackgroundAppOpenShowType = "BackgroundAppOpenShowType";
 
     public static String call_end_last_ad_date = "call_end_last_ad_date";
     public static String call_end_ad_count_today = "call_end_ad_count_today";
@@ -467,6 +468,22 @@ public class ADSMainClass {
 
     public static void setAppOpenBackgroundShow(boolean value) {
         ADSPrefManage().edit().putBoolean(AppOpenBackgroundShow, value).apply();
+    }
+
+    public static String getBackgroundAppOpenShowType() {
+        return ADSPrefManage().getString(BackgroundAppOpenShowType, "Load");
+    }
+
+    public static void setBackgroundAppOpenShowType(String value) {
+        ADSPrefManage().edit().putString(BackgroundAppOpenShowType, value).apply();
+    }
+
+    public static boolean isBackgroundAppOpenLoadMode() {
+        return "load".equalsIgnoreCase(getBackgroundAppOpenShowType().trim());
+    }
+
+    public static boolean isBackgroundAppOpenPreLoadMode() {
+        return "preload".equalsIgnoreCase(getBackgroundAppOpenShowType().trim());
     }
 
     public static int getAppOpenAdDailyLimit() {

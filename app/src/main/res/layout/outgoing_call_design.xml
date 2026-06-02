@@ -160,18 +160,19 @@
                         android:id="@+id/ll_row_1"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:baselineAligned="false"
                         android:orientation="horizontal">
 
                         <LinearLayout
                             android:id="@+id/ll_swap"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
+                            android:layout_gravity="top|center_horizontal"
                             android:layout_weight="1"
                             android:clickable="true"
                             android:focusable="true"
                             android:foreground="@drawable/custom_button_ripple"
-                            android:gravity="center"
+                            android:gravity="center_horizontal|top"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                             android:orientation="vertical"
                             android:padding="@dimen/_4sdp"
@@ -200,17 +201,10 @@
 
                             <TextView
                                 android:id="@+id/tv_swap"
-                                style="@style/TextStyle.Medium"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
+                                style="@style/TextStyle.CallActionLabel"
                                 android:layout_marginTop="@dimen/_10sdp"
-                                android:gravity="center"
                                 android:text="@string/swap"
-                                android:textColor="@color/black_color"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toBottomOf="@+id/tv_number_name" />
+ />
 
                         </LinearLayout>
 
@@ -218,12 +212,12 @@
                             android:id="@+id/ll_hold"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
+                            android:layout_gravity="top|center_horizontal"
                             android:layout_weight="1"
                             android:clickable="true"
                             android:focusable="true"
                             android:foreground="@drawable/custom_button_ripple"
-                            android:gravity="center"
+                            android:gravity="center_horizontal|top"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                             android:orientation="vertical"
                             android:padding="@dimen/_4sdp">
@@ -251,17 +245,10 @@
 
                             <TextView
                                 android:id="@+id/tv_hold"
-                                style="@style/TextStyle.Medium"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
+                                style="@style/TextStyle.CallActionLabel"
                                 android:layout_marginTop="@dimen/_10sdp"
-                                android:gravity="center"
                                 android:text="@string/hold"
-                                android:textColor="@color/black_color"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toBottomOf="@+id/tv_number_name" />
+ />
 
                         </LinearLayout>
 
@@ -269,12 +256,12 @@
                             android:id="@+id/ll_video_call"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
+                            android:layout_gravity="top|center_horizontal"
                             android:layout_weight="1"
                             android:clickable="true"
                             android:focusable="true"
                             android:foreground="@drawable/custom_button_ripple"
-                            android:gravity="center"
+                            android:gravity="center_horizontal|top"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                             android:orientation="vertical"
                             android:padding="@dimen/_4sdp">
@@ -302,17 +289,10 @@
 
                             <TextView
                                 android:id="@+id/tv_video_call"
-                                style="@style/TextStyle.Medium"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
+                                style="@style/TextStyle.CallActionLabel"
                                 android:layout_marginTop="@dimen/_10sdp"
-                                android:gravity="center"
                                 android:text="@string/video_call"
-                                android:textColor="@color/black_color"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toBottomOf="@+id/tv_number_name" />
+ />
 
                         </LinearLayout>
 
@@ -321,12 +301,12 @@
                             android:id="@+id/ll_manage"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
+                            android:layout_gravity="top|center_horizontal"
                             android:layout_weight="1"
                             android:clickable="true"
                             android:focusable="true"
                             android:foreground="@drawable/custom_button_ripple"
-                            android:gravity="center"
+                            android:gravity="center_horizontal|top"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                             android:orientation="vertical"
                             android:visibility="gone">
@@ -354,17 +334,10 @@
 
                             <TextView
                                 android:id="@+id/tv_manage"
-                                style="@style/TextStyle.Medium"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
+                                style="@style/TextStyle.CallActionLabel"
                                 android:layout_marginTop="@dimen/_10sdp"
-                                android:gravity="center"
                                 android:text="@string/manage"
-                                android:textColor="@color/black_color"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toBottomOf="@+id/tv_number_name" />
+ />
 
                         </LinearLayout>
 
@@ -372,12 +345,12 @@
                             android:id="@+id/ll_merge"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
+                            android:layout_gravity="top|center_horizontal"
                             android:layout_weight="1"
                             android:clickable="true"
                             android:focusable="true"
                             android:foreground="@drawable/custom_button_ripple"
-                            android:gravity="center"
+                            android:gravity="center_horizontal|top"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                             android:orientation="vertical"
                             android:visibility="gone">
@@ -405,17 +378,10 @@
 
                             <TextView
                                 android:id="@+id/tv_merge"
-                                style="@style/TextStyle.Medium"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
+                                style="@style/TextStyle.CallActionLabel"
                                 android:layout_marginTop="@dimen/_10sdp"
-                                android:gravity="center"
                                 android:text="@string/merge"
-                                android:textColor="@color/black_color"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toBottomOf="@+id/tv_number_name" />
+ />
 
                         </LinearLayout>
 
@@ -423,12 +389,12 @@
                             android:id="@+id/ll_add_call"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
+                            android:layout_gravity="top|center_horizontal"
                             android:layout_weight="1"
                             android:clickable="true"
                             android:focusable="true"
                             android:foreground="@drawable/custom_button_ripple"
-                            android:gravity="center"
+                            android:gravity="center_horizontal|top"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                             android:orientation="vertical"
                             android:padding="@dimen/_4sdp">
@@ -456,17 +422,10 @@
 
                             <TextView
                                 android:id="@+id/tv_add_call"
-                                style="@style/TextStyle.Medium"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
+                                style="@style/TextStyle.CallActionLabel"
                                 android:layout_marginTop="@dimen/_10sdp"
-                                android:gravity="center"
                                 android:text="@string/add_call"
-                                android:textColor="@color/black_color"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toBottomOf="@+id/tv_number_name" />
+ />
 
                         </LinearLayout>
 
@@ -477,6 +436,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/_30sdp"
+                        android:baselineAligned="false"
                         android:orientation="horizontal"
                         android:weightSum="4">
 
@@ -484,12 +444,12 @@
                             android:id="@+id/ll_keypad"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
+                            android:layout_gravity="top|center_horizontal"
                             android:layout_weight="1"
                             android:clickable="true"
                             android:focusable="true"
                             android:foreground="@drawable/custom_button_ripple"
-                            android:gravity="center"
+                            android:gravity="center_horizontal|top"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                             android:orientation="vertical"
                             android:padding="@dimen/_4sdp"
@@ -516,17 +476,10 @@
 
 
                             <TextView
-                                style="@style/TextStyle.Medium"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
+                                style="@style/TextStyle.CallActionLabel"
                                 android:layout_marginTop="@dimen/_10sdp"
-                                android:gravity="center"
                                 android:text="@string/keypad"
-                                android:textColor="@color/black_color"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toBottomOf="@+id/tv_number_name" />
+ />
 
 
                         </LinearLayout>
@@ -536,12 +489,12 @@
                             android:id="@+id/ll_mute"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
+                            android:layout_gravity="top|center_horizontal"
                             android:layout_weight="1"
                             android:clickable="true"
                             android:focusable="true"
                             android:foreground="@drawable/custom_button_ripple"
-                            android:gravity="center"
+                            android:gravity="center_horizontal|top"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                             android:orientation="vertical"
                             android:padding="@dimen/_4sdp">
@@ -569,17 +522,10 @@
 
                             <TextView
                                 android:id="@+id/tv_mute"
-                                style="@style/TextStyle.Medium"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
+                                style="@style/TextStyle.CallActionLabel"
                                 android:layout_marginTop="@dimen/_10sdp"
-                                android:gravity="center"
                                 android:text="@string/mute"
-                                android:textColor="@color/black_color"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toBottomOf="@+id/tv_number_name" />
+ />
 
 
                         </LinearLayout>
@@ -588,12 +534,12 @@
                             android:id="@+id/ll_speaker"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
+                            android:layout_gravity="top|center_horizontal"
                             android:layout_weight="1"
                             android:clickable="true"
                             android:focusable="true"
                             android:foreground="@drawable/custom_button_ripple"
-                            android:gravity="center"
+                            android:gravity="center_horizontal|top"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                             android:orientation="vertical"
                             android:padding="@dimen/_4sdp">
@@ -621,17 +567,10 @@
 
                             <TextView
                                 android:id="@+id/tv_speaker"
-                                style="@style/TextStyle.Medium"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
+                                style="@style/TextStyle.CallActionLabel"
                                 android:layout_marginTop="@dimen/_10sdp"
-                                android:gravity="center"
                                 android:text="@string/speaker"
-                                android:textColor="@color/black_color"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toBottomOf="@+id/tv_number_name" />
+ />
 
 
                         </LinearLayout>
@@ -640,12 +579,12 @@
                             android:id="@+id/ll_more"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
+                            android:layout_gravity="top|center_horizontal"
                             android:layout_weight="1"
                             android:clickable="true"
                             android:focusable="true"
                             android:foreground="@drawable/custom_button_ripple"
-                            android:gravity="center"
+                            android:gravity="center_horizontal|top"
                             android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                             android:orientation="vertical"
                             android:padding="@dimen/_4sdp"
@@ -672,17 +611,10 @@
 
 
                             <TextView
-                                style="@style/TextStyle.Medium"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
+                                style="@style/TextStyle.CallActionLabel"
                                 android:layout_marginTop="@dimen/_10sdp"
-                                android:gravity="center"
                                 android:text="@string/more"
-                                android:textColor="@color/black_color"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toBottomOf="@+id/tv_number_name" />
+ />
 
 
                         </LinearLayout>

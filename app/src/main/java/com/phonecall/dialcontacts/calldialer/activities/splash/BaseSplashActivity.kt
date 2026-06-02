@@ -146,6 +146,7 @@ BaseSplashActivity : AppCompatActivity() {
                         val admob_native_btn_text_color =
                             jsonobject.getString("Admob_Native_ButtonTextColor")
                         val ads_type_load = jsonobject.getString("Ads_Loading_Types")
+                        val background_app_open_show_type = jsonobject.getString("background_app_open_show_type")
                         val application_id = jsonobject.getString("ApplicationId")
                         val appliction_token = jsonobject.getString("ApplicationToken")
                         val bottom_ads_type = jsonobject.getString("Bottom_AdTypes")
@@ -378,23 +379,23 @@ BaseSplashActivity : AppCompatActivity() {
                         ADSMainClass.setOtherAdsShow(other_bottom_ads_show)
 
 
-                        val quick_message_screen = screen.getJSONObject("quick_message_screen")
-                        val full_Intent_screen_close_time =
-                            quick_message_screen.getInt(ADSMainClass.FULL_INTENT_SCREEN_CLOSE_TIME)
-                        val message_callend_show =
-                            quick_message_screen.getBoolean(ADSMainClass.MESSAGE_CALLEND_SHOW)
-                        val message_callend_ad_show =
-                            quick_message_screen.getBoolean(ADSMainClass.MESSAGE_CALLEND_AD_SHOW)
-                        val show_full_screen_intent_permission = quick_message_screen.optBoolean(
-                            SHOW_FULL_SCREEN_INTENT_PERMISSION,
-                            true
-                        )
-                        val quick_ads_type =
-                            quick_message_screen.optString(ADSMainClass.QUICK_ADS_TYPE)
-                        val quick_banner_id =
-                            quick_message_screen.optString(ADSMainClass.QUICK_BANNER_ID)
-                        val quick_native_id =
-                            quick_message_screen.optString(ADSMainClass.QUICK_NATIVE_ID)
+//                        val quick_message_screen = screen.getJSONObject("quick_message_screen")
+//                        val full_Intent_screen_close_time =
+//                            quick_message_screen.getInt(ADSMainClass.FULL_INTENT_SCREEN_CLOSE_TIME)
+//                        val message_callend_show =
+//                            quick_message_screen.getBoolean(ADSMainClass.MESSAGE_CALLEND_SHOW)
+//                        val message_callend_ad_show =
+//                            quick_message_screen.getBoolean(ADSMainClass.MESSAGE_CALLEND_AD_SHOW)
+//                        val show_full_screen_intent_permission = quick_message_screen.optBoolean(
+//                            SHOW_FULL_SCREEN_INTENT_PERMISSION,
+//                            true
+//                        )
+//                        val quick_ads_type =
+//                            quick_message_screen.optString(ADSMainClass.QUICK_ADS_TYPE)
+//                        val quick_banner_id =
+//                            quick_message_screen.optString(ADSMainClass.QUICK_BANNER_ID)
+//                        val quick_native_id =
+//                            quick_message_screen.optString(ADSMainClass.QUICK_NATIVE_ID)
 
                         val update_app = screen.getJSONObject("update_app")
                         val in_app_update_show = update_app.getBoolean("in_app_update_show")
@@ -406,17 +407,17 @@ BaseSplashActivity : AppCompatActivity() {
                         ADSMainClass.setInAppUpdateType(in_app_update_type)
                         ADSMainClass.setInApppDialogDailyShowCount(in_appp_dailog_daily_show_count)
 
-                        ADSMainClass.setIntTIMEValue(
-                            ADSMainClass.FULL_INTENT_SCREEN_CLOSE_TIME,
-                            full_Intent_screen_close_time
-                        )
-                        ADSMainClass.setMessageCallEndShow(message_callend_show)
-                        ADSMainClass.setMessageCallEndADShow(message_callend_ad_show)
-                        ADSMainClass.setBooleanValue(
-                            SHOW_FULL_SCREEN_INTENT_PERMISSION,
-                            show_full_screen_intent_permission
-                        )
-                        ADSMainClass.setQuickAdsType(quick_ads_type)
+//                        ADSMainClass.setIntTIMEValue(
+//                            ADSMainClass.FULL_INTENT_SCREEN_CLOSE_TIME,
+//                            full_Intent_screen_close_time
+//                        )
+//                        ADSMainClass.setMessageCallEndShow(message_callend_show)
+//                        ADSMainClass.setMessageCallEndADShow(message_callend_ad_show)
+//                        ADSMainClass.setBooleanValue(
+//                            SHOW_FULL_SCREEN_INTENT_PERMISSION,
+//                            show_full_screen_intent_permission
+//                        )
+//                        ADSMainClass.setQuickAdsType(quick_ads_type)
 
                         val overlay_notification_show = try {
                             jsonobject.getBoolean("overlay_permission_notification_show")
@@ -456,8 +457,8 @@ BaseSplashActivity : AppCompatActivity() {
                         ADSMainClass.setStringValue(ADSMainClass.CALL_END_BANNER, callend_banner_ad_id)
                         ADSMainClass.setStringValue(ADSMainClass.CALL_END_Inter, callend_inter_ad_id)
 
-                        ADSMainClass.setStringValue(ADSMainClass.QUICK_BANNER_ID, quick_banner_id)
-                        ADSMainClass.setStringValue(ADSMainClass.QUICK_NATIVE_ID, quick_native_id)
+//                        ADSMainClass.setStringValue(ADSMainClass.QUICK_BANNER_ID, quick_banner_id)
+//                        ADSMainClass.setStringValue(ADSMainClass.QUICK_NATIVE_ID, quick_native_id)
 
                         ADSMainClass.setStringValue(ADSMainClass.APP_OPEN_ID, app_open_id)
                         ADSMainClass.setStringValue(ADSMainClass.INTER_FIRST_TIME, inter_first_time)
@@ -580,6 +581,7 @@ BaseSplashActivity : AppCompatActivity() {
                         ADSMainClass.setSplashADType(splash_ads_type)
                         ADSMainClass.setAds_Free(ads_blocker)
                         ADSMainClass.setAdsTypeManage(ads_type_load)
+                        ADSMainClass.setBackgroundAppOpenShowType(background_app_open_show_type)
                         ADSMainClass.setBannerTypes(bottom_ads_type)
                         ADSMainClass.setNativeButtonColor(admob_native_btn_color)
                         ADSMainClass.setNativeButtonTextColor(admob_native_btn_text_color)

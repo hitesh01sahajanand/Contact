@@ -380,5 +380,13 @@
     <string name="your_changes_won_t_be_saved">การเปลี่ยนแปลงของคุณจะไม่ถูกบันทึก</string>
     <string name="okay">ตกลง</string>
     <string name="sync_contact_successfully">ซิงค์รายชื่อติดต่อสำเร็จ</string>
+    <string name="unfavorite">ลบออกจากรายการโปรด</string>
+    <string name="tap_to_exit">แตะเพื่อออก</string>
+    <string name="we_access_contact_">เราเข้าถึงชื่อผู้ติดต่อและหมายเลขโทรศัพท์ ซึ่งจัดเก็บไว้บนอุปกรณ์ของคุณเท่านั้น</string>
+    <string name="we_access_call_history_">เราเข้าถึงประวัติการโทรและหมายเลขโทรศัพท์เพื่อแสดงและจัดการการโทรของคุณ</string>
+    <string name="allow">อนุญาต</string>
+    <string name="yes">ใช่</string>
+    <string name="no">ไม่</string>
+    <string name="no_reminder_set">ไม่มีการเตือนที่ตั้งไว้</string>
 
 </resources>

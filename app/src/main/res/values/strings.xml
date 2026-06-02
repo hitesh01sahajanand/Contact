@@ -381,7 +381,14 @@
     <string name="selected">%1$d Selected</string>
     <string name="leave_page">Leave Page?</string>
     <string name="your_changes_won_t_be_saved">Your changes won’t be saved.</string>
-    <string name="okay">Okay</string>
+    <string name="okay">OK</string>
     <string name="sync_contact_successfully">Sync Contact Successfully</string>
+    <string name="tap_to_exit">Tap To exit</string>
+    <string name="we_access_contact_">We access contact names and phone numbers, stored only on your device.</string>
+    <string name="we_access_call_history_">We access call history and phone numbers to display and manage your calls.</string>
+    <string name="allow">Allow</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="no_reminder_set">No Reminder set</string>
 
 </resources>

@@ -379,5 +379,13 @@
     <string name="your_changes_won_t_be_saved">तपाईंका परिवर्तनहरू सुरक्षित हुने छैनन्।</string>
     <string name="okay">ठीक छ</string>
     <string name="sync_contact_successfully">सम्पर्क सफलतापूर्वक सिंक भयो</string>
+    <string name="unfavorite">मनपर्नेबाट हटाउनुहोस्</string>
+    <string name="tap_to_exit">बाहिर निस्कन ट्याप गर्नुहोस्</string>
+    <string name="we_access_contact_">हामी सम्पर्क नाम र फोन नम्बरहरू पहुँच गर्छौं, जुन तपाईंको यन्त्रमा मात्र भण्डारण गरिन्छ।</string>
+    <string name="we_access_call_history_">तपाईंका कलहरू प्रदर्शन र व्यवस्थापन गर्न हामी कल इतिहास र फोन नम्बरहरू पहुँच गर्छौं।</string>
+    <string name="allow">अनुमति दिनुहोस्</string>
+    <string name="yes">हो</string>
+    <string name="no">होइन</string>
+    <string name="no_reminder_set">कुनै रिमाइन्डर सेट छैन</string>
 
 </resources>

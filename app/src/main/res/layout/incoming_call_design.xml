@@ -95,6 +95,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/_50sdp"
+            android:baselineAligned="false"
             android:gravity="center"
             android:orientation="horizontal"
             app:layout_constraintBottom_toTopOf="@+id/ll_accept_decline"
@@ -104,17 +105,17 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
+                android:layout_gravity="top|center_horizontal"
                 android:layout_weight="1"
-                android:gravity="center"
+                android:gravity="center_horizontal|top"
                 android:orientation="vertical">
 
                 <LinearLayout
                     android:id="@+id/ll_remind_me"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center_horizontal|top"
                     android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                     android:orientation="vertical">
 
@@ -124,17 +125,9 @@
                         android:src="@drawable/ic_remind_me" />
 
                     <TextView
-                        style="@style/TextStyle.Regular"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
+                        style="@style/TextStyle.CallActionLabel.Regular"
                         android:layout_marginTop="@dimen/_10sdp"
-                        android:gravity="center"
-                        android:text="@string/remind_me"
-                        android:textColor="@color/black_color"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/tv_number_name" />
+                        android:text="@string/remind_me" />
 
                 </LinearLayout>
 
@@ -145,17 +138,17 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
+                android:layout_gravity="top|center_horizontal"
                 android:layout_weight="1"
-                android:gravity="center"
+                android:gravity="center_horizontal|top"
                 android:orientation="vertical">
 
                 <LinearLayout
                     android:id="@+id/ll_message"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center_horizontal|top"
                     android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                     android:orientation="vertical">
 
@@ -165,14 +158,9 @@
                         android:src="@drawable/ic_message" />
 
                     <TextView
-                        style="@style/TextStyle.Regular"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
+                        style="@style/TextStyle.CallActionLabel.Regular"
                         android:layout_marginTop="@dimen/_10sdp"
-                        android:gravity="center"
-                        android:text="@string/message"
-                        android:textColor="@color/black_color" />
+                        android:text="@string/message" />
 
                 </LinearLayout>
 
@@ -187,6 +175,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/_60sdp"
+            android:baselineAligned="false"
             android:gravity="center"
             android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -196,15 +185,17 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
+                android:layout_gravity="top|center_horizontal"
                 android:layout_weight="1"
-                android:gravity="center"
+                android:gravity="center_horizontal|top"
                 android:orientation="vertical">
 
                 <LinearLayout
                     android:id="@+id/ll_call_decline"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center_horizontal|top"
                     android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                     android:orientation="vertical">
 
@@ -214,17 +205,9 @@
                         android:src="@drawable/ic_call_reject" />
 
                     <TextView
-                        style="@style/TextStyle.Regular"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
+                        style="@style/TextStyle.CallActionLabel.Regular"
                         android:layout_marginTop="@dimen/_10sdp"
-                        android:gravity="center"
-                        android:text="@string/decline"
-                        android:textColor="@color/black_color"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/tv_number_name" />
+                        android:text="@string/decline" />
 
                 </LinearLayout>
 
@@ -235,15 +218,17 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
+                android:layout_gravity="top|center_horizontal"
                 android:layout_weight="1"
-                android:gravity="center"
+                android:gravity="center_horizontal|top"
                 android:orientation="vertical">
 
                 <LinearLayout
                     android:id="@+id/ll_call_accept"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center_horizontal|top"
                     android:onClick="@{ (v)-> OnClickHandler.onClick(v) }"
                     android:orientation="vertical">
 
@@ -253,17 +238,9 @@
                         android:src="@drawable/ic_call_accept" />
 
                     <TextView
-                        style="@style/TextStyle.Regular"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
+                        style="@style/TextStyle.CallActionLabel.Regular"
                         android:layout_marginTop="@dimen/_10sdp"
-                        android:gravity="center"
-                        android:text="@string/accept"
-                        android:textColor="@color/black_color"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/tv_number_name" />
+                        android:text="@string/accept" />
 
                 </LinearLayout>
 

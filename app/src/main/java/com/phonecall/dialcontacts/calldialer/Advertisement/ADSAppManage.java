@@ -153,8 +153,7 @@ public class ADSAppManage extends Application {
 
                 NumStarted--;
                 if (NumStarted == 0) {
-
-                } else {
+                    ADSAppBackground.ADSPreloadAppOpen(activity);
                 }
             }
 

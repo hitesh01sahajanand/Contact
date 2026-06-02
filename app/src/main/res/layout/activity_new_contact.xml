@@ -983,7 +983,7 @@
                                     android:background="@null"
                                     android:backgroundTint="@color/white"
                                     android:hint="@string/related_person"
-                                    android:inputType="number"
+                                    android:inputType="phone"
                                     android:paddingHorizontal="@dimen/_3sdp"
                                     android:paddingVertical="@dimen/_8sdp"
                                     android:singleLine="true"

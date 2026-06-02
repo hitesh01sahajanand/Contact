@@ -12,6 +12,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.phonecall.dialcontacts.calldialer.Advertisement.ADSAppManage
 import com.phonecall.dialcontacts.calldialer.R
 import com.phonecall.dialcontacts.calldialer.activities.allContacts.AllContactsActivity
 import com.phonecall.dialcontacts.calldialer.activities.details.ContactsDetailsActivity
@@ -41,9 +42,7 @@ class FavoritesFragment : Fragment(), OnClickHandler {
 
     override fun onResume() {
         super.onResume()
-        if (PermissionManager.hasContactPermissions(requireActivity())) {
-            viewModel.getAllFavoriteContact()
-        }
+        updatePermissionState()
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
@@ -52,8 +51,8 @@ class FavoritesFragment : Fragment(), OnClickHandler {
             if (::favoriteAdapter.isInitialized) {
                 favoriteAdapter.clearSelection()
             }
-        } else if (PermissionManager.hasContactPermissions(requireActivity())) {
-            viewModel.getAllFavoriteContact()
+        } else {
+            updatePermissionState()
         }
     }
 
@@ -64,14 +63,16 @@ class FavoritesFragment : Fragment(), OnClickHandler {
         binding.inHeader.cvAdd.isVisible = true
 
         viewModel.allFavoriteContacts.observe(viewLifecycleOwner) { favoriteList ->
-            if (favoriteList.isNotEmpty()) {
-                favoriteAdapter.addAll(favoriteList)
-                binding.rvFavorite.isVisible = true
-                binding.llFavoriteSpaceHolder.isVisible = false
-            } else {
-                binding.rvFavorite.isVisible = false
-                binding.llFavoriteSpaceHolder.isVisible = true
-            }
+            if (!PermissionManager.hasContactPermissions(requireActivity())) return@observe
+            favoriteAdapter.addAll(favoriteList)
+            val hasItems = favoriteAdapter.getCurrentList().isNotEmpty()
+            binding.rvFavorite.isVisible = hasItems
+            binding.llFavoriteSpaceHolder.isVisible = !hasItems
+        }
+
+        binding.cvAllow.setOnClickListener {
+            ADSAppManage.isAppOpenBlocked = true
+            PermissionManager.openAppSettings(requireActivity())
         }
 
         favoriteAdapter = FavoriteAdapter(onClick = { contactModel, clickAction ->
@@ -150,6 +151,7 @@ class FavoritesFragment : Fragment(), OnClickHandler {
         }
 
         binding.edtSearch.addTextChangedListener { editable ->
+            if (!PermissionManager.hasContactPermissions(requireActivity())) return@addTextChangedListener
             val query = editable.toString()
             favoriteAdapter.filter(query)
             binding.rvFavorite.isVisible = favoriteAdapter.getCurrentList().isNotEmpty()
@@ -167,6 +169,8 @@ class FavoritesFragment : Fragment(), OnClickHandler {
                 false
             }
         }
+
+        updatePermissionState()
     }
 
     override fun onClick(view: View) {
@@ -181,6 +185,26 @@ class FavoritesFragment : Fragment(), OnClickHandler {
             }
 
         }
+    }
+
+    private fun updatePermissionState() {
+        if (!::binding.isInitialized) return
+
+        val hasPermission = PermissionManager.hasContactPermissions(requireActivity())
+        val showPermissionCard = PermissionManager.shouldShowInlinePermissionCard(
+            requireActivity(),
+            hasPermission
+        )
+        binding.llContact.isVisible = showPermissionCard
+        binding.cvSearch.isVisible = hasPermission
+
+        if (!hasPermission) {
+            binding.rvFavorite.isVisible = false
+            binding.llFavoriteSpaceHolder.isVisible = false
+            return
+        }
+
+        viewModel.getAllFavoriteContact()
     }
 
     fun clearSearch() {
